@@ -10,6 +10,8 @@ namespace TodoListApp.Application.Tests.UserTaskAccess.Mappers;
 /// </summary>
 public class TaskAccessForOwnerMapperTests
 {
+    private readonly string _passwordHash = new('a', 64);
+
     /// <summary>
     /// Verifies that a single <see cref="UserTaskAccessEntity"/> is correctly mapped
     /// to a <see cref="UserBriefDto"/>, specifically checking the nested User properties.
@@ -24,7 +26,7 @@ public class TaskAccessForOwnerMapperTests
             firstName: "John",
             userName: "johndoe",
             email: "john.doe@example.com",
-            passwordHash: "password-hash",
+            passwordHash: this._passwordHash,
             lastName: "Doe");
 
         var entity = new UserTaskAccessEntity(taskId, user.Id)
@@ -38,10 +40,10 @@ public class TaskAccessForOwnerMapperTests
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().Be(user.Id);
-        result.FirstName.Should().Be(user.FirstName);
+        result.FirstName.Should().Be(user.FirstName.Value);
         result.LastName.Should().Be(user.LastName);
-        result.UserName.Should().Be(user.UserName);
-        result.Email.Should().Be(user.Email);
+        result.UserName.Should().Be(user.UserName.Value);
+        result.Email.Should().Be(user.Email.Value);
     }
 
     /// <summary>
@@ -57,11 +59,11 @@ public class TaskAccessForOwnerMapperTests
         {
             new(taskId, Guid.NewGuid())
             {
-                User = new UserEntity("User1", "un1", "user1@gmail.com", "h"),
+                User = new UserEntity("User1", "un1", "user1@gmail.com", this._passwordHash),
             },
             new(taskId, Guid.NewGuid())
             {
-                User = new UserEntity("User2", "un2", "user2@gmail.com", "h"),
+                User = new UserEntity("User2", "un2", "user2@gmail.com", this._passwordHash),
             },
         };
 
@@ -72,12 +74,11 @@ public class TaskAccessForOwnerMapperTests
         result.Should().NotBeNull();
         result.Should().HaveCount(2);
 
-        // Перевіряємо першого елемента для впевненості
         var firstResult = result.First();
         var firstEntity = entities[0];
 
         firstResult.Id.Should().Be(firstEntity.User.Id);
-        firstResult.Email.Should().Be(firstEntity.User.Email);
+        firstResult.Email.Should().Be(firstEntity.User.Email.Value);
     }
 
     /// <summary>

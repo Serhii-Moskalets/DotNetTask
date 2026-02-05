@@ -11,6 +11,8 @@ namespace TodoListApp.Infrastructure.Test.DbContext;
 /// </summary>
 public class TodoListAppDbContextTests
 {
+    private readonly string _passwordHash = new('a', 64);
+
     /// <summary>
     /// Tests that a <see cref="UserEntity"/> can be added and retrieved from the database.
     /// </summary>
@@ -19,13 +21,14 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var user = new UserEntity("John", "john", "john@example.com", "hashPassword");
+        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         context.Add(user);
         context.SaveChanges();
 
-        var savedUser = context.Users.FirstOrDefault(u => u.UserName == "john");
+        var savedUser = context.Users.FirstOrDefault(u => u.UserName.Value == "john");
         Assert.NotNull(savedUser);
-        Assert.Equal("John", savedUser.FirstName);
+        Assert.Equal("john@example.com", savedUser.Email.Value);
+        Assert.Equal("John", savedUser.FirstName.Value);
     }
 
     /// <summary>
@@ -37,7 +40,7 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var user = new UserEntity("John", "john", "john@example.com", "hashPassword");
+        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         context.Add(user);
         context.SaveChanges();
 
@@ -82,7 +85,7 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var user = new UserEntity("John", "john", "john@example.com", "hashPassword");
+        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         context.Add(user);
         context.SaveChanges();
 
@@ -104,11 +107,11 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var user = new UserEntity("John", "john", "john@example.com", "hashPassword");
+        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         context.Add(user);
         context.SaveChanges();
 
-        var taskList = new TaskListEntity(Guid.NewGuid(), "My Task List");
+        var taskList = new TaskListEntity(user.Id, "My Task List");
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 

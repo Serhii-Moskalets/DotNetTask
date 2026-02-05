@@ -21,6 +21,7 @@ public class CreateUserTaskAccessCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<IUserTaskAccessRepository> _accessRepoMock;
     private readonly CreateUserTaskAccessCommandHandler _handler;
+    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateUserTaskAccessCommandHandlerTests"/> class.
@@ -51,7 +52,7 @@ public class CreateUserTaskAccessCommandHandlerTests
     {
         // Arrange
         var email = "test@test.com";
-        var user = new UserEntity("Name", "Nick", email, "pass");
+        var user = new UserEntity("Name", "Nick", email, this._passwordHash);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
         this._userRepoMock.Setup(r => r.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
@@ -84,7 +85,7 @@ public class CreateUserTaskAccessCommandHandlerTests
     {
         // Arrange
         var email = "share@test.com";
-        var user = new UserEntity("Name", "Nick", email, "pass");
+        var user = new UserEntity("Name", "Nick", email, this._passwordHash);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
         this._userRepoMock.Setup(r => r.GetByEmailAsync(email.ToLowerInvariant(), It.IsAny<CancellationToken>()))

@@ -18,6 +18,7 @@ public class GetCommentsQueryHandlerTests
     private readonly Mock<ITaskAccessService> _taskAccessMock;
     private readonly Mock<ICommentRepository> _commentsRepoMock;
     private readonly GetCommentsQueryHandler _handler;
+    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetCommentsQueryHandlerTests"/> class.
@@ -72,7 +73,7 @@ public class GetCommentsQueryHandlerTests
         var page = 1;
         var pageSize = 10;
 
-        var author = new UserEntity("Alice", "alice", "alice@example.com", "hash");
+        var author = new UserEntity("Alice", "alice", "alice@example.com", this._passwordHash);
         var comments = new List<CommentEntity>
         {
             new(taskId, author.Id, "Comment 1", author),
