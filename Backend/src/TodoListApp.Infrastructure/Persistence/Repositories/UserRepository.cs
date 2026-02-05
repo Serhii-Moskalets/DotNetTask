@@ -32,11 +32,13 @@ public class UserRepository(TodoListAppDbContext context)
         if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
         {
             return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => x.Email.ToLowerInvariant() == email.ToLowerInvariant(), cancellationToken);
+                .AnyAsync(
+                    x => x.Email.Value.ToLowerInvariant() == email.ToLowerInvariant(),
+                    cancellationToken);
         }
 
         return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => EF.Functions.Like(x.Email, email), cancellationToken);
+            .AnyAsync(x => EF.Functions.Like(x.Email.Value, email), cancellationToken);
     }
 
     /// <summary>
@@ -53,11 +55,13 @@ public class UserRepository(TodoListAppDbContext context)
         if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
         {
             return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => x.UserName.ToLowerInvariant() == userName.ToLowerInvariant(), cancellationToken);
+                .AnyAsync(
+                    x => x.UserName.Value == userName.ToLowerInvariant(),
+                    cancellationToken);
         }
 
         return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => EF.Functions.Like(x.UserName, userName), cancellationToken);
+            .AnyAsync(x => EF.Functions.Like(x.UserName.Value, userName), cancellationToken);
     }
 
     /// <summary>
@@ -74,11 +78,13 @@ public class UserRepository(TodoListAppDbContext context)
         if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
         {
             return await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Email.ToLowerInvariant() == email.ToLowerInvariant(), cancellationToken);
+                .FirstOrDefaultAsync(
+                    x => x.Email.Value.ToLowerInvariant() == email.ToLowerInvariant(),
+                    cancellationToken);
         }
 
         return await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => EF.Functions.Like(x.Email, email), cancellationToken);
+            .FirstOrDefaultAsync(x => EF.Functions.Like(x.Email.Value, email), cancellationToken);
     }
 
     /// <summary>
@@ -95,10 +101,12 @@ public class UserRepository(TodoListAppDbContext context)
         if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
         {
             return await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.UserName.ToLowerInvariant() == userName.ToLowerInvariant(), cancellationToken);
+                .FirstOrDefaultAsync(
+                    x => x.UserName.Value == userName.ToLowerInvariant(),
+                    cancellationToken);
         }
 
         return await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => EF.Functions.Like(x.UserName, userName), cancellationToken);
+            .FirstOrDefaultAsync(x => EF.Functions.Like(x.UserName.Value, userName), cancellationToken);
     }
 }
