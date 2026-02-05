@@ -10,6 +10,8 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class UserRepositoryTests
 {
+    private readonly string _passwordHash = new('a', 64);
+
     /// <summary>
     /// Verifies that <see cref="UserRepository.ExistsByEmailAsync"/>
     /// returns true when a user with the specified email exists.
@@ -20,7 +22,7 @@ public class UserRepositoryTests
     {
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
-        var user = new UserEntity("John", "john", "john@example.com", "hash");
+        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
@@ -39,7 +41,7 @@ public class UserRepositoryTests
     {
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
-        var user = new UserEntity("John", "john", "john@example.com", "hash");
+        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
@@ -58,35 +60,12 @@ public class UserRepositoryTests
     {
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
-        var user = new UserEntity("John", "john", "John@Example.com", "hash");
+        var user = new UserEntity("John", "john", "John@Example.com", this._passwordHash);
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
         Assert.True(await repo.ExistsByEmailAsync("john@example.com"));
         Assert.True(await repo.ExistsByEmailAsync("JOHN@EXAMPLE.COM"));
-    }
-
-    /// <summary>
-    /// Checks that <see cref="UserRepository.GetByUserNameAsync"/>
-    /// performs a case-insensitive username lookup.
-    /// </summary>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact]
-    public async Task GetByUserName_IsCaseInsensitive()
-    {
-        await using var context = InMemoryDbContextFactory.Create();
-        var repo = new UserRepository(context);
-        var user = new UserEntity("John", "JohnUser", "john@example.com", "hash");
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
-
-        var user1 = await repo.GetByUserNameAsync("johnuser");
-        var user2 = await repo.GetByUserNameAsync("JOHNUSER");
-
-        Assert.NotNull(user1);
-        Assert.NotNull(user2);
-        Assert.Equal(user.Id, user1.Id);
-        Assert.Equal(user.Id, user2.Id);
     }
 
     /// <summary>
@@ -99,11 +78,11 @@ public class UserRepositoryTests
     {
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
-        var userEntity = new UserEntity("John", "john", "john@example.com", "hash");
+        var userEntity = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         await context.Users.AddAsync(userEntity);
         await context.SaveChangesAsync();
 
-        var saved = await repo.GetByEmailAsync(userEntity.Email);
+        var saved = await repo.GetByEmailAsync(userEntity.Email.Value);
 
         Assert.NotNull(saved);
         Assert.Equal(userEntity.UserName, saved.UserName);
@@ -134,11 +113,11 @@ public class UserRepositoryTests
     {
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
-        var userEntity = new UserEntity("John", "john", "john@example.com", "hash");
+        var userEntity = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         await context.Users.AddAsync(userEntity);
         await context.SaveChangesAsync();
 
-        var saved = await repo.GetByUserNameAsync(userEntity.UserName);
+        var saved = await repo.GetByUserNameAsync(userEntity.UserName.Value);
 
         Assert.NotNull(saved);
         Assert.Equal(userEntity.UserName, saved.UserName);

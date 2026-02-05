@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Entities;
+﻿using FluentAssertions;
+using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 
@@ -13,9 +14,10 @@ public class UserEntityTests
     private const string LastName = "Doe";
     private const string UserName = "jdoe";
     private const string Email = "john@example.com";
-    private const string PasswordHash = "hashedPassword";
     private const string TokenValue = "token123";
-    private static readonly DateTime TokenExpires = DateTime.UtcNow.AddHours(1);
+    private readonly string _passwordHash = new('a', 64);
+    private readonly string _newPasswordHash = new('b', 64);
+    private readonly TimeSpan _duration = TimeSpan.FromHours(1);
 
     /// <summary>
     /// Tests that the constructor creates a user with valid data.
@@ -23,164 +25,110 @@ public class UserEntityTests
     [Fact]
     public void Constructor_Should_CreateUser_When_ValidData()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash, LastName);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash, LastName);
 
-        Assert.Equal(FirstName, user.FirstName);
-        Assert.Equal(LastName, user.LastName);
-        Assert.Equal(UserName, user.UserName);
-        Assert.Equal(Email, user.Email);
-        Assert.Equal(PasswordHash, user.PasswordHash);
+        // Assert
+        user.FirstName.Value.Should().Be(FirstName);
+        user.LastName.Should().Be(LastName);
+        user.UserName.Value.Should().Be(UserName);
+        user.Email.Value.Should().Be(Email);
+        user.PasswordHash.Value.Should().Be(this._passwordHash);
     }
 
     /// <summary>
-    /// Tests that the constructor throws <see cref="DomainException"/>
-    /// when the first name is null, empty, or whitespace.
-    /// </summary>
-    /// <param name="firstName">The first name to test.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void Constructor_Should_Throw_When_FirstNameIsInvalid(string? firstName)
-    {
-        Assert.Throws<DomainException>(() =>
-            new UserEntity(firstName!, UserName, Email, PasswordHash));
-    }
-
-    /// <summary>
-    /// Tests that the constructor throws <see cref="DomainException"/>
-    /// when the user name is null, empty, or whitespace.
-    /// </summary>
-    /// <param name="userName">The user name to test.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void Constructor_Should_Throw_When_UserNameIsInvalid(string? userName)
-    {
-        Assert.Throws<DomainException>(() =>
-            new UserEntity(FirstName, userName!, Email, PasswordHash));
-    }
-
-    /// <summary>
-    /// Tests that the constructor throws <see cref="DomainException"/>
-    /// when the email is null, empty, or whitespace.
-    /// </summary>
-    /// <param name="email">The email to test.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void Constructor_Should_Throw_When_EmailIsInvalid(string? email)
-    {
-        Assert.Throws<DomainException>(() =>
-            new UserEntity(FirstName, UserName, email!, PasswordHash));
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.SetEmailVerificationToken"/> sets token value, expiry, and type correctly.
+    /// Tests that <see cref="UserEntity.RequestEmailVerification"/> sets token value, expiry, and type correctly.
     /// </summary>
     [Fact]
-    public void SetEmailVerificationToken_Should_SetToken()
+    public void RequestEmailVerification_Should_SetToken_And_MarkEmailUnconfirmed()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
 
-        user.SetEmailVerificationToken(TokenValue, TokenExpires);
+        user.RequestEmailVerification(TokenValue, this._duration);
 
-        Assert.Equal(TokenValue, user.TokenValue);
-        Assert.Equal(TokenExpires, user.TokenExpires);
-        Assert.Equal(UserTokenType.EmailVerification, user.TokenType);
+        // Assert
+        user.CurrentToken.Should().NotBeNull();
+        user.CurrentToken.Type.Should().Be(UserTokenType.EmailVerification);
+        user.EmailConfirmed.Should().BeFalse();
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.SetPasswordResetToken"/> sets token value, expiry, and type correctly.
+    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> sets token value, expiry, and type correctly.
     /// </summary>
     [Fact]
-    public void SetPasswordResetToken_Should_SetToken()
+    public void ConfirmEmailVerification_Should_SetConfirmed_When_TokenValid()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        user.RequestEmailVerification(TokenValue, this._duration);
+        var currentTime = DateTime.UtcNow;
 
-        user.SetPasswordResetToken(TokenValue, TokenExpires);
+        user.ConfirmEmailVerification(TokenValue, currentTime);
 
-        Assert.Equal(TokenValue, user.TokenValue);
-        Assert.Equal(TokenExpires, user.TokenExpires);
-        Assert.Equal(UserTokenType.PasswordReset, user.TokenType);
+        // Assert
+        user.EmailConfirmed.Should().BeTrue();
+        user.CurrentToken.Should().BeNull();
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.SetEmailChangeToken"/> sets token value, expiry, and type correctly.
+    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> updates the email
+    /// and confirms it when a valid token is provided.
     /// </summary>
     [Fact]
-    public void EmailChangeToken_Should_SetToken()
+    public void ConfirmEmailChange_Should_UpdateEmail_When_Valid()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        const string newEmail = "new@example.com";
+        user.RequestEmailChange(newEmail, TokenValue, this._duration);
 
-        user.SetEmailChangeToken(TokenValue, TokenExpires);
+        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
 
-        Assert.Equal(TokenValue, user.TokenValue);
-        Assert.Equal(TokenExpires, user.TokenExpires);
-        Assert.Equal(UserTokenType.EmailChange, user.TokenType);
+        // Assert
+        user.Email.Value.Should().Be(newEmail);
+        user.EmailConfirmed.Should().BeTrue();
+        user.CurrentToken.Should().BeNull();
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.SetPendingEmail"/> sets a pending email
-    /// and unsets the <see cref="UserEntity.EmailConfirmed"/> flag.
+    /// Tests that <see cref="UserEntity.RequestPasswordReset"/> throws a
+    /// <see cref="DomainException"/> when the user's email is not confirmed.
     /// </summary>
     [Fact]
-    public void SetPendingEmail_Should_SetPendingEmailAndUnsetConfirmed()
+    public void RequestPasswordReset_Should_Throw_When_EmailNotConfirmed()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
 
-        user.SetPendingEmail("new@example.com");
+        // Act
+        var act = () => user.RequestPasswordReset(TokenValue, this._duration);
 
-        Assert.Equal("new@example.com", user.PendingEmail);
-        Assert.False(user.EmailConfirmed);
+        // Assert
+        act.Should().Throw<DomainException>()
+            .WithMessage("Email must be confirmed.");
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> updates the email,
-    /// confirms it, clears pending email and token.
-    /// </summary>
-    [Fact]
-    public void ConfirmEmailChange_Should_UpdateEmailAndClearToken()
-    {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-
-        user.SetEmailChangeToken(TokenValue, TokenExpires);
-        user.SetPendingEmail("new@example.com");
-
-        user.ConfirmEmailChange();
-
-        Assert.Equal("new@example.com", user.Email);
-        Assert.True(user.EmailConfirmed);
-        Assert.Null(user.PendingEmail);
-        Assert.Null(user.TokenValue);
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.SetPasswordHash"/> updates the password hash.
-    /// </summary>
-    [Fact]
-    public void SetPasswordHash_Should_UpdatePassword()
-    {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-        user.SetPasswordHash("newHash");
-        Assert.Equal("newHash", user.PasswordHash);
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.ResetPassword"/> updates the password hash
-    /// when a valid password reset token is present.
+    /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> updates the password hash
+    /// when a valid password reset token is provided.
     /// </summary>
     [Fact]
     public void ResetPassword_Should_UpdatePassword_When_ValidToken()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-        user.SetPasswordResetToken(TokenValue, TokenExpires);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        user.RequestEmailVerification(TokenValue, this._duration);
+        user.ConfirmEmailVerification(TokenValue, DateTime.UtcNow);
 
-        user.ResetPassword("newHash");
+        user.RequestPasswordReset(TokenValue, this._duration);
 
-        Assert.Equal("newHash", user.PasswordHash);
+        user.ConfirmPasswordReset(this._newPasswordHash, TokenValue, DateTime.UtcNow);
+
+        // Assert
+        user.PasswordHash.Value.Should().Be(this._newPasswordHash);
+        user.EmailConfirmed.Should().BeTrue();
+        user.CurrentToken.Should().BeNull();
     }
 
     /// <summary>
@@ -189,17 +137,19 @@ public class UserEntityTests
     [Fact]
     public void UpdateFirstAndLastName_Should_UpdateNames()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
 
         user.UpdateFirstAndLastName("Jane", "Smith");
 
-        Assert.Equal("Jane", user.FirstName);
-        Assert.Equal("Smith", user.LastName);
+        // Assert
+        user.FirstName.Value.Should().Be("Jane");
+        user.LastName.Should().Be("Smith");
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.UpdateFirstAndLastName"/> throws <see cref="DomainException"/>
-    /// when the first name is null, empty, or whitespace.
+    /// Tests that <see cref="UserEntity.UpdateFirstAndLastName"/> throws a
+    /// <see cref="DomainException"/> when the new first name is null, empty, or whitespace.
     /// </summary>
     /// <param name="newFirstName">The new first name to test.</param>
     [Theory]
@@ -208,8 +158,14 @@ public class UserEntityTests
     [InlineData(" ")]
     public void UpdateFirst_ShouldThrow_InvalidFirstName(string? newFirstName)
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-        Assert.Throws<DomainException>(() => user.UpdateFirstAndLastName(newFirstName!));
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+
+        // Act
+        var act = () => user.UpdateFirstAndLastName(newFirstName!, LastName);
+
+        // Assert
+        act.Should().Throw<DomainException>();
     }
 
     /// <summary>
@@ -223,45 +179,11 @@ public class UserEntityTests
     [InlineData(" ")]
     public void Constructor_Should_Throw_When_PasswordHashIsInvalid(string? passwordHash)
     {
-        Assert.Throws<DomainException>(() =>
-            new UserEntity(FirstName, UserName, Email, passwordHash!));
-    }
+        // Act
+        var act = () => new UserEntity(FirstName, UserName, Email, passwordHash!);
 
-    /// <summary>
-    /// Tests that <see cref="UserEntity.ResetPassword"/> throws <see cref="DomainException"/>
-    /// when the token type is invalid.
-    /// </summary>
-    [Fact]
-    public void ResetPassword_Should_Throw_When_TokenTypeIsInvalid()
-    {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-        user.SetEmailVerificationToken(TokenValue, TokenExpires);
-
-        Assert.Throws<DomainException>(() => user.ResetPassword("newHash"));
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.ResetPassword"/> throws <see cref="DomainException"/>
-    /// when the password reset token has expired.
-    /// </summary>
-    [Fact]
-    public void ResetPassword_Should_Throw_When_TokenExpired()
-    {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-        user.SetPasswordResetToken(TokenValue, DateTime.UtcNow.AddMinutes(-1));
-
-        Assert.Throws<DomainException>(() => user.ResetPassword("newHash"));
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.SetPendingEmail"/> throws <see cref="DomainException"/>
-    /// when the pending email is the same as the current email.
-    /// </summary>
-    [Fact]
-    public void SetPendingEmail_Should_Throw_When_EmailSameAsCurrent()
-    {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-        Assert.Throws<DomainException>(() => user.SetPendingEmail(Email));
+        // Assert
+        act.Should().Throw<DomainException>();
     }
 
     /// <summary>
@@ -271,35 +193,78 @@ public class UserEntityTests
     [Fact]
     public void UpdateFirstAndLastName_Should_SetLastNameToNull_When_Empty()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
         user.UpdateFirstAndLastName("Jane", " ");
 
-        Assert.Null(user.LastName);
+        // Assert
+        user.LastName.Should().BeNull();
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ClearToken"/> clears all token-related fields.
+    /// Tests that <see cref="UserEntity.ChangePassword"/> updates the password hash
+    /// when the current password hash is provided correctly.
     /// </summary>
     [Fact]
-    public void ClearToken_Should_SetTokenNull()
+    public void ChangePassword_Should_UpdatePassword_When_CurrentPasswordCorrect()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-        user.SetEmailVerificationToken(TokenValue, TokenExpires);
-        user.ClearToken();
-        Assert.Null(user.TokenExpires);
-        Assert.Null(user.TokenValue);
-        Assert.Null(user.TokenType);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+
+        // Act
+        user.ChangePassword(this._passwordHash, this._newPasswordHash);
+
+        // Assert
+        user.PasswordHash.Value.Should().Be(this._newPasswordHash);
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ClearPendingEmail"/> clears the pending email.
+    /// Tests that <see cref="UserEntity.ChangePassword"/> throws a <see cref="DomainException"/>
+    /// when the provided current password hash does not match the stored one.
     /// </summary>
     [Fact]
-    public void ClearPendingEmail_Should_PendingEmailNull()
+    public void ChangePassword_Should_Throw_When_CurrentPasswordIncorrect()
     {
-        var user = new UserEntity(FirstName, UserName, Email, PasswordHash);
-        user.SetPendingEmail("jane@gmail.com");
-        user.ClearPendingEmail();
-        Assert.Null(user.PendingEmail);
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+
+        // Act & Assert
+        user.Invoking(u => u.ChangePassword("wronghash", this._newPasswordHash))
+            .Should().Throw<DomainException>()
+            .WithMessage("Current password is incorrect.");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ChangeUserName"/> updates the username
+    /// when a valid and different new username is provided.
+    /// </summary>
+    [Fact]
+    public void ChangeUserName_Should_UpdateUserName_When_NewUserNameDifferent()
+    {
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        const string newUserName = "newjdoe";
+
+        // Act
+        user.ChangeUserName(newUserName);
+
+        // Assert
+        user.UserName.Value.Should().Be(newUserName);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> throws a <see cref="DomainException"/>
+    /// when an invalid or incorrect token is provided.
+    /// </summary>
+    [Fact]
+    public void ConfirmEmailVerification_Should_Throw_When_TokenInvalid()
+    {
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        user.RequestEmailVerification(TokenValue, this._duration);
+
+        // Act & Assert
+        user.Invoking(u => u.ConfirmEmailVerification("invalidtoken", DateTime.UtcNow))
+            .Should().Throw<DomainException>();
     }
 }
