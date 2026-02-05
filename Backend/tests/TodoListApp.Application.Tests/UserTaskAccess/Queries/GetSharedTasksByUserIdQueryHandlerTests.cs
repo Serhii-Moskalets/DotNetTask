@@ -15,6 +15,7 @@ public class GetSharedTasksByUserIdQueryHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IUserTaskAccessRepository> _userTaskAccessRepoMock;
     private readonly GetSharedTasksByUserIdQueryHandler _handler;
+    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetSharedTasksByUserIdQueryHandlerTests"/> class.
@@ -68,7 +69,7 @@ public class GetSharedTasksByUserIdQueryHandlerTests
         var task1 = new TaskEntity(userId, Guid.NewGuid(), "Task 1");
         var entities = new List<UserTaskAccessEntity>
         {
-            new(task1.Id, userId) { Task = task1, User = new UserEntity("Owner", "o", "o@t.com", "h") },
+            new(task1.Id, userId) { Task = task1, User = new UserEntity("Owner", "owner", "o@t.com", this._passwordHash) },
         };
 
         this._userTaskAccessRepoMock

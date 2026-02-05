@@ -10,6 +10,8 @@ namespace TodoListApp.Application.Tests.Tasks.Mappers;
 /// </summary>
 public class TaskMapperTests
 {
+    private readonly string _passwordHash = new('a', 64);
+
     /// <summary>
     /// Verifies that <see cref="TaskEntity"/> is correctly mapped to <see cref="TaskDto"/>
     /// including its nested objects like Tag.
@@ -87,7 +89,7 @@ public class TaskMapperTests
         // Arrange
         var taskId = Guid.NewGuid();
 
-        var user = new UserEntity("Joe", "joes", "joe@gmail.com", "hash");
+        var user = new UserEntity("Joe", "joes", "joe@gmail.com", this._passwordHash);
 
         var entity = new CommentEntity(taskId, user.Id, "Test comment content", user);
 
