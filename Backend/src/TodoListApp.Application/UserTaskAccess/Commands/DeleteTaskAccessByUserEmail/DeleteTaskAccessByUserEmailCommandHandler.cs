@@ -35,7 +35,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
         var sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(email, cancellationToken);
         if (sharedUser is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "Opperation error.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "Operation error.");
         }
 
         var deleted = await this.UnitOfWork.UserTaskAccesses.DeleteByIdAsync(command.TaskId, sharedUser!.Id, cancellationToken);
@@ -43,7 +43,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
 
         if (deleted <= 0)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "Access doesn't deleted.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "Access wasn't deleted.");
         }
 
         return await Result<bool>.SuccessAsync(true);
