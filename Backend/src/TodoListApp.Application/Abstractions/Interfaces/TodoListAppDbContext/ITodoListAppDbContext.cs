@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 using TodoListApp.Domain.Entities;
 
 namespace TodoListApp.Application.Abstractions.Interfaces.TodoListAppDbContext;
@@ -38,6 +39,11 @@ public interface ITodoListAppDbContext
     /// Gets or sets the <see cref="DbSet{UserTaskAccessEntity}"/> representing user task access records.
     /// </summary>
     DbSet<UserTaskAccessEntity> UserTaskAccesses { get; set; }
+
+    /// <summary>
+    /// Gets the change tracker that provides access to change tracking information.
+    /// </summary>
+    ChangeTracker ChangeTracker { get; }
 
     /// <summary>
     /// Persists all changes made in the context to the database asynchronously.
