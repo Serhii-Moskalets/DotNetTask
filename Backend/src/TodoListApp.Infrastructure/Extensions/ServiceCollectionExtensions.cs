@@ -14,6 +14,7 @@ using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Persistence.UnitOfWork;
 using TodoListApp.Infrastructure.Security;
 using TodoListApp.Infrastructure.Services;
+using TodoListApp.Infrastructure.Test.Security.Settings;
 
 namespace TodoListApp.Infrastructure.Extensions;
 
@@ -60,6 +61,21 @@ public static class ServiceCollectionExtensions
         // --- Add Security services ---
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITokenGenerator, TokenGenerator>();
+
+        // --- Add Jwt Token service ---
+        services.AddOptions<JwtSettings>()
+            .Bind(config.GetSection(JwtSettings.SectionName))
+            .Validate(
+            settings =>
+            {
+                return !string.IsNullOrWhiteSpace(settings.Secret) &&
+                       settings.Secret.Length >= 32 &&
+                       !string.IsNullOrWhiteSpace(settings.Issuer) &&
+                       !string.IsNullOrWhiteSpace(settings.Audience);
+            }, "JWT Settings are invalid: Secret (min 32 chars), Issuer and Audience are required.")
+        .ValidateOnStart();
+
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
 
         return services;
     }
