@@ -1,5 +1,6 @@
 ﻿using TodoListApp.Domain.Common;
 using TodoListApp.Domain.Enums;
+using TodoListApp.Domain.Events;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -112,6 +113,8 @@ public class UserEntity : BaseEntity
     {
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification);
         this.EmailConfirmed = false;
+
+        this.AddDomainEvent(new UserRegisteredDomainEvent(this, this.CurrentToken));
     }
 
     /// <summary>
@@ -149,8 +152,11 @@ public class UserEntity : BaseEntity
             throw new DomainException("New email is same as current.");
         }
 
+        string oldEmail = this.Email.Value;
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailChange, newEmail);
         this.EmailConfirmed = false;
+
+        this.AddDomainEvent(new UserEmailChangedDomainEvent(this, this.CurrentToken, oldEmail));
     }
 
     /// <summary>
@@ -185,6 +191,8 @@ public class UserEntity : BaseEntity
         }
 
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.PasswordReset);
+
+        this.AddDomainEvent(new PasswordResetRequestedDomainEvent(this, this.CurrentToken));
     }
 
     /// <summary>
