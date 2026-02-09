@@ -3,7 +3,7 @@ using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
-using TodoListApp.Application.Application.Users.Commands.RegisterUser;
+using TodoListApp.Application.Users.Commands.RegisterUser;
 using TodoListApp.Domain.Entities;
 
 namespace TodoListApp.Application.Tests.Users.Commands;

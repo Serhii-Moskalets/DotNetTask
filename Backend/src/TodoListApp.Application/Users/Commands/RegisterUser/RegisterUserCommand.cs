@@ -1,7 +1,7 @@
 ﻿using MediatR;
 using TinyResult;
 
-namespace TodoListApp.Application.Application.Users.Commands.RegisterUser;
+namespace TodoListApp.Application.Users.Commands.RegisterUser;
 
 /// <summary>
 /// Represents a command to register a new user in the system.

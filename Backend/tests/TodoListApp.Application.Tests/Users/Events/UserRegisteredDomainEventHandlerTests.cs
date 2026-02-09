@@ -1,7 +1,7 @@
 ﻿using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Notifications;
-using TodoListApp.Application.Application.Users.Events;
+using TodoListApp.Application.Users.Events;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Events;

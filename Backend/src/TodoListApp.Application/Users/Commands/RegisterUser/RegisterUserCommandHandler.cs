@@ -5,7 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Domain.Entities;
 
-namespace TodoListApp.Application.Application.Users.Commands.RegisterUser;
+namespace TodoListApp.Application.Users.Commands.RegisterUser;
 
 /// <summary>
 /// Handles the <see cref="RegisterUserCommand"/> to create a new user account.

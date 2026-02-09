@@ -3,7 +3,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Notifications;
 using TodoListApp.Domain.Events;
 
-namespace TodoListApp.Application.Application.Users.Events;
+namespace TodoListApp.Application.Users.Events;
 
 /// <summary>
 /// Handles the <see cref="UserRegisteredDomainEvent"/> by sending a verification email.
