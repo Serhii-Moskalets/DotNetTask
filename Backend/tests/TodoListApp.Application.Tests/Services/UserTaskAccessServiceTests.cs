@@ -59,7 +59,7 @@ public class UserTaskAccessServiceTests
     {
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", _passwordHash);
+        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
@@ -82,7 +82,7 @@ public class UserTaskAccessServiceTests
         // Arrange
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", _passwordHash);
+        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), "Task");
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
