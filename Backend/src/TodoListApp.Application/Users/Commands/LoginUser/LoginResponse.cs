@@ -1,22 +1,14 @@
 ﻿namespace TodoListApp.Application.Users.Commands.LoginUser;
 
 /// <summary>
-/// Represents the response returned after a successful user authentication.
+/// Represents the data returned after a successful login.
 /// </summary>
-/// <param name="Id">
-/// The unique identifier of the authenticated user.
-/// </param>
-/// <param name="UserName">
-/// The username of the authenticated user.
-/// </param>
-/// <param name="Email">
-/// The email address of the authenticated user.
-/// </param>
-/// <param name="Teken">
-/// The authentication token issued for the user session.
-/// </param>
+/// <param name="Id">The unique identifier of the user.</param>
+/// <param name="UserName">The user's unique username.</param>
+/// <param name="Email">The user's registered email address.</param>
+/// <param name="Token">The generated JWT for subsequent authenticated requests.</param>
 public record LoginResponse(
     Guid Id,
     string UserName,
     string Email,
-    string Teken);
+    string Token);
