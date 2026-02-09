@@ -32,7 +32,7 @@ public sealed record PasswordHash
 
         var trimmedValue = value.Trim();
 
-        if (trimmedValue.Length < 64)
+        if (trimmedValue.Length < 60)
         {
             throw new DomainException("Invalid password hash format.");
         }
