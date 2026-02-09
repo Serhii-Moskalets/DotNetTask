@@ -15,7 +15,7 @@ public class UserTaskAccessServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly UserTaskAccessService _service;
-    private readonly string _passwordHash = new('a', 64);
+    private readonly string _passwordHash = new('a', 60);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserTaskAccessServiceTests"/> class.
