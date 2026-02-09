@@ -3,12 +3,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TodoListApp.Application.Abstractions.Interfaces.Notifications;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
+using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Infrastructure.Notifications.Services;
 using TodoListApp.Infrastructure.Notifications.Settings;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Persistence.UnitOfWork;
+using TodoListApp.Infrastructure.Security;
 
 namespace TodoListApp.Infrastructure.Extensions;
 
@@ -45,6 +47,9 @@ public static class ServiceCollectionExtensions
         services.AddTransient<IEmailSender, EmailSender>();
         services.AddSingleton<IEmailTemplateProvider, EmailTemplateProvider>();
         services.AddScoped<IEmailService, EmailService>();
+
+        // --- Add Password Hasher
+        services.AddSingleton<IPasswordHasher, PasswordHasher>();
 
         return services;
     }

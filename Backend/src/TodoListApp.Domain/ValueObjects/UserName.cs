@@ -51,7 +51,7 @@ public sealed partial record UserName
 
     /// <summary>
     /// Returns the string representation of the user name.
-    /// </summary
+    /// </summary>
     /// <returns>The underlying string value.</returns>
     public override string ToString() => this.Value;
 }

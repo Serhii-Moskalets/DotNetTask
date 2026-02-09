@@ -1,0 +1,95 @@
+﻿using TodoListApp.Infrastructure.Security;
+
+namespace TodoListApp.Infrastructure.Test.Security;
+
+/// <summary>
+/// Unit tests for the <see cref="PasswordHasher"/> class to ensure secure password hashing and verification.
+/// </summary>
+public class PasswordHasherTests
+{
+    private readonly PasswordHasher _hasher = new();
+
+    /// <summary>
+    /// Verifies that <see cref="PasswordHasher.HashPassword"/> generates a valid 60-character
+    /// BCrypt hash and that the password can be successfully verified against it.
+    /// </summary>
+    /// <param name="password">The plain-text password to hash and verify.</param>
+    [Theory]
+    [InlineData("MyPassword123#")]
+    [InlineData("Very_Long_Password_With_Spaces_And_Symbols_#1234567890")]
+    public void HashPassword_ShouldGenerateValidHash(string password)
+    {
+        // Act
+        var hash = this._hasher.HashPassword(password);
+
+        // Assert
+        Assert.NotNull(hash);
+        Assert.Equal(60, hash.Length);
+        Assert.True(this._hasher.VerifyPassword(password, hash));
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="PasswordHasher.HashPassword"/> throws an <see cref="ArgumentException"/>
+    /// when the provided password is null, empty, or whitespace.
+    /// </summary>
+    /// <param name="invalidPassword">The invalid password string to test.</param>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void HashPassword_ShouldThrowException_WhenPasswordIsInvalid(string? invalidPassword)
+    {
+        // Act & Assert
+        Assert.ThrowsAny<ArgumentException>(() => this._hasher.HashPassword(invalidPassword!));
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="PasswordHasher.VerifyPassword"/> returns <c>false</c>
+    /// when a wrong password is provided for a given hash.
+    /// </summary>
+    [Fact]
+    public void VerifyPassword_ShouldReturnFalse_WhenPasswordIsIncorrect()
+    {
+        // Arrange
+        const string password = "CommectPassword";
+        var hash = this._hasher.HashPassword(password);
+
+        // Act
+        var result = this._hasher.VerifyPassword("WrongPasswrod", hash);
+
+        // Assert
+        Assert.False(result);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="PasswordHasher.VerifyPassword"/> throws an <see cref="ArgumentException"/>
+    /// when the hash provided for verification is invalid (whitespace).
+    /// </summary>
+    /// <param name="invalidHash">The invalid hash string to test.</param>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void VerifyPassword_ShouldThrowException_WhenHashIsInvalid(string? invalidHash)
+    {
+        // Act & Assert
+        Assert.ThrowsAny<ArgumentException>(() =>
+            this._hasher.VerifyPassword("password", invalidHash!));
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="PasswordHasher.VerifyPassword"/> throws an <see cref="ArgumentException"/>
+    /// when the password provided for verification is invalid (whitespace).
+    /// </summary>
+    /// <param name="invalidPassword">The invalid password string to test.</param>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("  ")]
+    public void VerifyPassword_ShouldThrowException_WhenPasswordIsInvalid(string? invalidPassword)
+    {
+        // Act & Assert
+        Assert.ThrowsAny<ArgumentException>(() =>
+            this._hasher.VerifyPassword(invalidPassword!, "hash"));
+    }
+}
