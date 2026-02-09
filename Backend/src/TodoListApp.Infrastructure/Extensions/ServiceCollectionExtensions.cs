@@ -57,8 +57,9 @@ public static class ServiceCollectionExtensions
         // --- Add URL Provider ---
         services.AddScoped<IUrlProvider, UrlProvider>();
 
-        // --- Add Password Hasher
+        // --- Add Security services ---
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<ITokenGenerator, TokenGenerator>();
 
         return services;
     }
