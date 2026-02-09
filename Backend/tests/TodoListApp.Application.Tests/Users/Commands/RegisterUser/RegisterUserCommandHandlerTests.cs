@@ -6,7 +6,7 @@ using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.RegisterUser;
 using TodoListApp.Domain.Entities;
 
-namespace TodoListApp.Application.Tests.Users.Commands;
+namespace TodoListApp.Application.Tests.Users.Commands.RegisterUser;
 
 /// <summary>
 /// Contains unit tests for the <see cref="RegisterUserCommandHandler"/> class.
@@ -87,7 +87,6 @@ public class RegisterUserCommandHandlerTests
 
         result.Error.Message.Should().Be("Email is already exists.");
 
-        // Перевіряємо, що збереження НЕ відбулося
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
