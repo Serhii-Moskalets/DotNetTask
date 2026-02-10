@@ -1,5 +1,4 @@
-﻿using MediatR;
-using TinyResult;
+﻿using TodoListApp.Application.Abstractions.Messaging;
 
 namespace TodoListApp.Application.Users.Commands.RegisterUser;
 
@@ -16,4 +15,4 @@ public record RegisterUserCommand(
     string? LastName,
     string UserName,
     string Email,
-    string Password) : IRequest<Result<Guid>>;
+    string Password) : ICommand<Guid>;

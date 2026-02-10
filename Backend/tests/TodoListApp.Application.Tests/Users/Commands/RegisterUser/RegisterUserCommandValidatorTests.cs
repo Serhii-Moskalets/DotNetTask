@@ -48,10 +48,10 @@ public class RegisterUserCommandValidatorTests
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.FirstName);
-        result.ShouldHaveValidationErrorFor(x => x.UserName);
-        result.ShouldHaveValidationErrorFor(x => x.Email);
-        result.ShouldHaveValidationErrorFor(x => x.Password);
+        result.ShouldHaveValidationErrorFor(x => x.FirstName).WithErrorMessage("First name is required.");
+        result.ShouldHaveValidationErrorFor(x => x.UserName).WithErrorMessage("Username is required.");
+        result.ShouldHaveValidationErrorFor(x => x.Email).WithErrorMessage("Email is required.");
+        result.ShouldHaveValidationErrorFor(x => x.Password).WithErrorMessage("Password is required.");
     }
 
     /// <summary>
@@ -68,7 +68,8 @@ public class RegisterUserCommandValidatorTests
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.UserName);
+        result.ShouldHaveValidationErrorFor(x => x.UserName)
+            .WithErrorMessage("Username must be between 3 and 20 characters.");
     }
 
     /// <summary>
