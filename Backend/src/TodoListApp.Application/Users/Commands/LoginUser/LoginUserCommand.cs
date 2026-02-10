@@ -1,5 +1,5 @@
-﻿using MediatR;
-using TinyResult;
+﻿using TinyResult;
+using TodoListApp.Application.Abstractions.Messaging;
 
 namespace TodoListApp.Application.Users.Commands.LoginUser;
 
@@ -10,4 +10,4 @@ namespace TodoListApp.Application.Users.Commands.LoginUser;
 /// <param name="Password">The plain-text password to be verified.</param>
 public record LoginUserCommand(
     string Email,
-    string Password) : IRequest<Result<LoginResponse>>;
+    string Password) : ICommand<LoginResponse>;
