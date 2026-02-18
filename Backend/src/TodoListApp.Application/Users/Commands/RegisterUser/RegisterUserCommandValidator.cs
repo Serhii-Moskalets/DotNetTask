@@ -16,6 +16,9 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
             .NotEmpty().WithMessage("First name is required.")
             .MaximumLength(20).WithMessage("First name cannot be longer than 20 characters.");
 
+        this.RuleFor(x => x.LastName)
+            .MaximumLength(30).WithMessage("Last name cannot be longer than 30 characters.");
+
         this.RuleFor(x => x.UserName)
             .NotEmpty().WithMessage("Username is required.")
             .Length(3, 20).WithMessage("Username must be between 3 and 20 characters.");

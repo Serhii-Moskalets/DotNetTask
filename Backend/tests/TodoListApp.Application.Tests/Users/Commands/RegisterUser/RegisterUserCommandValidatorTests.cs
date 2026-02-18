@@ -55,6 +55,37 @@ public class RegisterUserCommandValidatorTests
     }
 
     /// <summary>
+    /// Verifies that validation errors are triggered when mandatory fields exceed their maximum allowed length.
+    /// </summary>
+    /// <param name="firstName">The first name to validate (Max: 20).</param>
+    /// <param name="lastName">The last name to validate (Max: 30).</param>
+    [Theory]
+    [InlineData("thisfirstnameiswaytoolong", "ValidLastName")]
+    [InlineData("ValidFirstName", "thislastnameiswaytoolongforoursystem")]
+    [InlineData("thisfirstnameiswaytoolong", "thislastnameiswaytoolongforoursystem")]
+    public void Should_Have_Errors_When_First_And_Last_Name_Are_Too_Long(string firstName, string lastName)
+    {
+        // Arrange
+        var command = new RegisterUserCommand(firstName, lastName, "UserName", "email@example.com", "paSsword!2");
+
+        // Act
+        var result = this._validator.TestValidate(command);
+
+        // Assert
+        if (firstName.Length > 20)
+        {
+            result.ShouldHaveValidationErrorFor(x => x.FirstName)
+                .WithErrorMessage("First name cannot be longer than 20 characters.");
+        }
+
+        if (lastName.Length > 30)
+        {
+            result.ShouldHaveValidationErrorFor(x => x.LastName)
+                .WithErrorMessage("Last name cannot be longer than 30 characters.");
+        }
+    }
+
+    /// <summary>
     /// Verifies that UserName length restrictions are enforced.
     /// </summary>
     /// <param name="userName">The username with invalid length.</param>
