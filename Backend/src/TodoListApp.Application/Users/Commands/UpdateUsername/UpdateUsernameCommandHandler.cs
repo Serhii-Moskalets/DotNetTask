@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.UpdateUsername;
 
@@ -28,19 +29,19 @@ public class UpdateUsernameCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, "User not found.");
         }
 
-        var trimmedUsername = command.UserName.Trim();
+        var newUserName = UserName.Create(command.UserName);
 
-        if (user.UserName.Value.Equals(trimmedUsername, StringComparison.OrdinalIgnoreCase))
+        if (newUserName == user.UserName)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "New Username is same as current.");
         }
 
-        if (await this.UnitOfWork.Users.ExistsByUserNameAsync(trimmedUsername, cancellationToken))
+        if (await this.UnitOfWork.Users.ExistsByUserNameAsync(newUserName.Value, cancellationToken))
         {
             return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Username is already taken.");
         }
 
-        user.ChangeUserName(trimmedUsername);
+        user.ChangeUserName(newUserName);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
         return await Result<bool>.SuccessAsync(true);

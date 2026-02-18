@@ -74,13 +74,13 @@ public class UpdateUsernameCommandHandlerTests
     }
 
     /// <summary>
-    /// Verifies that the handler returns a success result without performing
+    /// Verifies that the handler returns a failure result without performing
     /// any database updates or uniqueness checks when the new username
     /// is identical to the current one.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnSuccess_WhenUsernameIsSameAsCurrent()
+    public async Task Handle_ShouldReturnFailure_WhenUsernameIsSameAsCurrent()
     {
         // Arrange
         var userId = Guid.NewGuid();
@@ -95,7 +95,10 @@ public class UpdateUsernameCommandHandlerTests
         var result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
-        result.IsSuccess.Should().BeTrue();
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
+        result.Error.Message.Should().Be("New Username is same as current.");
+
         this._unitOfWorkMock.Verify(x => x.Users.ExistsByUserNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
