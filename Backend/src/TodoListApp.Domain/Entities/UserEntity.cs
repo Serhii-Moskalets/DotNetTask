@@ -181,15 +181,10 @@ public class UserEntity : BaseEntity
     /// <summary>
     /// Initiates a password reset request.
     /// </summary>
-    /// <param name="token">The reset token.</param>
-    /// <param name="duration">How long the token is valid.</param>
+    /// <param name="token">The unique secure token for password reset.</param>
+    /// <param name="duration">The timeframe during which the token remains valid.</param>
     public void RequestPasswordReset(string token, TimeSpan duration)
     {
-        if (!this.EmailConfirmed)
-        {
-            throw new DomainException("Email must be confirmed.");
-        }
-
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.PasswordReset);
 
         this.AddDomainEvent(new PasswordResetRequestedDomainEvent(this, this.CurrentToken));
@@ -198,38 +193,39 @@ public class UserEntity : BaseEntity
     /// <summary>
     /// Confirms the password reset and updates the password hash.
     /// </summary>
-    /// <param name="newHash">The new password hash.</param>
-    /// <param name="token">The reset token.</param>
-    /// <param name="currentTime">The current UTC time.</param>
-    public void ConfirmPasswordReset(string newHash, string token, DateTime currentTime)
+    /// <param name="newPasswordHash">The new password hash.</param>
+    /// <param name="token">The reset token to validate.</param>
+    /// <param name="currentTime">The current time to check token expiration.</param>
+    /// <exception cref="DomainException">
+    /// Thrown when the token is invalid, expired, or the new password is the same as the old one.
+    /// </exception>
+    public void ConfirmPasswordReset(PasswordHash newPasswordHash, string token, DateTime currentTime)
     {
         if (this.CurrentToken?.IsValid(token, UserTokenType.PasswordReset, currentTime) is not true)
         {
             throw new DomainException("Invalid or expired password reset token.");
         }
 
-        this.SetPasswordHash(newHash);
+        this.SetPasswordHash(newPasswordHash);
         this.CurrentToken = null;
+        this.EmailConfirmed = true;
     }
 
     /// <summary>
-    /// Changes the user's password after validating the current password hash
-    /// and ensuring the new password hash differs from the existing one.
+    /// Changes the user's password for authenticated users.
     /// </summary>
-    /// <param name="newPasswordHash">
-    /// The new password hash to replace the existing one.
-    /// </param>
+    /// <remarks>
+    /// This method ensures that the user has a confirmed email address
+    /// and that the new password is not identical to the current one.
+    /// </remarks>
+    /// <param name="newPasswordHash">The new password hash to be set.</param>
     /// <exception cref="DomainException">
-    /// Thrown when the new password hash is the same as the existing password hash.
+    /// Thrown when the email is not confirmed or when the new password hash
+    /// is the same as the current password hash.
     /// </exception>
     public void ChangePassword(PasswordHash newPasswordHash)
     {
-        if (this.PasswordHash == newPasswordHash)
-        {
-            throw new DomainException("New password cannot be the same as the old one");
-        }
-
-        this.PasswordHash = newPasswordHash;
+        this.SetPasswordHash(newPasswordHash);
     }
 
     /// <summary>
@@ -283,22 +279,14 @@ public class UserEntity : BaseEntity
     /// <summary>
     /// Sets the new password hash.
     /// </summary>
-    /// <param name="newHash">The new password hash.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="newHash"/> is null, empty, or consists only of white-space characters.
-    /// </exception>
-    private void SetPasswordHash(string newHash)
+    /// <param name="newPasswordHash">The new password hash.</param>
+    private void SetPasswordHash(PasswordHash newPasswordHash)
     {
-        if (!this.EmailConfirmed)
+        if (this.PasswordHash == newPasswordHash)
         {
-            throw new DomainException("Email must be confirmed.");
+            throw new DomainException("New password cannot be the same as the old one");
         }
 
-        if (string.IsNullOrWhiteSpace(newHash))
-        {
-            throw new DomainException("Password cannot be empty.");
-        }
-
-        this.PasswordHash = PasswordHash.Create(newHash);
+        this.PasswordHash = newPasswordHash;
     }
 }

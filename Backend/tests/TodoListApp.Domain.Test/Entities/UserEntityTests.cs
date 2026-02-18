@@ -93,24 +93,6 @@ public class UserEntityTests
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.RequestPasswordReset"/> throws a
-    /// <see cref="DomainException"/> when the user's email is not confirmed.
-    /// </summary>
-    [Fact]
-    public void RequestPasswordReset_Should_Throw_When_EmailNotConfirmed()
-    {
-        // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
-
-        // Act
-        var act = () => user.RequestPasswordReset(TokenValue, this._duration);
-
-        // Assert
-        act.Should().Throw<DomainException>()
-            .WithMessage("Email must be confirmed.");
-    }
-
-    /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> updates the password hash
     /// when a valid password reset token is provided.
     /// </summary>
@@ -124,7 +106,9 @@ public class UserEntityTests
 
         user.RequestPasswordReset(TokenValue, this._duration);
 
-        user.ConfirmPasswordReset(this._newPasswordHashString, TokenValue, DateTime.UtcNow);
+        var newPasswordHash = PasswordHash.Create(this._newPasswordHashString);
+
+        user.ConfirmPasswordReset(newPasswordHash, TokenValue, DateTime.UtcNow);
 
         // Assert
         user.PasswordHash.Value.Should().Be(this._newPasswordHashString);
