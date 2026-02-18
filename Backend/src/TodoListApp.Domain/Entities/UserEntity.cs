@@ -216,33 +216,20 @@ public class UserEntity : BaseEntity
     /// Changes the user's password after validating the current password hash
     /// and ensuring the new password hash differs from the existing one.
     /// </summary>
-    /// <param name="currentHash">
-    /// The current password hash used to verify the user's identity.
-    /// </param>
-    /// <param name="newHash">
+    /// <param name="newPasswordHash">
     /// The new password hash to replace the existing one.
     /// </param>
     /// <exception cref="DomainException">
-    /// Thrown when the current password hash does not match the stored password hash.
-    /// </exception>
-    /// <exception cref="DomainException">
     /// Thrown when the new password hash is the same as the existing password hash.
     /// </exception>
-    public void ChangePassword(string currentHash, string newHash)
+    public void ChangePassword(PasswordHash newPasswordHash)
     {
-        if (!this.PasswordHash.Value.Equals(currentHash, StringComparison.Ordinal))
-        {
-            throw new DomainException("Current password is incorrect.");
-        }
-
-        var newPaswordHash = PasswordHash.Create(newHash);
-
-        if (this.PasswordHash.Value.Equals(newPaswordHash.Value, StringComparison.Ordinal))
+        if (this.PasswordHash == newPasswordHash)
         {
             throw new DomainException("New password cannot be the same as the old one");
         }
 
-        this.PasswordHash = newPaswordHash;
+        this.PasswordHash = newPasswordHash;
     }
 
     /// <summary>

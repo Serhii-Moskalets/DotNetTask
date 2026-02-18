@@ -2,6 +2,7 @@
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Domain.Test.Entities;
 
@@ -15,8 +16,8 @@ public class UserEntityTests
     private const string UserName = "jdoe";
     private const string Email = "john@example.com";
     private const string TokenValue = "token123";
-    private readonly string _passwordHash = new('a', 64);
-    private readonly string _newPasswordHash = new('b', 64);
+    private readonly string _passwordHashString = new('a', 64);
+    private readonly string _newPasswordHashString = new('b', 64);
     private readonly TimeSpan _duration = TimeSpan.FromHours(1);
 
     /// <summary>
@@ -26,14 +27,14 @@ public class UserEntityTests
     public void Constructor_Should_CreateUser_When_ValidData()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash, LastName);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString, LastName);
 
         // Assert
         user.FirstName.Value.Should().Be(FirstName);
         user.LastName!.Value.Should().Be(LastName);
         user.UserName.Value.Should().Be(UserName);
         user.Email.Value.Should().Be(Email);
-        user.PasswordHash.Value.Should().Be(this._passwordHash);
+        user.PasswordHash.Value.Should().Be(this._passwordHashString);
     }
 
     /// <summary>
@@ -43,7 +44,7 @@ public class UserEntityTests
     public void RequestEmailVerification_Should_SetToken_And_MarkEmailUnconfirmed()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
 
         user.RequestEmailVerification(TokenValue, this._duration);
 
@@ -60,7 +61,7 @@ public class UserEntityTests
     public void ConfirmEmailVerification_Should_SetConfirmed_When_TokenValid()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
         user.RequestEmailVerification(TokenValue, this._duration);
         var currentTime = DateTime.UtcNow;
 
@@ -79,7 +80,7 @@ public class UserEntityTests
     public void ConfirmEmailChange_Should_UpdateEmail_When_Valid()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
         const string newEmail = "new@example.com";
         user.RequestEmailChange(newEmail, TokenValue, this._duration);
 
@@ -99,7 +100,7 @@ public class UserEntityTests
     public void RequestPasswordReset_Should_Throw_When_EmailNotConfirmed()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
 
         // Act
         var act = () => user.RequestPasswordReset(TokenValue, this._duration);
@@ -117,16 +118,16 @@ public class UserEntityTests
     public void ResetPassword_Should_UpdatePassword_When_ValidToken()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
         user.RequestEmailVerification(TokenValue, this._duration);
         user.ConfirmEmailVerification(TokenValue, DateTime.UtcNow);
 
         user.RequestPasswordReset(TokenValue, this._duration);
 
-        user.ConfirmPasswordReset(this._newPasswordHash, TokenValue, DateTime.UtcNow);
+        user.ConfirmPasswordReset(this._newPasswordHashString, TokenValue, DateTime.UtcNow);
 
         // Assert
-        user.PasswordHash.Value.Should().Be(this._newPasswordHash);
+        user.PasswordHash.Value.Should().Be(this._newPasswordHashString);
         user.EmailConfirmed.Should().BeTrue();
         user.CurrentToken.Should().BeNull();
     }
@@ -139,7 +140,7 @@ public class UserEntityTests
     public void ChangeFirstName_And_ChangeLastName_Should_UpdateNames()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
 
         // Act
         var changeFirstNameResult = user.ChangeFirstName("Jane");
@@ -164,7 +165,7 @@ public class UserEntityTests
     public void UpdateFirst_ShouldThrow_When_Invalid(string? invalidName)
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
 
         // Act
         var act = () => user.ChangeFirstName(invalidName!);
@@ -181,7 +182,7 @@ public class UserEntityTests
     public void ChangeLastName_Should_SetToNull_When_EmptyOrWhitespace()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash, "OldName");
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString, "OldName");
 
         // Act
         user.ChangeLastName(" ");
@@ -198,7 +199,7 @@ public class UserEntityTests
     public void ChangeLastAndFirstName_ShouldReturnFalse_When_FirstOrLastNameIsTheSame()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash, LastName);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString, LastName);
 
         // Act
         var changeFirstNameResult = user.ChangeFirstName(FirstName);
@@ -235,29 +236,31 @@ public class UserEntityTests
     public void ChangePassword_Should_UpdatePassword_When_CurrentPasswordCorrect()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
+        var newPasswordHash = PasswordHash.Create(this._newPasswordHashString);
 
         // Act
-        user.ChangePassword(this._passwordHash, this._newPasswordHash);
+        user.ChangePassword(newPasswordHash);
 
         // Assert
-        user.PasswordHash.Value.Should().Be(this._newPasswordHash);
+        user.PasswordHash.Should().Be(newPasswordHash);
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ChangePassword"/> throws a <see cref="DomainException"/>
-    /// when the provided current password hash does not match the stored one.
-    /// </summary>
+    /// Verifies that <see cref="UserEntity.ChangePassword"/> throws a <see cref="DomainException"/>
+    /// when the new password hash is the same as the current one.
+    /// </summary>>
     [Fact]
-    public void ChangePassword_Should_Throw_When_CurrentPasswordIncorrect()
+    public void ChangePassword_Should_Throw_When_NewPasswordIsSameAsOld()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
+        var samePasswordHash = PasswordHash.Create(this._passwordHashString);
 
         // Act & Assert
-        user.Invoking(u => u.ChangePassword("wronghash", this._newPasswordHash))
+        user.Invoking(u => u.ChangePassword(samePasswordHash))
             .Should().Throw<DomainException>()
-            .WithMessage("Current password is incorrect.");
+            .WithMessage("New password cannot be the same as the old one");
     }
 
     /// <summary>
@@ -268,7 +271,7 @@ public class UserEntityTests
     public void ChangeUserName_Should_Update_When_ValidVOProvided()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
         var newUserName = Domain.ValueObjects.UserName.Create("new_unique_name");
 
         // Act
@@ -287,7 +290,7 @@ public class UserEntityTests
     public void ConfirmEmailVerification_Should_Throw_When_TokenInvalid()
     {
         // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHashString);
         user.RequestEmailVerification(TokenValue, this._duration);
 
         // Act & Assert
