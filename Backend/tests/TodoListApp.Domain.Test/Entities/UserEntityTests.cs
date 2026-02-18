@@ -30,7 +30,7 @@ public class UserEntityTests
 
         // Assert
         user.FirstName.Value.Should().Be(FirstName);
-        user.LastName.Should().Be(LastName);
+        user.LastName!.Value.Should().Be(LastName);
         user.UserName.Value.Should().Be(UserName);
         user.Email.Value.Should().Be(Email);
         user.PasswordHash.Value.Should().Be(this._passwordHash);
@@ -132,40 +132,59 @@ public class UserEntityTests
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.UpdateFirstAndLastName"/> updates first and last names.
+    /// Tests that <see cref="UserEntity.ChangeFirstName"/> and <see cref="UserEntity.ChangeLastName"/> updates first and last names.
     /// </summary>
     [Fact]
-    public void UpdateFirstAndLastName_Should_UpdateNames()
-    {
-        // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
-
-        user.UpdateFirstAndLastName("Jane", "Smith");
-
-        // Assert
-        user.FirstName.Value.Should().Be("Jane");
-        user.LastName.Should().Be("Smith");
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.UpdateFirstAndLastName"/> throws a
-    /// <see cref="DomainException"/> when the new first name is null, empty, or whitespace.
-    /// </summary>
-    /// <param name="newFirstName">The new first name to test.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void UpdateFirst_ShouldThrow_InvalidFirstName(string? newFirstName)
+    public void ChangeFirstName_And_ChangeLastName_Should_UpdateNames()
     {
         // Arrange
         var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
 
         // Act
-        var act = () => user.UpdateFirstAndLastName(newFirstName!, LastName);
+        user.ChangeFirstName("Jane");
+        user.ChangeLastName("Smith");
+
+        // Assert
+        user.FirstName.Value.Should().Be("Jane");
+        user.LastName!.Value.Should().Be("Smith");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ChangeFirstName"/> throws a
+    /// <see cref="DomainException"/> when the new first name is null, empty, or whitespace.
+    /// </summary>
+    /// <param name="invalidName">The new first name to test.</param>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void UpdateFirst_ShouldThrow_When_Invalid(string? invalidName)
+    {
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
+
+        // Act
+        var act = () => user.ChangeFirstName(invalidName!);
 
         // Assert
         act.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ChangeLastName"/> sets last name to null
+    /// when the new last name is empty or whitespace.
+    /// </summary>
+    [Fact]
+    public void ChangeLastName_Should_SetToNull_When_EmptyOrWhitespace()
+    {
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash, "OldName");
+
+        // Act
+        user.ChangeLastName(" ");
+
+        // Assert
+        user.LastName.Should().BeNull();
     }
 
     /// <summary>
@@ -184,21 +203,6 @@ public class UserEntityTests
 
         // Assert
         act.Should().Throw<DomainException>();
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.UpdateFirstAndLastName"/> sets last name to null
-    /// when the new last name is empty or whitespace.
-    /// </summary>
-    [Fact]
-    public void UpdateFirstAndLastName_Should_SetLastNameToNull_When_Empty()
-    {
-        // Arrange
-        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
-        user.UpdateFirstAndLastName("Jane", " ");
-
-        // Assert
-        user.LastName.Should().BeNull();
     }
 
     /// <summary>
@@ -239,17 +243,18 @@ public class UserEntityTests
     /// when a valid and different new username is provided.
     /// </summary>
     [Fact]
-    public void ChangeUserName_Should_UpdateUserName_When_NewUserNameDifferent()
+    public void ChangeUserName_Should_Update_When_ValidVOProvided()
     {
         // Arrange
         var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
-        const string newUserName = "newjdoe";
+        var newUserName = Domain.ValueObjects.UserName.Create("new_unique_name");
 
         // Act
         user.ChangeUserName(newUserName);
 
         // Assert
-        user.UserName.Value.Should().Be(newUserName);
+        user.UserName.Should().Be(newUserName);
+        user.UserName.Value.Should().Be("new_unique_name");
     }
 
     /// <summary>

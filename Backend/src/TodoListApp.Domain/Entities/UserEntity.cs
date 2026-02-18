@@ -30,6 +30,8 @@ public class UserEntity : BaseEntity
     /// <paramref name="firstName"/>, <paramref name="userName"/>,
     /// <paramref name="email"/>, <paramref name="passwordHash"/>
     /// is null, empty, or consists only of white-space characters.
+    /// Thrown when <paramref name="firstName"/> contain more than 20 characters.
+    /// Thrown when <paramref name="lastName"/> contain more than 30 characters.
     /// </exception>
     public UserEntity(string firstName, string userName, string email, string passwordHash, string? lastName = null)
     {
@@ -37,9 +39,7 @@ public class UserEntity : BaseEntity
         this.UserName = UserName.Create(userName);
         this.Email = Email.Create(email);
         this.PasswordHash = PasswordHash.Create(passwordHash);
-        this.LastName = string.IsNullOrWhiteSpace(lastName)
-            ? null
-            : lastName.Trim();
+        this.LastName = LastName.Create(lastName);
     }
 
     private UserEntity() { }
@@ -52,7 +52,7 @@ public class UserEntity : BaseEntity
     /// <summary>
     /// Gets the last name of the user.
     /// </summary>
-    public string? LastName { get; private set; }
+    public LastName? LastName { get; private set; }
 
     /// <summary>
     /// Gets the username of the user.
@@ -246,37 +246,43 @@ public class UserEntity : BaseEntity
     }
 
     /// <summary>
-    /// Updates the user's first and last name.
+    /// Updates the user's first name.
     /// </summary>
     /// <param name="newFirstName">The new first name.</param>
-    /// <param name="newLastName">The new last name (optional).</param>
-    public void UpdateFirstAndLastName(string newFirstName, string? newLastName = null)
+    public void ChangeFirstName(string newFirstName)
     {
-        var newFirst = FirstName.Create(newFirstName);
-        if (!this.FirstName.Value.Equals(newFirst.Value, StringComparison.OrdinalIgnoreCase))
+        var firstName = FirstName.Create(newFirstName);
+        if (this.FirstName != firstName)
         {
-            this.FirstName = newFirst;
+            this.FirstName = firstName;
         }
+    }
 
-        this.LastName = string.IsNullOrWhiteSpace(newLastName)
-            ? null
-            : newLastName.Trim();
+    /// <summary>
+    /// Updates the user's last name.
+    /// </summary>
+    /// <param name="newLastName">The new first name.</param>
+    public void ChangeLastName(string newLastName)
+    {
+        var lastName = LastName.Create(newLastName);
+        if (this.LastName != lastName)
+        {
+            this.LastName = lastName;
+        }
     }
 
     /// <summary>
     /// Updates the user's account username.
     /// </summary>
     /// <param name="userName">The new username.</param>
-    public void ChangeUserName(string userName)
+    public void ChangeUserName(UserName userName)
     {
-        var newUserName = UserName.Create(userName);
-
-        if (this.UserName.Value.Equals(newUserName.Value, StringComparison.OrdinalIgnoreCase))
+        if (this.UserName.Value.Equals(userName.Value, StringComparison.OrdinalIgnoreCase))
         {
             throw new DomainException("New Username is same as current.");
         }
 
-        this.UserName = newUserName;
+        this.UserName = userName;
     }
 
     /// <summary>

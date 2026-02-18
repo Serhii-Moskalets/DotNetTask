@@ -41,7 +41,7 @@ public class TaskAccessForOwnerMapperTests
         result.Should().NotBeNull();
         result.Id.Should().Be(user.Id);
         result.FirstName.Should().Be(user.FirstName.Value);
-        result.LastName.Should().Be(user.LastName);
+        result.LastName.Should().Be(user.LastName!.Value);
         result.UserName.Should().Be(user.UserName.Value);
         result.Email.Should().Be(user.Email.Value);
     }

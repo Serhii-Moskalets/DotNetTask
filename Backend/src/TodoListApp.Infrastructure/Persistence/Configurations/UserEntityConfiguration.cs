@@ -31,8 +31,12 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
             .HasMaxLength(20);
 
         builder.Property(u => u.LastName)
+            .HasConversion(
+                n => n != null ? n.Value : null,
+                v => LastName.Create(v))
             .HasColumnName("last_name")
-            .HasMaxLength(30);
+            .HasMaxLength(30)
+            .IsRequired(false);
 
         builder.Property(u => u.UserName)
             .HasConversion(un => un.Value, v => UserName.Create(v))
