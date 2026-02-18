@@ -47,6 +47,13 @@ public class LoginUserCommandHandler(
                 "Invalid email or password.");
         }
 
+        if (!user.EmailConfirmed)
+        {
+            return await Result<LoginResponse>.FailureAsync(
+                ErrorCode.ValidationError,
+                "Please confirm your email before logging in.");
+        }
+
         var token = this._jwtTokenGenerator.GenerateToken(user);
 
         return new LoginResponse(

@@ -43,6 +43,9 @@ public class LoginUserCommandHandlerTests
         // Arrange
         var command = new LoginUserCommand("john@test.com", "CorrectPassword123!");
         var user = new UserEntity("John", "johndoe", command.Email, new('a', 64), "Doe");
+
+        this.ConfirmEmail(user);
+
         const string generatedToken = "valid_jwt_token";
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
@@ -115,5 +118,11 @@ public class LoginUserCommandHandlerTests
         result.Error.Message.Should().Be("Invalid email or password.");
 
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
+    }
+
+    private void ConfirmEmail(UserEntity user)
+    {
+        var property = typeof(UserEntity).GetProperty(nameof(user.EmailConfirmed));
+        property?.SetValue(user, true);
     }
 }
