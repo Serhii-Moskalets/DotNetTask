@@ -132,7 +132,8 @@ public class UserEntityTests
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ChangeFirstName"/> and <see cref="UserEntity.ChangeLastName"/> updates first and last names.
+    /// Tests that <see cref="UserEntity.ChangeFirstName"/> and <see cref="UserEntity.ChangeLastName"/>
+    /// successfully update the user's names and return <see langword="true"/> when different values are provided.
     /// </summary>
     [Fact]
     public void ChangeFirstName_And_ChangeLastName_Should_UpdateNames()
@@ -141,12 +142,14 @@ public class UserEntityTests
         var user = new UserEntity(FirstName, UserName, Email, this._passwordHash);
 
         // Act
-        user.ChangeFirstName("Jane");
-        user.ChangeLastName("Smith");
+        var changeFirstNameResult = user.ChangeFirstName("Jane");
+        var changeLastNameResult = user.ChangeLastName("Smith");
 
         // Assert
         user.FirstName.Value.Should().Be("Jane");
         user.LastName!.Value.Should().Be("Smith");
+        changeFirstNameResult.Should().BeTrue();
+        changeLastNameResult.Should().BeTrue();
     }
 
     /// <summary>
@@ -185,6 +188,25 @@ public class UserEntityTests
 
         // Assert
         user.LastName.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserEntity.ChangeFirstName"/> and <see cref="UserEntity.ChangeLastName"/>
+    /// return <see langword="false"/> when the provided names are identical to the current ones.
+    /// </summary>
+    [Fact]
+    public void ChangeLastAndFirstName_ShouldReturnFalse_When_FirstOrLastNameIsTheSame()
+    {
+        // Arrange
+        var user = new UserEntity(FirstName, UserName, Email, this._passwordHash, LastName);
+
+        // Act
+        var changeFirstNameResult = user.ChangeFirstName(FirstName);
+        var changeLastNameResult = user.ChangeLastName(LastName);
+
+        // Assert
+        changeFirstNameResult.Should().BeFalse();
+        changeLastNameResult.Should().BeFalse();
     }
 
     /// <summary>

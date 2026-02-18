@@ -249,26 +249,34 @@ public class UserEntity : BaseEntity
     /// Updates the user's first name.
     /// </summary>
     /// <param name="newFirstName">The new first name.</param>
-    public void ChangeFirstName(string newFirstName)
+    /// <returns>True if the first name was changed; otherwise, false.</returns>
+    public bool ChangeFirstName(string newFirstName)
     {
         var firstName = FirstName.Create(newFirstName);
-        if (this.FirstName != firstName)
+        if (this.FirstName == firstName)
         {
-            this.FirstName = firstName;
+            return false;
         }
+
+        this.FirstName = firstName;
+        return true;
     }
 
     /// <summary>
     /// Updates the user's last name.
     /// </summary>
-    /// <param name="newLastName">The new first name.</param>
-    public void ChangeLastName(string newLastName)
+    /// <param name="newLastName">The new last name.</param>
+    /// <returns>True if the last name was changed; otherwise, false..</returns>
+    public bool ChangeLastName(string newLastName)
     {
         var lastName = LastName.Create(newLastName);
-        if (this.LastName != lastName)
+        if (this.LastName == lastName)
         {
-            this.LastName = lastName;
+            return false;
         }
+
+        this.LastName = lastName;
+        return true;
     }
 
     /// <summary>
