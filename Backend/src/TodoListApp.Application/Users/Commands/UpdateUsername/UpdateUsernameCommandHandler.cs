@@ -22,14 +22,14 @@ public class UpdateUsernameCommandHandler(
     /// <returns>A <see cref="Result{Boolean}"/> indicating success or failure of the operation.</returns>
     public async Task<Result<bool>> Handle(UpdateUsernameCommand command, CancellationToken cancellationToken)
     {
+        var newUserName = UserName.Create(command.UserName);
+
         var user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
 
         if (user is null)
         {
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, "User not found.");
         }
-
-        var newUserName = UserName.Create(command.UserName);
 
         if (newUserName == user.UserName)
         {
