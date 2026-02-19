@@ -14,6 +14,8 @@ namespace TodoListApp.Application.Tests.Users.Commands.ConfirmPasswordReset;
 /// </summary>
 public class ConfirmPasswordResetCommandHandlerTests
 {
+    private const string CurrentEmail = "test@example.com";
+
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly ConfirmPasswordResetCommandHandler _sut;
@@ -42,12 +44,12 @@ public class ConfirmPasswordResetCommandHandlerTests
     public async Task Handle_Should_ReturnSuccess_When_RequestIsValid()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("test@example.com", "NewPassword123!", "valid-token");
-        var user = new UserEntity("John", "johndoe", command.Email, this._oldPasswordHashString);
+        var user = new UserEntity("John", "johndoe", CurrentEmail, this._oldPasswordHashString);
+        var command = new ConfirmPasswordResetCommand(user.Id, "NewPassword123!", "valid-token");
 
         user.RequestPasswordReset("valid-token", TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._passwordHasherMock.Setup(x => x.HashPassword(command.NewPassword))
@@ -72,9 +74,9 @@ public class ConfirmPasswordResetCommandHandlerTests
     public async Task Handle_Should_ReturnFailure_When_UserDoesNotExist()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("nonexistent@test.com", "Pass123!", "token");
+        var command = new ConfirmPasswordResetCommand(Guid.NewGuid(), "Pass123!", "token");
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
 
         // Act
@@ -95,12 +97,12 @@ public class ConfirmPasswordResetCommandHandlerTests
     public async Task Handle_Should_ThrowDomainException_When_TokenIsInvalid()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("test@example.com", "NewPass123!", "wrong-token");
-        var user = new UserEntity("John", "johndoe", command.Email, this._oldPasswordHashString);
+        var user = new UserEntity("John", "johndoe", CurrentEmail, this._oldPasswordHashString);
+        var command = new ConfirmPasswordResetCommand(user.Id, "NewPass123!", "wrong-token");
 
         user.RequestPasswordReset("correct-token", TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._passwordHasherMock.Setup(x => x.HashPassword(command.NewPassword))

@@ -15,9 +15,8 @@ public class ConfirmPasswordResetCommandValidator : AbstractValidator<ConfirmPas
         this.RuleFor(x => x.Token)
             .NotEmpty().WithMessage("Token is required.");
 
-        this.RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("Invalid email format.");
+        this.RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("UserId is required.");
 
         this.RuleFor(x => x.NewPassword)
             .NotEmpty().WithMessage("Password is required.")

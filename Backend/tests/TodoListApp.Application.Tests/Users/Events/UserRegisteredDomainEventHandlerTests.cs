@@ -50,7 +50,7 @@ public class UserRegisteredDomainEventHandlerTests
         var expectedLink = "https://test.com/confirm?token=test-token";
 
         this._urlProviderMock
-            .Setup(x => x.GetEmailConfirmationLink(user.Email.Value, token.Value))
+            .Setup(x => x.GetEmailConfirmationLink(user.Id, token.Value))
             .Returns(expectedLink);
 
         // Act
@@ -58,7 +58,7 @@ public class UserRegisteredDomainEventHandlerTests
 
         // Assert
         this._urlProviderMock.Verify(
-            x => x.GetEmailConfirmationLink(user.Email.Value, token.Value),
+            x => x.GetEmailConfirmationLink(user.Id, token.Value),
             Times.Once);
 
         this._emailServiceMock.Verify(

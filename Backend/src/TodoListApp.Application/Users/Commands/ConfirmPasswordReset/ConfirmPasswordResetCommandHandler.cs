@@ -32,7 +32,7 @@ public class ConfirmPasswordResetCommandHandler(
     /// </returns>
     public async Task<Result<bool>> Handle(ConfirmPasswordResetCommand command, CancellationToken cancellationToken)
     {
-        var user = await this.UnitOfWork.Users.GetByEmailAsync(command.Email, cancellationToken);
+        var user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
 
         if (user is null)
         {

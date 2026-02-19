@@ -9,6 +9,7 @@ namespace TodoListApp.Application.Tests.Users.Commands.ConfirmPasswordReset;
 public class ConfirmPasswordResetCommandValidatorTests
 {
     private readonly ConfirmPasswordResetCommandValidator _validator;
+    private readonly Guid userId = Guid.NewGuid();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConfirmPasswordResetCommandValidatorTests"/> class.
@@ -26,7 +27,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     {
         // Arrange
         var command = new ConfirmPasswordResetCommand(
-            "test@example.com",
+            this.userId,
             "SecurePass123!",
             "ValidToken123");
 
@@ -42,7 +43,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Token_Is_Empty()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("test@example.com", "SecurePass123!", string.Empty);
+        var command = new ConfirmPasswordResetCommand(this.userId, "SecurePass123!", string.Empty);
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -51,39 +52,18 @@ public class ConfirmPasswordResetCommandValidatorTests
     }
 
     /// <summary>
-    /// Verifies that an empty or null email triggers a validation error.
+    /// Verifies that an empty userId triggers a validation error.
     /// </summary>
-    /// <param name="email">The email value to validate (null or empty string).</param>
-    [Theory]
-    [InlineData("")]
-    [InlineData(null)]
-    public void Should_Have_Error_When_Email_Is_Empty(string? email)
+    [Fact]
+    public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand(email!, "SecurePass123!", "token");
+        var command = new ConfirmPasswordResetCommand(Guid.Empty, "SecurePass123!", "token");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Email)
-              .WithErrorMessage("Email is required.");
-    }
-
-    /// <summary>
-    /// Verifies that an incorrect email format triggers a validation error.
-    /// </summary>
-    /// <param name="invalidEmail">The malformed email address.</param>
-    [Theory]
-    [InlineData("not-an-email")]
-    [InlineData("missing-at-sign.com")]
-    public void Should_Have_Error_When_Email_Format_Is_Incorrect(string invalidEmail)
-    {
-        // Arrange
-        var command = new ConfirmPasswordResetCommand(invalidEmail, "SecurePass123!", "token");
-
-        // Act & Assert
-        var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.Email)
-              .WithErrorMessage("Invalid email format.");
+        result.ShouldHaveValidationErrorFor(x => x.UserId)
+              .WithErrorMessage("UserId is required.");
     }
 
     /// <summary>
@@ -93,7 +73,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Is_Too_Short()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("test@example.com", "token", "Short1!");
+        var command = new ConfirmPasswordResetCommand(this.userId, "token", "Short1!");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -108,7 +88,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Uppercase()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("test@example.com", "lowercase123!", "token");
+        var command = new ConfirmPasswordResetCommand(this.userId, "lowercase123!", "token");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -123,7 +103,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Lowercase()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("test@example.com", "UPPERCASE123!", "token");
+        var command = new ConfirmPasswordResetCommand(this.userId, "UPPERCASE123!", "token");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -138,7 +118,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Number()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("test@example.com", "NoNumbers!", "token");
+        var command = new ConfirmPasswordResetCommand(this.userId, "NoNumbers!", "token");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -156,7 +136,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Allowed_Special_Character(string password)
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand("test@example.com", "token", password);
+        var command = new ConfirmPasswordResetCommand(this.userId, "token", password);
 
         // Act & Assert
         var result = this._validator.TestValidate(command);

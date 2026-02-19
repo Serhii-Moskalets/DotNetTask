@@ -25,27 +25,27 @@ public class UrlProvider : IUrlProvider
     }
 
     /// <inheritdoc />
-    public string GetEmailChangeLink(string email, string token, string newEmail)
+    public string GetEmailChangeLink(Guid userId, string token, string newEmail)
         => this.BuildUrl("confirm-email-change", new Dictionary<string, string>
             {
-                { "email", email },
+                { "userId", userId.ToString() },
                 { "token", token },
                 { "newEmail", newEmail },
             });
 
     /// <inheritdoc />
-    public string GetEmailConfirmationLink(string email, string token)
+    public string GetEmailConfirmationLink(Guid userId, string token)
         => this.BuildUrl("confirm-email", new Dictionary<string, string>
             {
-                { "email", email },
+                { "userId", userId.ToString() },
                 { "token", token },
             });
 
     /// <inheritdoc />
-    public string GetPasswordResetLink(string email, string token)
+    public string GetPasswordResetLink(Guid userId, string token)
         => this.BuildUrl("reset-password", new Dictionary<string, string>
         {
-            { "email", email },
+            { "userId", userId.ToString() },
             { "token", token },
         });
 

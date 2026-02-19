@@ -11,6 +11,8 @@ namespace TodoListApp.Infrastructure.Test.Services;
 public class UrlProviderTests
 {
     private const string BaseUrl = "https://todoList.com";
+    private readonly Guid userId = Guid.NewGuid();
+
     private readonly Mock<IConfiguration> _configurationMock;
 
     /// <summary>
@@ -41,7 +43,7 @@ public class UrlProviderTests
         var sut = new UrlProvider(configMock.Object);
 
         // Act
-        var result = sut.GetEmailConfirmationLink("test@test.com", "123");
+        var result = sut.GetEmailConfirmationLink(this.userId, "123");
 
         // Assert
         result.Should().StartWith(baseUrl);
@@ -56,14 +58,14 @@ public class UrlProviderTests
     {
         // Arrange
         var sut = new UrlProvider(this._configurationMock.Object);
-        const string email = "user+special@example.com";
         const string token = "abc/123+def==";
 
         // Act
-        var result = sut.GetEmailConfirmationLink(email, token);
+        var result = sut.GetEmailConfirmationLink(this.userId, token);
 
         // Assert
         result.Should().NotContain("+");
-        result.Should().Contain("user%2bspecial");
+        result.Should().Contain("abc%2f123%2bdef%3d%3d");
+        result.Should().Contain($"userId={this.userId}");
     }
 }
