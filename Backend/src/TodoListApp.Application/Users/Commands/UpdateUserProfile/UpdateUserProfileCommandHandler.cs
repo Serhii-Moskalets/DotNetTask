@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.UpdateUserProfile;
 
@@ -31,22 +32,20 @@ public class UpdateUserProfileCommandHandler(IUnitOfWork unitOfWork)
 
         if (command.FirstName is not null)
         {
-            isChanged |= user.ChangeFirstName(command.FirstName);
+            isChanged |= user.ChangeFirstName(FirstName.Create(command.FirstName));
         }
 
         if (command.LastName is not null)
         {
-            isChanged |= user.ChangeLastName(command.LastName);
+            isChanged |= user.ChangeLastName(LastName.Create(command.LastName));
         }
 
-        if (isChanged)
-        {
-            await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-            return await Result<bool>.SuccessAsync(true);
-        }
-        else
+        if (!isChanged)
         {
             return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "No changes detected. Names are the same as current.");
         }
+
+        await this.UnitOfWork.SaveChangesAsync(cancellationToken);
+        return await Result<bool>.SuccessAsync(true);
     }
 }

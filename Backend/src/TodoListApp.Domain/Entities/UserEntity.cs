@@ -139,24 +139,17 @@ public class UserEntity : BaseEntity
     /// <param name="newEmail">The requested new email address.</param>
     /// <param name="token">The change token.</param>
     /// <param name="duration">How long the token is valid.</param>
-    public void RequestEmailChange(string newEmail, string token, TimeSpan duration)
+    public void RequestEmailChange(Email newEmail, string token, TimeSpan duration)
     {
-        if (string.IsNullOrWhiteSpace(newEmail))
-        {
-            throw new DomainException("New email cannot be empty.");
-        }
-
-        var pendingEmail = Email.Create(newEmail);
-        if (string.Equals(pendingEmail.Value, this.Email.Value, StringComparison.OrdinalIgnoreCase))
+        if (newEmail == this.Email)
         {
             throw new DomainException("New email is same as current.");
         }
 
         string oldEmail = this.Email.Value;
-        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailChange, newEmail);
-        this.EmailConfirmed = false;
+        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailChange, newEmail.Value);
 
-        this.AddDomainEvent(new UserEmailChangedDomainEvent(this, this.CurrentToken, oldEmail));
+        this.AddDomainEvent(new EmailChangeRequestedDomainEvent(this, this.CurrentToken, oldEmail));
     }
 
     /// <summary>
@@ -214,15 +207,7 @@ public class UserEntity : BaseEntity
     /// <summary>
     /// Changes the user's password for authenticated users.
     /// </summary>
-    /// <remarks>
-    /// This method ensures that the user has a confirmed email address
-    /// and that the new password is not identical to the current one.
-    /// </remarks>
     /// <param name="newPasswordHash">The new password hash to be set.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when the email is not confirmed or when the new password hash
-    /// is the same as the current password hash.
-    /// </exception>
     public void ChangePassword(PasswordHash newPasswordHash)
     {
         this.SetPasswordHash(newPasswordHash);
@@ -233,15 +218,14 @@ public class UserEntity : BaseEntity
     /// </summary>
     /// <param name="newFirstName">The new first name.</param>
     /// <returns>True if the first name was changed; otherwise, false.</returns>
-    public bool ChangeFirstName(string newFirstName)
+    public bool ChangeFirstName(FirstName newFirstName)
     {
-        var firstName = FirstName.Create(newFirstName);
-        if (this.FirstName == firstName)
+        if (this.FirstName == newFirstName)
         {
             return false;
         }
 
-        this.FirstName = firstName;
+        this.FirstName = newFirstName;
         return true;
     }
 
@@ -250,15 +234,14 @@ public class UserEntity : BaseEntity
     /// </summary>
     /// <param name="newLastName">The new last name.</param>
     /// <returns>True if the last name was changed; otherwise, false..</returns>
-    public bool ChangeLastName(string newLastName)
+    public bool ChangeLastName(LastName? newLastName)
     {
-        var lastName = LastName.Create(newLastName);
-        if (this.LastName == lastName)
+        if (this.LastName == newLastName)
         {
             return false;
         }
 
-        this.LastName = lastName;
+        this.LastName = newLastName;
         return true;
     }
 
