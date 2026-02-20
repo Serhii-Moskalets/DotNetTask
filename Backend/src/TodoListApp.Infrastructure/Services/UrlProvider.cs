@@ -42,6 +42,14 @@ public class UrlProvider : IUrlProvider
             });
 
     /// <inheritdoc />
+    public string GetEmailRevertLink(Guid userId, string token)
+        => this.BuildUrl("revert-confirm-email", new Dictionary<string, string>
+        {
+            { "userId", userId.ToString() },
+            { "token", token },
+        });
+
+    /// <inheritdoc />
     public string GetPasswordResetLink(Guid userId, string token)
         => this.BuildUrl("reset-password", new Dictionary<string, string>
         {
@@ -55,6 +63,11 @@ public class UrlProvider : IUrlProvider
     private string BuildUrl(string path, Dictionary<string, string> queryParams)
     {
         var builder = new UriBuilder(this._frontendBaseUrl);
+
+        if (builder.Uri.IsDefaultPort)
+        {
+            builder.Port = -1;
+        }
 
         builder.Path = builder.Path.TrimEnd('/') + "/" + path.TrimStart('/');
 

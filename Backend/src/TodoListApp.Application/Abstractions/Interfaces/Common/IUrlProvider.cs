@@ -30,4 +30,12 @@ public interface IUrlProvider
     /// <param name="newEmail">The new email address that needs to be confirmed.</param>
     /// <returns>A fully qualified URL string for the email change confirmation page.</returns>
     string GetEmailChangeLink(Guid userId, string token, string newEmail);
+
+    /// <summary>
+    /// Generates a link to revert an email address change.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="token">The security token generated to revert the email change operation.</param>
+    /// <returns>A fully qualified URL string for the email change revert page.</returns>
+    string GetEmailRevertLink(Guid userId, string token);
 }
