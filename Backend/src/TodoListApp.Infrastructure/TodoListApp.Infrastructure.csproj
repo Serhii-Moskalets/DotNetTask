@@ -8,9 +8,26 @@
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="Notifications\Templates\email_change.html" />
+    <None Remove="Notifications\Templates\password_reset.html" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Notifications\Templates\email_change.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Notifications\Templates\email_change_security_alert.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 
   <ItemGroup>
     <Content Include="Notifications\Templates\email_verification.html">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Notifications\Templates\password_reset.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -20,6 +20,11 @@ public static class EmailSubjects
     public const string EmailChangeConfirmation = "Confirm your new email address";
 
     /// <summary>
+    /// Subject line for email change security alert.
+    /// </summary>
+    public const string EmailChangeSecurityAlert = "Security Alert: Email Change Requested";
+
+    /// <summary>
     /// Subject line for password reset emails.
     /// </summary>
     public const string PasswordReset = "Reset your password";

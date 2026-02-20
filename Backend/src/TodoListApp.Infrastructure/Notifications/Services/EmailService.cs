@@ -68,6 +68,37 @@ public class EmailService
     }
 
     /// <summary>
+    /// Sends a security alert email to inform the user about an email address change request.
+    /// </summary>
+    /// <param name="toEmail">The user's current (old) email address where the alert will be sent.</param>
+    /// <param name="newEmail">The new email address that was requested.</param>
+    /// <param name="userName">The name of the user for personalization in the email.</param>
+    /// <param name="revertLink">The unique link used to cancel the email change and secure the account.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public Task SendEmailChangeSecurityAlertAsync(
+        string toEmail,
+        string newEmail,
+        string userName,
+        string revertLink,
+        CancellationToken cancellationToken = default)
+    {
+        var placeholders = new Dictionary<string, string>
+        {
+            { "USER_NAME", userName },
+            { "NEW_EMAIL", newEmail },
+            { "REVERT_LINK", revertLink },
+        };
+
+        return this.SendEmailAsync(
+            toEmail,
+            EmailSubjects.EmailChangeSecurityAlert,
+            EmailTemplates.EmailChangeSecurityAlert,
+            placeholders,
+            cancellationToken);
+    }
+
+    /// <summary>
     /// Sends a confirmation email to verify a user's request to reset their password.
     /// </summary>
     /// <param name="toEmail">The recipient's current email address.</param>
