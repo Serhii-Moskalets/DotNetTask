@@ -7,8 +7,10 @@
 /// <param name="UserName">The user's unique username.</param>
 /// <param name="Email">The user's registered email address.</param>
 /// <param name="Token">The generated JWT for subsequent authenticated requests.</param>
+/// <param name="MustChangePassword">A flag indicating whether the user is required to change their password before they can access the application's full functionality.</param>
 public record LoginResponse(
     Guid Id,
     string UserName,
     string Email,
-    string Token);
+    string? Token,
+    bool MustChangePassword = false);

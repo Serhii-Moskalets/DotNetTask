@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.LoginUser;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.LoginUser;
 
@@ -44,7 +45,7 @@ public class LoginUserCommandHandlerTests
         var command = new LoginUserCommand("john@test.com", "CorrectPassword123!");
         var user = new UserEntity("John", "johndoe", command.Email, new('a', 64), "Doe");
 
-        this.ConfirmEmail(user);
+        ConfirmEmail(user);
 
         const string generatedToken = "valid_jwt_token";
 
@@ -120,9 +121,70 @@ public class LoginUserCommandHandlerTests
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
     }
 
-    private void ConfirmEmail(UserEntity user)
+    /// <summary>
+    /// Verifies that the login process returns a success result indicating that a password change
+    /// is required, and does not generate a JWT, when the <see cref="UserEntity.MustChangePassword"/>
+    /// flag is set to <see langword="true"/>.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Handle_ShouldReturnMustChangePassword_WhenFlagIsTrue()
     {
-        var property = typeof(UserEntity).GetProperty(nameof(user.EmailConfirmed));
-        property?.SetValue(user, true);
+        // Arrange
+        var command = new LoginUserCommand("john@test.com", "Password123!");
+        var user = new UserEntity("John", "johndoe", command.Email, new('a', 64));
+
+        ConfirmEmail(user);
+
+        var revertToken = "revert";
+        user.RequestEmailChange(Email.Create("new@test.com"), "token", revertToken, TimeSpan.FromHours(1));
+        user.ConfirmEmailChange("token", DateTime.UtcNow);
+        user.RevertEmailChange(revertToken, DateTime.UtcNow);
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
+            .Returns(true);
+
+        // Act
+        var result = await this._sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.MustChangePassword.Should().BeTrue();
+        result.Value.Token.Should().BeNull();
+        this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Verifies that the login process fails with a validation error when the user
+    /// has not yet confirmed their email address.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Handle_ShouldReturnFailure_WhenEmailIsNotConfirmed()
+    {
+        // Arrange
+        var command = new LoginUserCommand("john@test.com", "Password123!");
+        var user = new UserEntity("John", "johndoe", command.Email, new('a', 64));
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
+            .Returns(true);
+
+        // Act
+        var result = await this._sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsFailure.Should().BeTrue();
+        result.Error!.Message.Should().Be("Please confirm your email before logging in.");
+    }
+
+    private static void ConfirmEmail(UserEntity user)
+    {
+        var token = "any-token";
+        user.RequestEmailVerification(token, TimeSpan.FromHours(1));
+        user.ConfirmEmailVerification(token, DateTime.UtcNow);
     }
 }
