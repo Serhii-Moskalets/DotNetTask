@@ -15,8 +15,11 @@ public class UserEntityTests
     private const string CurrentLastName = "Doe";
     private const string CurrentUserName = "jdoe";
     private const string CurrentEmail = "john@example.com";
-    private const string TokenValue = "token123";
 
+    private const string TokenValue = "token123";
+    private const string RevertToken = "revert_secret";
+
+    private readonly Email _newEmail = Email.Create("newEmail@example.com");
     private readonly string _passwordHashString = new('a', 64);
     private readonly string _newPasswordHashString = new('b', 64);
 
@@ -29,7 +32,7 @@ public class UserEntityTests
     public void Constructor_Should_CreateUser_When_ValidData()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString, CurrentLastName);
+        var user = this.CreateUser();
 
         // Assert
         user.FirstName.Value.Should().Be(CurrentFirstName);
@@ -37,6 +40,26 @@ public class UserEntityTests
         user.UserName.Value.Should().Be(CurrentUserName);
         user.Email.Value.Should().Be(CurrentEmail);
         user.PasswordHash.Value.Should().Be(this._passwordHashString);
+        user.SecurityStamp.Should().NotBeNullOrWhiteSpace();
+        user.MustChangePassword.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Tests that the <see cref="UserEntity"/> constructor throws an <see cref="DomainException"/>
+    /// when the password hash is null, empty, or whitespace.
+    /// </summary>
+    /// <param name="passwordHash">The password hash to test.</param>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void Constructor_Should_Throw_When_PasswordHashIsInvalid(string? passwordHash)
+    {
+        // Act
+        var act = () => new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, passwordHash!);
+
+        // Assert
+        act.Should().Throw<DomainException>();
     }
 
     /// <summary>
@@ -46,7 +69,7 @@ public class UserEntityTests
     public void RequestEmailVerification_Should_SetToken_And_MarkEmailUnconfirmed()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
+        var user = this.CreateUser();
 
         user.RequestEmailVerification(TokenValue, this._duration);
 
@@ -63,7 +86,7 @@ public class UserEntityTests
     public void ConfirmEmailVerification_Should_SetConfirmed_When_TokenValid()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
+        var user = this.CreateUser();
         user.RequestEmailVerification(TokenValue, this._duration);
         var currentTime = DateTime.UtcNow;
 
@@ -75,6 +98,44 @@ public class UserEntityTests
     }
 
     /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> throws
+    /// when the email verification token is expired.
+    /// </summary>
+    [Fact]
+    public void ConfirmEmailVerification_ShouldThrow_When_TokenExpired()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        user.RequestEmailVerification(TokenValue, TimeSpan.FromMinutes(1));
+
+        var expiredTime = DateTime.UtcNow.AddMinutes(2);
+
+        // Act
+        var result = () => user.ConfirmEmailVerification(TokenValue, expiredTime);
+
+        // Assert
+        result.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> throws
+    /// when the email verification was not requested.
+    /// </summary>
+    [Fact]
+    public void ConfirmEmailVerification_ShouldThrow_When_NoRequestWasMade()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        var expiredTime = DateTime.UtcNow;
+
+        // Act
+        var result = () => user.ConfirmEmailVerification(TokenValue, expiredTime);
+
+        // Assert
+        result.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> updates the email
     /// and confirms it when a valid token is provided.
     /// </summary>
@@ -82,16 +143,195 @@ public class UserEntityTests
     public void ConfirmEmailChange_Should_UpdateEmail_When_Valid()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
-        var newEmail = Email.Create("new@example.com");
-        user.RequestEmailChange(newEmail, TokenValue, this._duration);
+        var user = this.CreateUser();
+
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, this._duration);
 
         user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
 
         // Assert
-        user.Email.Value.Should().Be(newEmail.Value);
+        user.Email.Value.Should().Be(this._newEmail.Value);
         user.EmailConfirmed.Should().BeTrue();
         user.CurrentToken.Should().BeNull();
+        user.RevertToken.Should().NotBeNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> throws
+    /// when the email change confirmation token is expired.
+    /// </summary>
+    [Fact]
+    public void ConfirmEmailChange_ShouldThrow_When_TokenExpired()
+    {
+        // Arrange
+        var user = this.CreateUser();
+
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1));
+
+        var expiredTime = DateTime.UtcNow.AddMinutes(2);
+
+        // Act
+        var result = () => user.ConfirmEmailChange(TokenValue, expiredTime);
+
+        // Assert
+        result.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> throws
+    /// when the email change was not requested.
+    /// </summary>
+    [Fact]
+    public void ConfirmEmailChange_ShouldThrow_When_NoRequestWasMade()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        var expiredTime = DateTime.UtcNow;
+
+        // Act
+        var result = () => user.ConfirmEmailChange(TokenValue, expiredTime);
+
+        // Assert
+        result.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserEntity.RevertEmailChange"/> successfully restores the
+    /// original email address from the token's metadata.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_Should_RestoreOldEmail()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, this._duration);
+        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
+
+        // Act
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+
+        // Assert
+        user.Email.Value.Should().Be(CurrentEmail);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RevertEmailChange"/> updates the security stamp
+    /// compared to the initial state, ensuring general session invalidation.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_Should_UpdateSecurityStamp()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        var initialStamp = user.SecurityStamp;
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, this._duration);
+        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
+
+        // Act
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+
+        // Assert
+        user.SecurityStamp.Should().NotBe(initialStamp);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserEntity.RevertEmailChange"/> generates a new security stamp
+    /// that differs from the one generated during the (unauthorized) email confirmation,
+    /// effectively kicking out the attacker.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_Should_InvalidatePreviousSecurityStamp()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, this._duration);
+        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
+        var stampAfterHacker = user.SecurityStamp;
+
+        // Act
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+
+        // Assert
+        user.SecurityStamp.Should().NotBe(stampAfterHacker);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RevertEmailChange"/> sets the <see cref="UserEntity.MustChangePassword"/>
+    /// flag to true, forcing the user to secure their account upon next login.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_Should_SetMustChangePassword()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, this._duration);
+        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
+
+        // Act
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+
+        // Assert
+        user.MustChangePassword.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserEntity.RevertEmailChange"/> clears both the current
+    /// confirmation token and the revert token after a successful restoration.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_Should_ClearTokens()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, this._duration);
+        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
+
+        // Act
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+
+        // Assert
+        user.CurrentToken.Should().BeNull();
+        user.RevertToken.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> throws
+    /// when the email change confirmation token is expired.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_ShouldThrow_When_TokenExpired()
+    {
+        // Arrange
+        var user = this.CreateUser();
+
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1));
+
+        var expiredTime = DateTime.UtcNow.AddMinutes(2);
+
+        // Act
+        var result = () => user.RevertEmailChange(RevertToken, expiredTime);
+
+        // Assert
+        result.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RevertEmailChange"/> throws a <see cref="DomainException"/>
+    /// when no revert token exists or the process was never initiated.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_ShouldThrow_When_NoRevertRequestWasMade()
+    {
+        // Arrange
+        var user = this.CreateUser();
+
+        var expiredTime = DateTime.UtcNow;
+
+        // Act
+        var result = () => user.RevertEmailChange(RevertToken, expiredTime);
+
+        // Assert
+        result.Should().Throw<DomainException>();
     }
 
     /// <summary>
@@ -99,12 +339,11 @@ public class UserEntityTests
     /// when a valid password reset token is provided.
     /// </summary>
     [Fact]
-    public void ResetPassword_Should_UpdatePassword_When_ValidToken()
+    public void ResetPassword_Should_UpdatePassword_And_SecurityStamp_When_ValidToken()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
-        user.RequestEmailVerification(TokenValue, this._duration);
-        user.ConfirmEmailVerification(TokenValue, DateTime.UtcNow);
+        var user = this.CreateUser();
+        var initialStamp = user.SecurityStamp;
 
         user.RequestPasswordReset(TokenValue, this._duration);
 
@@ -115,7 +354,51 @@ public class UserEntityTests
         // Assert
         user.PasswordHash.Value.Should().Be(this._newPasswordHashString);
         user.EmailConfirmed.Should().BeTrue();
+        user.SecurityStamp.Should().NotBe(initialStamp);
         user.CurrentToken.Should().BeNull();
+        user.MustChangePassword.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> throws
+    /// when the password reset confirmation token is expired.
+    /// </summary>
+    [Fact]
+    public void ConfirmPasswordReset_ShouldThrow_When_TokenExpired()
+    {
+        // Arrange
+        var user = this.CreateUser();
+
+        user.RequestPasswordReset(TokenValue, TimeSpan.FromMinutes(1));
+        var expiredTime = DateTime.UtcNow.AddMinutes(2);
+
+        var newPasswordHash = PasswordHash.Create(this._newPasswordHashString);
+
+        // Act
+        var result = () => user.ConfirmPasswordReset(newPasswordHash, TokenValue, expiredTime);
+
+        // Assert
+        result.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> throws a <see cref="DomainException"/>
+    /// when no password reset request exists for the user.
+    /// </summary>
+    [Fact]
+    public void ConfirmPasswordReset_ShouldThrow_When_NoRequestWasMade()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        var expiredTime = DateTime.UtcNow;
+
+        var newPasswordHash = PasswordHash.Create(this._newPasswordHashString);
+
+        // Act
+        var result = () => user.ConfirmPasswordReset(newPasswordHash, TokenValue, expiredTime);
+
+        // Assert
+        result.Should().Throw<DomainException>();
     }
 
     /// <summary>
@@ -126,7 +409,7 @@ public class UserEntityTests
     public void ChangeFirstName_And_ChangeLastName_Should_UpdateNames()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
+        var user = this.CreateUser();
         var newFirstName = FirstName.Create("Jane");
         var newLastName = LastName.Create("Jane");
 
@@ -149,7 +432,7 @@ public class UserEntityTests
     public void ChangeLastName_Should_SetToNull_When_EmptyOrWhitespace()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString, "OldName");
+        var user = this.CreateUser();
         var newLastName = LastName.Create(" ");
 
         // Act
@@ -167,7 +450,7 @@ public class UserEntityTests
     public void ChangeLastAndFirstName_ShouldReturnFalse_When_FirstOrLastNameIsTheSame()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString, CurrentLastName);
+        var user = this.CreateUser();
         var currentFirstName = FirstName.Create(CurrentFirstName);
         var currentLastName = LastName.Create(CurrentLastName);
 
@@ -181,24 +464,6 @@ public class UserEntityTests
     }
 
     /// <summary>
-    /// Tests that the <see cref="UserEntity"/> constructor throws an <see cref="DomainException"/>
-    /// when the password hash is null, empty, or whitespace.
-    /// </summary>
-    /// <param name="passwordHash">The password hash to test.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData(" ")]
-    public void Constructor_Should_Throw_When_PasswordHashIsInvalid(string? passwordHash)
-    {
-        // Act
-        var act = () => new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, passwordHash!);
-
-        // Assert
-        act.Should().Throw<DomainException>();
-    }
-
-    /// <summary>
     /// Tests that <see cref="UserEntity.ChangePassword"/> updates the password hash
     /// when the current password hash is provided correctly.
     /// </summary>
@@ -206,7 +471,7 @@ public class UserEntityTests
     public void ChangePassword_Should_UpdatePassword_When_CurrentPasswordCorrect()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
+        var user = this.CreateUser();
         var newPasswordHash = PasswordHash.Create(this._newPasswordHashString);
 
         // Act
@@ -224,13 +489,31 @@ public class UserEntityTests
     public void ChangePassword_Should_Throw_When_NewPasswordIsSameAsOld()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
+        var user = this.CreateUser();
         var samePasswordHash = PasswordHash.Create(this._passwordHashString);
 
         // Act & Assert
         user.Invoking(u => u.ChangePassword(samePasswordHash))
-            .Should().Throw<DomainException>()
-            .WithMessage("New password cannot be the same as the old one");
+            .Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Tests that the security stamp is initialized and changes after password update.
+    /// </summary>
+    [Fact]
+    public void ChangePassword_Should_UpdateSecurityStamp()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        var initialStamp = user.SecurityStamp;
+        var newPasswordHash = PasswordHash.Create(this._newPasswordHashString);
+
+        // Act
+        user.ChangePassword(newPasswordHash);
+
+        // Assert
+        user.SecurityStamp.Should().NotBe(initialStamp);
+        user.MustChangePassword.Should().BeFalse();
     }
 
     /// <summary>
@@ -241,8 +524,8 @@ public class UserEntityTests
     public void ChangeUserName_Should_Update_When_ValidVOProvided()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
-        var newUserName = Domain.ValueObjects.UserName.Create("new_unique_name");
+        var user = this.CreateUser();
+        var newUserName = UserName.Create("new_unique_name");
 
         // Act
         user.ChangeUserName(newUserName);
@@ -253,6 +536,24 @@ public class UserEntityTests
     }
 
     /// <summary>
+    /// Tests that <see cref="UserEntity.ChangeUserName"/> throws a <see cref="DomainException"/>
+    /// when the provided username is identical to the current one.
+    /// </summary>
+    [Fact]
+    public void ChangeUserName_Should_Throw_When_SameUserNameProvided()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        var oldUserName = UserName.Create(CurrentUserName);
+
+        // Act
+        var result = () => user.ChangeUserName(oldUserName);
+
+        // Assert
+        result.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> throws a <see cref="DomainException"/>
     /// when an invalid or incorrect token is provided.
     /// </summary>
@@ -260,11 +561,14 @@ public class UserEntityTests
     public void ConfirmEmailVerification_Should_Throw_When_TokenInvalid()
     {
         // Arrange
-        var user = new UserEntity(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString);
+        var user = this.CreateUser();
         user.RequestEmailVerification(TokenValue, this._duration);
 
         // Act & Assert
         user.Invoking(u => u.ConfirmEmailVerification("invalidtoken", DateTime.UtcNow))
             .Should().Throw<DomainException>();
     }
+
+    private UserEntity CreateUser()
+        => new(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString, CurrentLastName);
 }

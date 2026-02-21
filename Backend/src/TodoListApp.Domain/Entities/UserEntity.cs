@@ -70,9 +70,25 @@ public class UserEntity : BaseEntity
     public bool EmailConfirmed { get; private set; }
 
     /// <summary>
+    /// Gets a value indicating whether the user is required to change their password on the next login.
+    /// </summary>
+    public bool MustChangePassword { get; private set; } = false;
+
+    /// <summary>
+    /// Gets a random value that changes whenever the user's security credentials are updated.
+    /// Used for invalidating active sessions.
+    /// </summary>
+    public string SecurityStamp { get; private set; } = Guid.NewGuid().ToString();
+
+    /// <summary>
     /// Gets the current security token assigned to the user for verification or resets.
     /// </summary>
     public SecurityToken? CurrentToken { get; private set; }
+
+    /// <summary>
+    /// Gets the security token assigned to the user for revert email change.
+    /// </summary>
+    public SecurityToken? RevertToken { get; private set; }
 
     /// <summary>
     /// Gets the hashed password of the user.
@@ -137,9 +153,10 @@ public class UserEntity : BaseEntity
     /// Initiates an email change request.
     /// </summary>
     /// <param name="newEmail">The requested new email address.</param>
-    /// <param name="token">The change token.</param>
-    /// <param name="duration">How long the token is valid.</param>
-    public void RequestEmailChange(Email newEmail, string token, TimeSpan duration)
+    /// <param name="confirmationToken">The unique secure token for confirming the new email.</param>
+    /// <param name="revertToken">The unique secure token for reverting the change.</param>
+    /// <param name="duration">How long the tokens is valid.</param>
+    public void RequestEmailChange(Email newEmail, string confirmationToken, string revertToken, TimeSpan duration)
     {
         if (newEmail == this.Email)
         {
@@ -147,15 +164,17 @@ public class UserEntity : BaseEntity
         }
 
         string oldEmail = this.Email.Value;
-        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailChange, newEmail.Value);
 
-        this.AddDomainEvent(new EmailChangeRequestedDomainEvent(this, this.CurrentToken, oldEmail));
+        this.CurrentToken = SecurityToken.Create(confirmationToken, duration, UserTokenType.EmailChange, newEmail.Value);
+        this.RevertToken = SecurityToken.Create(revertToken, duration, UserTokenType.EmailChangeRevert, oldEmail);
+
+        this.AddDomainEvent(new EmailChangeRequestedDomainEvent(this, this.CurrentToken, this.RevertToken));
     }
 
     /// <summary>
-    /// Confirms the pending email change.
+    /// Confirms the pending email change using the confirmation token.
     /// </summary>
-    /// <param name="token">The change token.</param>
+    /// <param name="token">The change token sent to the new email address.</param>
     /// <param name="currentTime">The current UTC time.</param>
     public void ConfirmEmailChange(string token, DateTime currentTime)
     {
@@ -168,7 +187,32 @@ public class UserEntity : BaseEntity
 
         this.Email = Email.Create(pendingEmail);
         this.EmailConfirmed = true;
+
         this.CurrentToken = null;
+    }
+
+    /// <summary>
+    /// Reverts the email change to the original address using the revert token.
+    /// </summary>
+    /// <param name="token">The revert token sent to the original email address.</param>
+    /// <param name="currentTime">The current UTC time.</param>
+    public void RevertEmailChange(string token, DateTime currentTime)
+    {
+        if (this.RevertToken?.IsValid(token, UserTokenType.EmailChangeRevert, currentTime) is not true)
+        {
+            throw new DomainException("Invalid or expired email change revert token.");
+        }
+
+        var oldEmail = this.RevertToken.Metadata ?? throw new DomainException("Original email data is missing.");
+
+        this.Email = Email.Create(oldEmail);
+        this.EmailConfirmed = true;
+
+        this.UpdateSecurityStamp();
+        this.MustChangePassword = true;
+
+        this.CurrentToken = null;
+        this.RevertToken = null;
     }
 
     /// <summary>
@@ -178,8 +222,8 @@ public class UserEntity : BaseEntity
     /// <param name="duration">The timeframe during which the token remains valid.</param>
     public void RequestPasswordReset(string token, TimeSpan duration)
     {
+        this.MustChangePassword = false;
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.PasswordReset);
-
         this.AddDomainEvent(new PasswordResetRequestedDomainEvent(this, this.CurrentToken));
     }
 
@@ -199,7 +243,10 @@ public class UserEntity : BaseEntity
             throw new DomainException("Invalid or expired password reset token.");
         }
 
+        this.UpdateSecurityStamp();
         this.SetPasswordHash(newPasswordHash);
+
+        this.MustChangePassword = false;
         this.CurrentToken = null;
         this.EmailConfirmed = true;
     }
@@ -210,7 +257,9 @@ public class UserEntity : BaseEntity
     /// <param name="newPasswordHash">The new password hash to be set.</param>
     public void ChangePassword(PasswordHash newPasswordHash)
     {
+        this.UpdateSecurityStamp();
         this.SetPasswordHash(newPasswordHash);
+        this.MustChangePassword = false;
     }
 
     /// <summary>
@@ -271,5 +320,13 @@ public class UserEntity : BaseEntity
         }
 
         this.PasswordHash = newPasswordHash;
+    }
+
+    /// <summary>
+    /// Sets the new security stamp.
+    /// </summary>
+    private void UpdateSecurityStamp()
+    {
+        this.SecurityStamp = Guid.NewGuid().ToString();
     }
 }
