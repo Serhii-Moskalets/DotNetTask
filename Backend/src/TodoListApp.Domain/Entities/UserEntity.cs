@@ -78,7 +78,7 @@ public class UserEntity : BaseEntity
     /// Gets a random value that changes whenever the user's security credentials are updated.
     /// Used for invalidating active sessions.
     /// </summary>
-    public string SecurityStamp { get; private set; } = Guid.NewGuid().ToString();
+    public SecurityStamp SecurityStamp { get; private set; } = SecurityStamp.New();
 
     /// <summary>
     /// Gets the current security token assigned to the user for verification or resets.
@@ -329,6 +329,6 @@ public class UserEntity : BaseEntity
     /// </summary>
     private void UpdateSecurityStamp()
     {
-        this.SecurityStamp = Guid.NewGuid().ToString();
+        this.SecurityStamp = SecurityStamp.New();
     }
 }
