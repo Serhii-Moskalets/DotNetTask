@@ -31,16 +31,7 @@ public class LoginUserCommandHandler(
     {
         var user = await this._unitOfWork.Users.GetByEmailAsync(request.Email, cancellationToken);
 
-        if (user is null)
-        {
-            return await Result<LoginResponse>.FailureAsync(
-                TinyResult.Enums.ErrorCode.ValidationError,
-                "Invalid email or password.");
-        }
-
-        var isPasswordValid = this._passwordHasher.VerifyPassword(request.Password, user.PasswordHash.Value);
-
-        if (!isPasswordValid)
+        if (user is null || !this._passwordHasher.VerifyPassword(request.Password, user.PasswordHash.Value))
         {
             return await Result<LoginResponse>.FailureAsync(
                 ErrorCode.ValidationError,
@@ -54,12 +45,23 @@ public class LoginUserCommandHandler(
                 "Please confirm your email before logging in.");
         }
 
+        if (user.MustChangePassword)
+        {
+            return Result<LoginResponse>.Success(new LoginResponse(
+                user.Id,
+                user.UserName.Value,
+                user.Email.Value,
+                Token: null,
+                MustChangePassword: true));
+        }
+
         var token = this._jwtTokenGenerator.GenerateToken(user);
 
-        return new LoginResponse(
+        return Result<LoginResponse>.Success(new LoginResponse(
             user.Id,
             user.UserName.Value,
             user.Email.Value,
-            token);
+            token,
+            MustChangePassword: false));
     }
 }

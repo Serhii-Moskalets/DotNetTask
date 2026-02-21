@@ -40,7 +40,8 @@ public class UserEntityTests
         user.UserName.Value.Should().Be(CurrentUserName);
         user.Email.Value.Should().Be(CurrentEmail);
         user.PasswordHash.Value.Should().Be(this._passwordHashString);
-        user.SecurityStamp.Should().NotBeNullOrWhiteSpace();
+        user.SecurityStamp.Should().NotBeNull();
+        user.SecurityStamp.Value.Should().NotBeNullOrWhiteSpace();
         user.MustChangePassword.Should().BeFalse();
     }
 
@@ -157,6 +158,26 @@ public class UserEntityTests
     }
 
     /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> updates the email,
+    /// confirms it, and updates the security stamp.
+    /// </summary>
+    [Fact]
+    public void ConfirmEmailChange_Should_UpdateSecurityStamp_When_Valid()
+    {
+        // Arrange
+        var user = this.CreateUser();
+        var initialStamp = user.SecurityStamp;
+
+        user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, this._duration);
+
+        // Act
+        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
+
+        // Assert
+        user.SecurityStamp.Should().NotBe(initialStamp);
+    }
+
+    /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> throws
     /// when the email change confirmation token is expired.
     /// </summary>
@@ -215,23 +236,25 @@ public class UserEntityTests
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.RevertEmailChange"/> updates the security stamp
-    /// compared to the initial state, ensuring general session invalidation.
+    /// Tests that <see cref="UserEntity.RevertEmailChange"/> successfully restores the
+    /// original email address and updates the security stamp.
     /// </summary>
     [Fact]
-    public void RevertEmailChange_Should_UpdateSecurityStamp()
+    public void RevertEmailChange_Should_RestoreOldEmail_And_UpdateSecurityStamp()
     {
         // Arrange
         var user = this.CreateUser();
-        var initialStamp = user.SecurityStamp;
         user.RequestEmailChange(this._newEmail, TokenValue, RevertToken, this._duration);
         user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
+        var stampAfterConfirm = user.SecurityStamp;
 
         // Act
         user.RevertEmailChange(RevertToken, DateTime.UtcNow);
 
         // Assert
-        user.SecurityStamp.Should().NotBe(initialStamp);
+        user.Email.Value.Should().Be(CurrentEmail);
+        user.MustChangePassword.Should().BeTrue();
+        user.SecurityStamp.Should().NotBe(stampAfterConfirm);
     }
 
     /// <summary>
@@ -501,7 +524,7 @@ public class UserEntityTests
     /// Tests that the security stamp is initialized and changes after password update.
     /// </summary>
     [Fact]
-    public void ChangePassword_Should_UpdateSecurityStamp()
+    public void ChangePassword_Should_UpdatePassword_And_SecurityStamp()
     {
         // Arrange
         var user = this.CreateUser();
@@ -512,6 +535,7 @@ public class UserEntityTests
         user.ChangePassword(newPasswordHash);
 
         // Assert
+        user.PasswordHash.Should().Be(newPasswordHash);
         user.SecurityStamp.Should().NotBe(initialStamp);
         user.MustChangePassword.Should().BeFalse();
     }

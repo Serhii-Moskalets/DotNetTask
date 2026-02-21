@@ -60,6 +60,7 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
             .IsRequired();
 
         builder.Property(u => u.SecurityStamp)
+            .HasConversion(s => s.Value, v => SecurityStamp.Create(v))
             .HasColumnName("security_stamp")
             .IsRequired();
 
