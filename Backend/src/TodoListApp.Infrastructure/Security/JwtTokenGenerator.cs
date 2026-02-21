@@ -46,6 +46,7 @@ public class JwtTokenGenerator(IOptions<JwtSettings> jwtOptions) : IJwtTokenGene
             new (JwtRegisteredClaimNames.Email, user.Email.Value),
             new (JwtRegisteredClaimNames.UniqueName, user.UserName.Value),
             new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new ("security_stamp", user.SecurityStamp.Value),
         };
 
         var token = new JwtSecurityToken(
