@@ -14,7 +14,8 @@ namespace TodoListApp.Application.Tests.Users.Commands.ConfirmChangeEmail;
 public class ConfirmChangeEmailCommandHandlerTests
 {
     private const string PendingEmail = "new@example.com";
-    private const string Token = "valid-token";
+    private const string ConfirmToken = "confirm-token";
+    private const string RevertToken = "revert-token";
     private readonly string _passwordHash = new('a', 64);
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
@@ -38,10 +39,10 @@ public class ConfirmChangeEmailCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var command = new ConfirmChangeEmailCommand(userId, Token);
+        var command = new ConfirmChangeEmailCommand(userId, ConfirmToken);
         var user = new UserEntity("John", "john", "old@example.com", this._passwordHash);
 
-        user.RequestEmailChange(Email.Create(PendingEmail), Token, TimeSpan.FromHours(1));
+        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -66,7 +67,7 @@ public class ConfirmChangeEmailCommandHandlerTests
     public async Task Handle_Should_ReturnNotFound_When_UserDoesNotExist()
     {
         // Arrange
-        var command = new ConfirmChangeEmailCommand(Guid.NewGuid(), Token);
+        var command = new ConfirmChangeEmailCommand(Guid.NewGuid(), ConfirmToken);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
@@ -93,7 +94,7 @@ public class ConfirmChangeEmailCommandHandlerTests
         var command = new ConfirmChangeEmailCommand(userId, "wrong-token");
         var user = new UserEntity("John", "john", "old@example.com", this._passwordHash);
 
-        user.RequestEmailChange(Email.Create(PendingEmail), Token, TimeSpan.FromHours(1));
+        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

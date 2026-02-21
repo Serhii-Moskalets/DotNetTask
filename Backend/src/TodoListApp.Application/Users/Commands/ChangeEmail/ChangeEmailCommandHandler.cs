@@ -53,9 +53,10 @@ public class ChangeEmailCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "This email is already in use.");
         }
 
-        var token = this._tokenGenerator.GenerateSecureToken();
+        var confirmationToken = this._tokenGenerator.GenerateSecureToken();
+        var revertToken = this._tokenGenerator.GenerateSecureToken();
 
-        user.RequestEmailChange(newEmail, token, TimeSpan.FromHours(1));
+        user.RequestEmailChange(newEmail, confirmationToken, revertToken, TimeSpan.FromHours(1));
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
         return await Result<bool>.SuccessAsync(true);
