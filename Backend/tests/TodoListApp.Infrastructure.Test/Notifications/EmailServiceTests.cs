@@ -131,4 +131,56 @@ public class EmailServiceTests
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
+
+    /// <summary>
+    /// Verifies that <see cref="EmailService.SendEmailChangeSecurityAlertAsync"/> correctly
+    /// coordinates template processing and delivery when an email change is requested.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SendEmailChangeSecurityAlertAsync_Should_CallTemplateProviderAndSender_WithCorrectData()
+    {
+        // Arrange
+        const string NewEmail = "new@example.com";
+
+        // Act
+        await this._emailService.SendEmailChangeSecurityAlertAsync(Email, NewEmail, UserName, Link, CancellationToken.None);
+
+        // Assert
+        this._templateProviderMock.Verify(
+            x => x.GetEmailTemplateAsync(
+                EmailTemplates.EmailChangeSecurityAlert,
+                It.Is<Dictionary<string, string>>(
+                    dict =>
+                    dict["USER_NAME"] == UserName &&
+                    dict["NEW_EMAIL"] == NewEmail &&
+                    dict["REVERT_LINK"] == Link)),
+            Times.Once);
+
+        this._senderMock.Verify(
+            x => x.SendAsync(
+                Email,
+                EmailSubjects.EmailChangeSecurityAlert,
+                ExpectedBody,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="EmailService"/> correctly propagates a <see cref="FileNotFoundException"/>
+    /// if the requested email template does not exist on the file system.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SendEmail_ShouldPropagateException_WhenTemplateNotFound()
+    {
+        // Arrange
+        this._templateProviderMock
+            .Setup(x => x.GetEmailTemplateAsync(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>()))
+            .ThrowsAsync(new FileNotFoundException("Template missing"));
+
+        // Act & Assert
+        await Assert.ThrowsAsync<FileNotFoundException>(() =>
+            this._emailService.SendPasswordResetEmailAsync(Email, UserName, Link, CancellationToken.None));
+    }
 }

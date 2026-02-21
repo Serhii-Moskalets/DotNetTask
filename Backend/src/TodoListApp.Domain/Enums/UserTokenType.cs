@@ -19,4 +19,9 @@ public enum UserTokenType
     /// Token used for changing the user's email address.
     /// </summary>
     EmailChange = 2,
+
+    /// <summary>
+    /// Token used to revert a user's email address change.
+    /// </summary>
+    EmailChangeRevert = 3,
 }

@@ -20,6 +20,11 @@ public static class EmailTemplates
     public const string EmailChange = "email_change";
 
     /// <summary>
+    /// Template name for email change security alert.
+    /// </summary>
+    public const string EmailChangeSecurityAlert = "email_change_security_alert";
+
+    /// <summary>
     /// Template name for password reset confirmation.
     /// </summary>
     public const string PasswordReset = "password_reset";

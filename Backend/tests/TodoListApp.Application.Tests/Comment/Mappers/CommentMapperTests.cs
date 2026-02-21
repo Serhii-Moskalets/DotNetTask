@@ -33,7 +33,7 @@ public class CommentMapperTests
         Assert.NotNull(result.User);
         Assert.Equal(user.UserName.Value, result.User.UserName);
         Assert.Equal(user.FirstName.Value, result.User.FirstName);
-        Assert.Equal(user.LastName, result.User.LastName);
+        Assert.Equal(user.LastName!.Value, result.User.LastName);
         Assert.Equal(user.Email.Value, result.User.Email);
     }
 
@@ -80,6 +80,6 @@ public class CommentMapperTests
         Assert.Equal(user.UserName.Value, result.UserName);
         Assert.Equal(user.FirstName.Value, result.FirstName);
         Assert.Equal(user.Email.Value, result.Email);
-        Assert.Equal(user.LastName, result.LastName);
+        Assert.Equal(user.LastName!.Value, result.LastName);
     }
 }

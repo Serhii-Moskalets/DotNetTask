@@ -419,3 +419,7 @@ FodyWeavers.xsd
 
 .env.local
 .env.*.local
+
+[Aa]ppsettings.Development.json
+[Aa]ppsettings.Local.json
+/Backend/src/TodoListApp.Api/appsettings.Development.json
