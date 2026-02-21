@@ -189,6 +189,8 @@ public class UserEntity : BaseEntity
         this.EmailConfirmed = true;
 
         this.CurrentToken = null;
+
+        this.UpdateSecurityStamp();
     }
 
     /// <summary>
