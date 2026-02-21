@@ -55,12 +55,12 @@ public sealed record SecurityToken
     {
         if (string.IsNullOrEmpty(value))
         {
-            throw new DomainException("Token value cannot be null or empty.");
+            throw new DomainException("Invalid or missing security token.");
         }
 
         if (duration <= TimeSpan.Zero)
         {
-            throw new DomainException("Token duration must be positive.");
+            throw new ArgumentException("Token duration must be positive.");
         }
 
         return new SecurityToken(value, DateTime.UtcNow.Add(duration), type, metadata);

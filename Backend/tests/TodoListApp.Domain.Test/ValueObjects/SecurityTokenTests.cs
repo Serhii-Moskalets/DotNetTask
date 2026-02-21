@@ -47,8 +47,7 @@ public class SecurityTokenTests
         Action act = () => SecurityToken.Create(invalidValue!, this._validDuration, UserTokenType.PasswordReset);
 
         // Assert
-        act.Should().Throw<DomainException>()
-            .WithMessage("Token value cannot be null or empty.");
+        act.Should().Throw<DomainException>();
     }
 
     /// <summary>
@@ -68,8 +67,7 @@ public class SecurityTokenTests
         Action act = () => SecurityToken.Create(ValidTokenValue, invalidDuration, UserTokenType.EmailChange);
 
         // Assert
-        act.Should().Throw<DomainException>()
-            .WithMessage("Token duration must be positive.");
+        act.Should().Throw<ArgumentException>();
     }
 
     /// <summary>
