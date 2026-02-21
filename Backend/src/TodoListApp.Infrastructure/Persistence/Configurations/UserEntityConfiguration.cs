@@ -58,6 +58,16 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
             .HasConversion(ph => ph.Value, v => PasswordHash.Create(v))
             .HasColumnName("password_hash")
             .IsRequired();
+
+        builder.Property(u => u.SecurityStamp)
+            .HasColumnName("security_stamp")
+            .IsRequired();
+
+        builder.Property(u => u.MustChangePassword)
+            .HasColumnName("must_change_password")
+            .HasDefaultValue(false)
+            .IsRequired();
+
         builder.OwnsOne(u => u.CurrentToken, token =>
         {
             token.WithOwner();
@@ -79,6 +89,28 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
         });
 
         builder.Navigation(u => u.CurrentToken).IsRequired(false);
+
+        builder.OwnsOne(u => u.RevertToken, token =>
+        {
+            token.WithOwner();
+
+            token.Property(t => t.Value)
+                .HasColumnName("revert_token_value")
+                .HasMaxLength(255);
+
+            token.Property(t => t.ExpiresAt)
+                .HasColumnName("revert_token_expires_at");
+
+            token.Property(t => t.Type)
+                .HasColumnName("revert_token_type")
+                .HasConversion<string>();
+
+            token.Property(t => t.Metadata)
+                .HasColumnName("revert_token_metadata")
+                .HasMaxLength(100);
+        });
+
+        builder.Navigation(u => u.RevertToken).IsRequired(false);
 
         builder.HasIndex(u => u.Email).IsUnique();
         builder.HasIndex(u => u.UserName).IsUnique();
