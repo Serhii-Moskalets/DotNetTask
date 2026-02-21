@@ -9,9 +9,9 @@ namespace TodoListApp.Domain.Events;
 /// </summary>
 /// <param name="User">The user entity whose email is being changed.</param>
 /// <param name="ConfirmationToken">The security token used to confirm the new email address.</param>
-/// <param name="OldEmail">The user's previous email address, maintained for notification or logging purposes.</param>
+/// <param name="RevertToken">The security token used to cancel the request and secure the account from the old email.</param>
 public record EmailChangeRequestedDomainEvent(
     UserEntity User,
     SecurityToken ConfirmationToken,
-    string OldEmail)
+    SecurityToken RevertToken)
     : IDomainEvent;
