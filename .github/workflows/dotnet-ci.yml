@@ -12,6 +12,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Enforce PR source branch (main only from dev)
+      if: github.base_ref == 'main' && github.head_ref != 'dev'
+      run: |
+        echo "ERROR: Merging into 'main' is only allowed from the 'dev' branch."
+        echo "Current source branch: ${{ github.head_ref }}"
+        exit 1
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -33,4 +40,9 @@ jobs:
         EmailSettings__UserName: "monsters.inc.verif@gmail.com"
         EmailSettings__Password: ${{ secrets.EMAIL_PASSWORD }}
         EmailSettings__EnableSsl: "true"
+
+        JwtSettings__Secret: ${{ secrets.JWT_SECRET }}
+        JwtSettings__Issuer: "TodoListApp"
+        JwtSettings__Audience: "TodoListApp-Users"
+        JwtSettings__ExpiryMinutes: 60
       run: dotnet test Backend/ --no-build --verbosity normal
