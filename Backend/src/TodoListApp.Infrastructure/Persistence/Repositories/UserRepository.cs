@@ -109,4 +109,34 @@ public class UserRepository(TodoListAppDbContext context)
         return await this.DbSet.AsNoTracking()
             .FirstOrDefaultAsync(x => EF.Functions.Like(x.UserName.Value, userName), cancellationToken);
     }
+
+    /// <summary>
+    /// Retrieves minimal security-related information for a specific user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <returns>
+    /// A task that returns a tuple containing the <c>SecurityStamp</c> and <c>MustChangePassword</c> flag
+    /// if the user exists; otherwise, <c>null</c>.
+    /// </returns>
+    /// <remarks>
+    /// This method is optimized for high-frequency security checks (e.g., in middleware)
+    /// by using a projection to fetch only the necessary columns instead of the entire user entity.
+    /// </remarks>
+    public async Task<(string SecurityStamp, bool MustChangePassword)?> GetUsersSecurityInfoAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await this.DbSet
+            .Where(u => u.Id == userId)
+            .Select(u => new { u.SecurityStamp.Value, u.MustChangePassword })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (user is null)
+        {
+            return null;
+        }
+
+        return (user.Value, user.MustChangePassword);
+    }
 }
