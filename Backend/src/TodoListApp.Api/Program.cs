@@ -43,6 +43,10 @@ builder.Logging.ClearProviders();
 builder.Host.UseSerilog();
 
 // DI
+builder.Services.AddProblemDetails();
+
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddApplicationServices();
@@ -55,7 +59,7 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseExceptionHandler();
 
 app.UseSerilogRequestLogging(options =>
 {
@@ -79,8 +83,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+
 app.UseAuthorization();
+
+app.UseMiddleware<UserSecurityMiddleware>();
 
 app.MapControllers();
 
-await app.RunAsync();
+app.Run();
