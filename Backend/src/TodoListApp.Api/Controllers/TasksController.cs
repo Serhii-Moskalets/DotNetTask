@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Api.Requests.Task;
 using TodoListApp.Application.Tasks.Commands.AddTagToTask;
@@ -24,8 +25,18 @@ namespace TodoListApp.Api.Controllers;
 /// This controller acts as an API layer and delegates
 /// all business logic to application command and query handlers.
 /// </remarks>
+[Authorize]
 public class TasksController : BaseController
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TasksController"/> class.
+    /// </summary>
+    /// <param name="mediator">The Mediatr sender for dispatching commands and queries.</param>
+    public TasksController(ISender mediator)
+        : base(mediator)
+    {
+    }
+
     /// <summary>
     /// Retrieves a task by its identifier.
     /// </summary>
@@ -34,7 +45,7 @@ public class TasksController : BaseController
     [HttpGet("{taskId:guid}")]
     public async Task<IActionResult> GetTaskById([FromRoute] Guid taskId)
     {
-        var query = new GetTaskByIdQuery(CurrentUserId, taskId);
+        var query = new GetTaskByIdQuery(this.CurrentUserId, taskId);
         var result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -48,7 +59,7 @@ public class TasksController : BaseController
     public async Task<IActionResult> GetTasks([FromQuery] GetTasksRequest request)
     {
         var query = new GetTasksQuery(
-            CurrentUserId,
+            this.CurrentUserId,
             request.TaskListId,
             request.Page,
             request.PageSize,
@@ -70,7 +81,7 @@ public class TasksController : BaseController
     [HttpGet("by-title")]
     public async Task<IActionResult> GetTasksByTitle([FromQuery] GetTaskByTitleRequest request)
     {
-        var query = new GetTaskByTitleQuery(CurrentUserId, request.Title);
+        var query = new GetTaskByTitleQuery(this.CurrentUserId, request.Title);
         var result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -94,9 +105,18 @@ public class TasksController : BaseController
                 Title = request.Title,
                 DueDate = request.DueDate,
                 TaskListId = taskListId,
-            }, CurrentUserId);
+            }, this.CurrentUserId);
 
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+
+        if (result.IsSuccess)
+        {
+            return this.CreatedAtAction(
+                nameof(this.GetTaskById),
+                new { taskId = result.Value },
+                result.Value);
+        }
+
         return this.HandleResult(result);
     }
 
@@ -119,7 +139,7 @@ public class TasksController : BaseController
                 Title = request.Title,
                 Description = request.Description,
                 DueDate = request.DueDate,
-            }, CurrentUserId);
+            }, this.CurrentUserId);
 
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
@@ -136,7 +156,7 @@ public class TasksController : BaseController
     [HttpDelete("{taskId:guid}")]
     public async Task<IActionResult> DeleteTask([FromRoute] Guid taskId)
     {
-        var command = new DeleteTaskCommand(taskId, CurrentUserId);
+        var command = new DeleteTaskCommand(taskId, this.CurrentUserId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -153,7 +173,7 @@ public class TasksController : BaseController
     [HttpPut("{taskId:guid}/tags/{tagId:guid}")]
     public async Task<IActionResult> AddTagToTask([FromRoute] Guid taskId, [FromRoute] Guid tagId)
     {
-        var command = new AddTagToTaskCommand(taskId, CurrentUserId, tagId);
+        var command = new AddTagToTaskCommand(taskId, this.CurrentUserId, tagId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -170,7 +190,7 @@ public class TasksController : BaseController
     [HttpDelete("{taskId:guid}/tag")]
     public async Task<IActionResult> RemoveTagFromTask([FromRoute] Guid taskId)
     {
-        var command = new RemoveTagFromTaskCommand(taskId, CurrentUserId);
+        var command = new RemoveTagFromTaskCommand(taskId, this.CurrentUserId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -187,7 +207,7 @@ public class TasksController : BaseController
     [HttpPut("{taskId:guid}/status/{status:int}")]
     public async Task<IActionResult> ChangeTaskStatus([FromRoute] Guid taskId, [FromRoute] StatusTask status)
     {
-        var command = new ChangeTaskStatusCommand(taskId, CurrentUserId, status);
+        var command = new ChangeTaskStatusCommand(taskId, this.CurrentUserId, status);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
