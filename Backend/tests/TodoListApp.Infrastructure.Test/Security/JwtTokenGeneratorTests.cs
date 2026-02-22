@@ -4,7 +4,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Infrastructure.Security;
-using TodoListApp.Infrastructure.Test.Security.Settings;
+using TodoListApp.Infrastructure.Security.Settings;
 
 namespace TodoListApp.Infrastructure.Test.Security;
 
