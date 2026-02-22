@@ -20,14 +20,19 @@ public class UserRepositoryTests
     [Fact]
     public async Task ExistsByEmail_ReturnTrue_WhenUserExists()
     {
+        // Arrange
         await using var context = InMemoryDbContextFactory.Create();
+
         var repo = new UserRepository(context);
         var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
+        // Aсt
         var exists = await repo.ExistsByEmailAsync("john@example.com");
 
+        // Assert
         Assert.True(exists);
     }
 
@@ -39,14 +44,19 @@ public class UserRepositoryTests
     [Fact]
     public async Task ExistsByUserName_ReturnTrue_WhenUserExists()
     {
+        // Arrange
         await using var context = InMemoryDbContextFactory.Create();
+
         var repo = new UserRepository(context);
         var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
+        // Act
         var exists = await repo.ExistsByUserNameAsync("john");
 
+        // Assert
         Assert.True(exists);
     }
 
@@ -58,12 +68,16 @@ public class UserRepositoryTests
     [Fact]
     public async Task ExistsByEmail_IsCaseInsensitive()
     {
+        // Arrange
         await using var context = InMemoryDbContextFactory.Create();
+
         var repo = new UserRepository(context);
         var user = new UserEntity("John", "john", "John@Example.com", this._passwordHash);
+
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
+        // Act & Assert
         Assert.True(await repo.ExistsByEmailAsync("john@example.com"));
         Assert.True(await repo.ExistsByEmailAsync("JOHN@EXAMPLE.COM"));
     }
@@ -76,14 +90,19 @@ public class UserRepositoryTests
     [Fact]
     public async Task GetByEmail_ReturnUser_WhenUserExists()
     {
+        // Arrange
         await using var context = InMemoryDbContextFactory.Create();
+
         var repo = new UserRepository(context);
         var userEntity = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+
         await context.Users.AddAsync(userEntity);
         await context.SaveChangesAsync();
 
+        // Act
         var saved = await repo.GetByEmailAsync(userEntity.Email.Value);
 
+        // Assert
         Assert.NotNull(saved);
         Assert.Equal(userEntity.UserName, saved.UserName);
     }
@@ -96,10 +115,14 @@ public class UserRepositoryTests
     [Fact]
     public async Task GetByEmail_ReturnNull_WhenUserDoesNotExist()
     {
+        // Arrange
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
+
+        // Act
         var saved = await repo.GetByEmailAsync("john@example.com");
 
+        // Assert
         Assert.Null(saved);
     }
 
@@ -111,14 +134,19 @@ public class UserRepositoryTests
     [Fact]
     public async Task GetByUserName_ReturnUser_WhenUserExists()
     {
+        // Arrange
         await using var context = InMemoryDbContextFactory.Create();
+
         var repo = new UserRepository(context);
         var userEntity = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+
         await context.Users.AddAsync(userEntity);
         await context.SaveChangesAsync();
 
+        // Act
         var saved = await repo.GetByUserNameAsync(userEntity.UserName.Value);
 
+        // Assert
         Assert.NotNull(saved);
         Assert.Equal(userEntity.UserName, saved.UserName);
     }
@@ -131,10 +159,59 @@ public class UserRepositoryTests
     [Fact]
     public async Task GetByUserName_ReturnNull_WhenUserDoesNotExist()
     {
+        // Arrange
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
+
+        // Act
         var saved = await repo.GetByUserNameAsync("user");
 
+        // Assert
         Assert.Null(saved);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.GetUsersSecurityInfoAsync"/>
+    /// returns correct security data when the user exists.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task GetUsersSecurityInfo_ReturnData_WhenUserExists()
+    {
+        // Arrange
+        await using var context = InMemoryDbContextFactory.Create();
+        var repo = new UserRepository(context);
+
+        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await repo.GetUsersSecurityInfoAsync(user.Id);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(user.SecurityStamp.Value, result.Value.SecurityStamp);
+        Assert.Equal(user.MustChangePassword, result.Value.MustChangePassword);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.GetUsersSecurityInfoAsync"/>
+    /// returns null when the user does not exist.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task GetUsersSecurityInfo_ReturnNull_WhenUserDoesNotExist()
+    {
+        // Arrange
+        await using var context = InMemoryDbContextFactory.Create();
+        var repo = new UserRepository(context);
+
+        // Act
+        var result = await repo.GetUsersSecurityInfoAsync(Guid.NewGuid());
+
+        // Assert
+        Assert.Null(result);
     }
 }
