@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.RegisterUser;
 
@@ -26,36 +27,40 @@ public class RegisterUserCommandHandler(
     /// <summary>
     /// Processes the user registration request.
     /// </summary>
-    /// <param name="request">The command containing user registration details.</param>
+    /// <param name="command">The command containing user registration details.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>
     /// A <see cref="Result{T}"/> containing the new user's unique identifier on success,
     /// or a failure result with a validation error if the email or username is already taken.
     /// </returns>
-    public async Task<Result<Guid>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
     {
-        var emailExists = await this._unitOfWork.Users.ExistsByEmailAsync(request.Email, cancellationToken);
+        var emailExists = await this._unitOfWork.Users.ExistsByEmailAsync(
+            Email.Create(command.Email),
+            cancellationToken);
 
         if (emailExists)
         {
             return await Result<Guid>.FailureAsync(ErrorCode.ValidationError, "Email is already exists.");
         }
 
-        var userNameExists = await this._unitOfWork.Users.ExistsByUserNameAsync(request.UserName, cancellationToken);
+        var userNameExists = await this._unitOfWork.Users.ExistsByUserNameAsync(
+            UserName.Create(command.UserName),
+            cancellationToken);
 
         if (userNameExists)
         {
             return await Result<Guid>.FailureAsync(ErrorCode.ValidationError, "User name is already exists.");
         }
 
-        var passwordHash = this._passwordHasher.HashPassword(request.Password);
+        var passwordHash = this._passwordHasher.HashPassword(command.Password);
 
         var user = new UserEntity(
-            request.FirstName,
-            request.UserName,
-            request.Email,
+            command.FirstName,
+            command.UserName,
+            command.Email,
             passwordHash,
-            request.LastName);
+            command.LastName);
 
         var token = this._tokenGenerator.GenerateSecureToken();
 
@@ -64,6 +69,6 @@ public class RegisterUserCommandHandler(
         await this._unitOfWork.Users.AddAsync(user, cancellationToken);
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return user.Id;
+        return await Result<Guid>.SuccessAsync(user.Id);
     }
 }

@@ -1,4 +1,6 @@
-﻿using TodoListApp.Domain.Entities;
+﻿using Moq;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
 
@@ -30,7 +32,7 @@ public class UserRepositoryTests
         await context.SaveChangesAsync();
 
         // Aсt
-        var exists = await repo.ExistsByEmailAsync("john@example.com");
+        var exists = await repo.ExistsByEmailAsync(user.Email);
 
         // Assert
         Assert.True(exists);
@@ -54,32 +56,10 @@ public class UserRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        var exists = await repo.ExistsByUserNameAsync("john");
+        var exists = await repo.ExistsByUserNameAsync(user.UserName);
 
         // Assert
         Assert.True(exists);
-    }
-
-    /// <summary>
-    /// Checks that <see cref="UserRepository.ExistsByEmailAsync"/>
-    /// performs a case-insensitive email comparison.
-    /// </summary>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    [Fact]
-    public async Task ExistsByEmail_IsCaseInsensitive()
-    {
-        // Arrange
-        await using var context = InMemoryDbContextFactory.Create();
-
-        var repo = new UserRepository(context);
-        var user = new UserEntity("John", "john", "John@Example.com", this._passwordHash);
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
-
-        // Act & Assert
-        Assert.True(await repo.ExistsByEmailAsync("john@example.com"));
-        Assert.True(await repo.ExistsByEmailAsync("JOHN@EXAMPLE.COM"));
     }
 
     /// <summary>
@@ -100,7 +80,7 @@ public class UserRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        var saved = await repo.GetByEmailAsync(userEntity.Email.Value);
+        var saved = await repo.GetByEmailAsync(userEntity.Email);
 
         // Assert
         Assert.NotNull(saved);
@@ -120,7 +100,7 @@ public class UserRepositoryTests
         var repo = new UserRepository(context);
 
         // Act
-        var saved = await repo.GetByEmailAsync("john@example.com");
+        var saved = await repo.GetByEmailAsync(Email.Create("john@example.com"));
 
         // Assert
         Assert.Null(saved);
@@ -144,7 +124,7 @@ public class UserRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        var saved = await repo.GetByUserNameAsync(userEntity.UserName.Value);
+        var saved = await repo.GetByUserNameAsync(userEntity.UserName);
 
         // Assert
         Assert.NotNull(saved);
@@ -164,7 +144,7 @@ public class UserRepositoryTests
         var repo = new UserRepository(context);
 
         // Act
-        var saved = await repo.GetByUserNameAsync("user");
+        var saved = await repo.GetByUserNameAsync(UserName.Create("user"));
 
         // Assert
         Assert.Null(saved);

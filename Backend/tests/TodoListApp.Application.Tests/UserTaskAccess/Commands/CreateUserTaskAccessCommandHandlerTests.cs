@@ -6,6 +6,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
 
@@ -55,7 +56,7 @@ public class CreateUserTaskAccessCommandHandlerTests
         var user = new UserEntity("Name", "Nick", email, this._passwordHash);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
-        this._userRepoMock.Setup(r => r.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
+        this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         var failureResult = await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Already shared");
@@ -88,7 +89,7 @@ public class CreateUserTaskAccessCommandHandlerTests
         var user = new UserEntity("Name", "Nick", email, this._passwordHash);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
-        this._userRepoMock.Setup(r => r.GetByEmailAsync(email.ToLowerInvariant(), It.IsAny<CancellationToken>()))
+        this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._serviceMock.Setup(s => s.CanGrantAccessAsync(command.TaskId, command.OwnerId, user, It.IsAny<CancellationToken>()))

@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.RegisterUser;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.RegisterUser;
 
@@ -45,9 +46,9 @@ public class RegisterUserCommandHandlerTests
         string passwordHash = new('a', 60);
         const string secureToken = "secure_verification_token";
 
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync(command.UserName, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync(It.IsAny<UserName>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
         this._passwordHasherMock.Setup(x => x.HashPassword(command.Password))
             .Returns(passwordHash);
@@ -75,7 +76,7 @@ public class RegisterUserCommandHandlerTests
         // Arrange
         var command = new RegisterUserCommand("John", "Doe", "johndoe", "existing@test.com", "Password123!");
 
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -100,9 +101,9 @@ public class RegisterUserCommandHandlerTests
         // Arrange
         var command = new RegisterUserCommand("John", "Doe", "existing_user", "john@test.com", "Password123!");
 
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync(command.UserName, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync(It.IsAny<UserName>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
