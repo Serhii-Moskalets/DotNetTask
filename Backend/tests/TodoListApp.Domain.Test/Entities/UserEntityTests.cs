@@ -593,6 +593,34 @@ public class UserEntityTests
             .Should().Throw<DomainException>();
     }
 
+    /// <summary>
+    /// Verifies that <see cref="UserEntity.UpdateUnconfirmedRegistration"/> correctly updates all user properties
+    /// and generates a new security token when the user's email has not yet been confirmed.
+    /// </summary>
+    [Fact]
+    public void UpdateUnconfirmedRegistration_Should_UpdateProperties_When_EmailNotConfirmed()
+    {
+        var user = this.CreateUser();
+        var newFirst = FirstName.Create("NewFirst");
+        var newLast = LastName.Create("NewLast");
+        var newUsername = UserName.Create("newusername");
+        var newPasswordHash = PasswordHash.Create(this._newPasswordHashString);
+
+        user.UpdateUnconfirmedRegistration(
+            newFirst,
+            newUsername,
+            newPasswordHash,
+            TokenValue,
+            this._duration,
+            newLast);
+
+        user.FirstName.Value.Should().Be(newFirst.Value);
+        user.LastName!.Value.Should().Be(newLast!.Value);
+        user.UserName.Value.Should().Be(newUsername.Value);
+        user.PasswordHash.Value.Should().Be(newPasswordHash.Value);
+        user.CurrentToken.Should().NotBeNull();
+    }
+
     private UserEntity CreateUser()
         => new(CurrentFirstName, CurrentUserName, CurrentEmail, this._passwordHashString, CurrentLastName);
 }

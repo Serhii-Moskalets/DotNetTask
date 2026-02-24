@@ -150,6 +150,43 @@ public class UserEntity : BaseEntity
     }
 
     /// <summary>
+    /// Updates the registration details for a user whose email address has not yet been confirmed. This method resets
+    /// the user's registration information and generates a new email verification token.
+    /// </summary>
+    /// <remarks>This method should only be called for users who have not yet confirmed their email address.
+    /// Calling this method will reset the user's registration details and invalidate any previous email verification
+    /// tokens.</remarks>
+    /// <param name="firsName">The first name to assign to the user during the registration update.</param>
+    /// <param name="userName">The username to assign to the user during the registration update.</param>
+    /// <param name="passwordHash">The hashed password to associate with the user during the registration update.</param>
+    /// <param name="token">The token string to use for creating a new email verification token.</param>
+    /// <param name="duration">The duration for which the email verification token remains valid.</param>
+    /// <param name="lastName">The last name to assign to the user during the registration update. This parameter is optional.</param>
+    /// <exception cref="DomainException">Thrown if the user's email address has already been confirmed.</exception>
+    public void UpdateUnconfirmedRegistration(
+        FirstName firsName,
+        UserName userName,
+        PasswordHash passwordHash,
+        string token,
+        TimeSpan duration,
+        LastName? lastName = null)
+    {
+        if (this.EmailConfirmed)
+        {
+            throw new DomainException("Cannot update registration details after email is confirmed.");
+        }
+
+        this.FirstName = firsName;
+        this.LastName = lastName;
+        this.PasswordHash = passwordHash;
+        this.UserName = userName;
+
+        this.RequestEmailVerification(token, duration);
+
+        this.UpdateSecurityStamp();
+    }
+
+    /// <summary>
     /// Initiates an email change request.
     /// </summary>
     /// <param name="newEmail">The requested new email address.</param>

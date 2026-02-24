@@ -35,11 +35,8 @@ public class RegisterUserCommandHandler(
     /// </returns>
     public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
     {
-        var emailExists = await this._unitOfWork.Users.ExistsByEmailAsync(
-            Email.Create(command.Email),
-            cancellationToken);
-
-        if (emailExists)
+        var user = await this._unitOfWork.Users.GetByEmailAsync(Email.Create(command.Email), asNoTracking: false, cancellationToken);
+        if (user?.EmailConfirmed is true)
         {
             return await Result<Guid>.FailureAsync(ErrorCode.ValidationError, "Email is already exists.");
         }
@@ -48,25 +45,38 @@ public class RegisterUserCommandHandler(
             UserName.Create(command.UserName),
             cancellationToken);
 
-        if (userNameExists)
+        if (userNameExists && (user == null || user.UserName.Value != command.UserName))
         {
             return await Result<Guid>.FailureAsync(ErrorCode.ValidationError, "User name is already exists.");
         }
 
         var passwordHash = this._passwordHasher.HashPassword(command.Password);
-
-        var user = new UserEntity(
-            command.FirstName,
-            command.UserName,
-            command.Email,
-            passwordHash,
-            command.LastName);
-
         var token = this._tokenGenerator.GenerateSecureToken();
 
-        user.RequestEmailVerification(token, TimeSpan.FromMinutes(15));
+        if (user is not null)
+        {
+            user.UpdateUnconfirmedRegistration(
+                FirstName.Create(command.FirstName),
+                UserName.Create(command.UserName),
+                PasswordHash.Create(passwordHash),
+                token,
+                TimeSpan.FromMinutes(15),
+                LastName.Create(command.LastName));
+        }
+        else
+        {
+            user = new UserEntity(
+                command.FirstName,
+                command.UserName,
+                command.Email,
+                passwordHash,
+                command.LastName);
 
-        await this._unitOfWork.Users.AddAsync(user, cancellationToken);
+            user.RequestEmailVerification(token, TimeSpan.FromMinutes(15));
+
+            await this._unitOfWork.Users.AddAsync(user, cancellationToken);
+        }
+
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<Guid>.SuccessAsync(user.Id);
