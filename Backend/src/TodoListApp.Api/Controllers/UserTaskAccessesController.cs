@@ -84,7 +84,7 @@ public class UserTaskAccessesController : BaseController
     [HttpPost("tasks/{taskId:guid}/share-task")]
     public async Task<IActionResult> CreateUserTaskAccess([FromRoute] Guid taskId, [FromBody] AccessEmailRequest request)
     {
-        var command = new CreateUserTaskAccessCommand(taskId, this.CurrentUserId, request.Email);
+        var command = new CreateUserTaskAccessCommand(taskId, this.CurrentUserId, request.Email ?? string.Empty);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -98,7 +98,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("tasks/{taskId:guid}/by-email")]
     public async Task<IActionResult> DeleteTaskAccessByEmail([FromRoute] Guid taskId, [FromQuery] string? email)
     {
-        var command = new DeleteTaskAccessByUserEmailCommand(taskId, this.CurrentUserId, email);
+        var command = new DeleteTaskAccessByUserEmailCommand(taskId, this.CurrentUserId, email ?? string.Empty);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
