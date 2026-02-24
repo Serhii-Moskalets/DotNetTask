@@ -32,7 +32,7 @@ public class LoginUserCommandHandler(
     {
         var email = Email.Create(command.Email);
 
-        var user = await this._unitOfWork.Users.GetByEmailAsync(email, cancellationToken);
+        var user = await this._unitOfWork.Users.GetByEmailAsync(email, asNoTracking: true, cancellationToken);
 
         if (user is null || !this._passwordHasher.VerifyPassword(command.Password, user.PasswordHash.Value))
         {

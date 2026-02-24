@@ -35,6 +35,7 @@ public class ResetPasswordCommandHandler(
     {
         var user = await this.UnitOfWork.Users.GetByEmailAsync(
             Email.Create(command.Email),
+            asNoTracking: false,
             cancellationToken);
 
         if (user is null)

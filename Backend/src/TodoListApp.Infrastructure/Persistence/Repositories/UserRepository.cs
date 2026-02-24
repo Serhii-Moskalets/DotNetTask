@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
@@ -43,21 +44,45 @@ public class UserRepository(TodoListAppDbContext context)
     /// Retrieves a user entity by its email.
     /// </summary>
     /// <param name="email">The email value object.</param>
+    /// <param name="asNoTracking">
+    /// If <c>true</c>, the query will not track changes in the retrieved entity,
+    /// which can improve performance for read-only operations.
+    /// </param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The <see cref="UserEntity"/> if found; otherwise, <c>null</c>.</returns>
-    public async Task<UserEntity?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default)
-        => await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+    public async Task<UserEntity?> GetByEmailAsync(Email email, bool asNoTracking = true, CancellationToken cancellationToken = default)
+    {
+        var query = this.DbSet.AsQueryable();
+
+        if (asNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
+
+        return await query.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+    }
 
     /// <summary>
     /// Retrieves a user entity by its username.
     /// </summary>
     /// <param name="userName">The username value object.</param>
+    /// <param name="asNoTracking">
+    /// If <c>true</c>, the query will not track changes in the retrieved entity,
+    /// which can improve performance for read-only operations.
+    /// </param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The <see cref="UserEntity"/> if found; otherwise, <c>null</c>.</returns>
-    public async Task<UserEntity?> GetByUserNameAsync(UserName userName, CancellationToken cancellationToken = default)
-        => await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.UserName == userName, cancellationToken);
+    public async Task<UserEntity?> GetByUserNameAsync(UserName userName, bool asNoTracking = true, CancellationToken cancellationToken = default)
+    {
+        var query = this.DbSet.AsQueryable();
+
+        if (asNoTracking)
+        {
+            query = query.AsNoTracking();
+        }
+
+        return await query.FirstOrDefaultAsync(x => x.UserName == userName, cancellationToken);
+    }
 
     /// <summary>
     /// Retrieves minimal security-related information for a specific user.

@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using Microsoft.EntityFrameworkCore;
+using Moq;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
@@ -26,7 +27,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
 
         var repo = new UserRepository(context);
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = this.CreateTestUser();
 
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
@@ -50,7 +51,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
 
         var repo = new UserRepository(context);
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = this.CreateTestUser();
 
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
@@ -74,7 +75,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
 
         var repo = new UserRepository(context);
-        var userEntity = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var userEntity = this.CreateTestUser();
 
         await context.Users.AddAsync(userEntity);
         await context.SaveChangesAsync();
@@ -107,6 +108,64 @@ public class UserRepositoryTests
     }
 
     /// <summary>
+    /// Verifies that the GetByEmailAsync method tracks the user entity in the context when the asNoTracking parameter
+    /// is set to false.
+    /// </summary>
+    /// <remarks>This test ensures that the retrieved user entity is tracked by the Entity Framework Core
+    /// context, confirming correct repository behavior when entity tracking is enabled.</remarks>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task GetByEmail_ShouldTrackEntity_WhenAsNoTrackingIsFalse()
+    {
+        // Arrange
+        await using var context = InMemoryDbContextFactory.Create();
+        var repo = new UserRepository(context);
+        var email = Email.Create("track@test.com");
+        var user = this.CreateTestUser(email: email.Value);
+
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+
+        // Act
+        var retrievedUser = await repo.GetByEmailAsync(email, asNoTracking: false);
+
+        // Assert
+        var isTracked = context.Entry(retrievedUser!).State != EntityState.Detached;
+        Assert.True(isTracked);
+    }
+
+    /// <summary>
+    /// Verifies that retrieving a user by email with the 'asNoTracking' option set to <see langword="true"/> does not
+    /// track the entity in the database context.
+    /// </summary>
+    /// <remarks>This test ensures that the repository's GetByEmailAsync method, when called with
+    /// 'asNoTracking' set to <see langword="true"/>, returns an entity that is not tracked by the Entity Framework Core
+    /// change tracker. This behavior is important for scenarios where tracking is unnecessary, as it can improve
+    /// performance and reduce memory usage.</remarks>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task GetByEmail_ShouldNotTrackEntity_WhenAsNoTrackingIsTrue()
+    {
+        // Arrange
+        await using var context = InMemoryDbContextFactory.Create();
+        var repo = new UserRepository(context);
+        var email = Email.Create("notrack@test.com");
+        var user = this.CreateTestUser(email: email.Value);
+
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+
+        // Act
+        var retrievedUser = await repo.GetByEmailAsync(email, asNoTracking: true);
+
+        // Assert
+        var isTracked = context.Entry(retrievedUser!).State != EntityState.Detached;
+        Assert.False(isTracked);
+    }
+
+    /// <summary>
     /// Checks that <see cref="UserRepository.GetByUserNameAsync"/>
     /// returns the correct user when the username exists.
     /// </summary>
@@ -118,7 +177,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
 
         var repo = new UserRepository(context);
-        var userEntity = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var userEntity = this.CreateTestUser();
 
         await context.Users.AddAsync(userEntity);
         await context.SaveChangesAsync();
@@ -162,7 +221,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = this.CreateTestUser();
 
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
@@ -194,4 +253,7 @@ public class UserRepositoryTests
         // Assert
         Assert.Null(result);
     }
+
+    private UserEntity CreateTestUser(string email = "test@example.com", string username = "testuser")
+       => new("FirstName", username, email, this._passwordHash);
 }

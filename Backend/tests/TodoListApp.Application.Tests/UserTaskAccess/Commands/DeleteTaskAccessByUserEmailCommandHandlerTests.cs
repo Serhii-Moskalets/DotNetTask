@@ -67,7 +67,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
 
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync((UserEntity?)null);
 
         // Act
@@ -93,7 +93,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
 
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Users.GetByEmailAsync(user.Email, asNoTracking: true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(user);
 
         this._uowMock.Setup(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()))
@@ -122,7 +122,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
 
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Users.GetByEmailAsync(user.Email, asNoTracking: true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(user);
 
         this._uowMock.Setup(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()))
@@ -161,7 +161,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
 
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(user);
 
         this._uowMock.Setup(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()))
@@ -171,6 +171,11 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        this._uowMock.Verify(u => u.Users.GetByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()), Times.Once);
+        this._uowMock.Verify(
+            u => u.Users.GetByEmailAsync(
+                It.Is<Email>(e => e.Value == normalizedEmail),
+                asNoTracking: true,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

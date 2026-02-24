@@ -13,17 +13,25 @@ public interface IUserRepository : IRepository<UserEntity>
     /// Retrieves a user entity by its email.
     /// </summary>
     /// <param name="email">The email value object.</param>
+    /// <param name="asNoTracking">
+    /// If <c>true</c>, the query will not track changes in the retrieved entity,
+    /// which can improve performance for read-only operations.
+    /// </param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The <see cref="UserEntity"/> if found; otherwise, <c>null</c>.</returns>
-    Task<UserEntity?> GetByEmailAsync(Email email, CancellationToken cancellationToken = default);
+    Task<UserEntity?> GetByEmailAsync(Email email, bool asNoTracking = true, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a user entity by its username.
     /// </summary>
     /// <param name="userName">The username value object.</param>
+    /// <param name="asNoTracking">
+    /// If <c>true</c>, the query will not track changes in the retrieved entity,
+    /// which can improve performance for read-only operations.
+    /// </param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The <see cref="UserEntity"/> if found; otherwise, <c>null</c>.</returns>
-    Task<UserEntity?> GetByUserNameAsync(UserName userName, CancellationToken cancellationToken = default);
+    Task<UserEntity?> GetByUserNameAsync(UserName userName, bool asNoTracking = true, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if a user with the specified email exists.

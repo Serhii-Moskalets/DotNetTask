@@ -31,6 +31,7 @@ public class CreateUserTaskAccessCommandHandler(
     {
         var sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(
             Email.Create(command.Email),
+            asNoTracking: true,
             cancellationToken);
 
         var accessValidation = await this._userTaskAccessService

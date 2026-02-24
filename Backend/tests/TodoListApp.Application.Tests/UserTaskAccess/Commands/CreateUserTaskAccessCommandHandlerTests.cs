@@ -56,7 +56,7 @@ public class CreateUserTaskAccessCommandHandlerTests
         var user = new UserEntity("Name", "Nick", email, this._passwordHash);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
-        this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
+        this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         var failureResult = await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Already shared");
@@ -89,7 +89,7 @@ public class CreateUserTaskAccessCommandHandlerTests
         var user = new UserEntity("Name", "Nick", email, this._passwordHash);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
-        this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
+        this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._serviceMock.Setup(s => s.CanGrantAccessAsync(command.TaskId, command.OwnerId, user, It.IsAny<CancellationToken>()))

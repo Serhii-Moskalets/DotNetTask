@@ -33,6 +33,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
 
         var sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(
             Email.Create(command.Email),
+            asNoTracking: true,
             cancellationToken);
 
         if (sharedUser is null)
