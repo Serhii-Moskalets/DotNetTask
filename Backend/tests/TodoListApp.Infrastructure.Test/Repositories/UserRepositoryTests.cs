@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Moq;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
@@ -252,6 +253,117 @@ public class UserRepositoryTests
 
         // Assert
         Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.GetBySecurityTokenAsync"/>
+    /// returns the user when the string token and type match the CurrentToken.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task GetBySecurityToken_ReturnUser_WhenMatchesCurrentToken()
+    {
+        // Arrange
+        await using var context = InMemoryDbContextFactory.Create();
+        var repo = new UserRepository(context);
+
+        var token = SecurityToken.Create("current-secret-code", TimeSpan.FromHours(1), UserTokenType.PasswordReset);
+
+        var user = this.CreateTestUser();
+        typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
+
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(user.Id, result.Id);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.GetBySecurityTokenAsync"/>
+    /// returns the user when the string token and type match the RevertToken.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task GetBySecurityToken_ReturnUser_WhenMatchesRevertToken()
+    {
+        // Arrange
+        await using var context = InMemoryDbContextFactory.Create();
+        var repo = new UserRepository(context);
+
+        var token = SecurityToken.Create("revert-secret-code", TimeSpan.FromHours(1), UserTokenType.EmailChange);
+
+        var user = this.CreateTestUser();
+        typeof(UserEntity).GetProperty(nameof(UserEntity.RevertToken))?.SetValue(user, token);
+
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+
+        // Act
+        var result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.Equal(user.Id, result.Id);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.GetBySecurityTokenAsync"/>
+    /// returns null when the token value matches but the token type is different.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task GetBySecurityToken_ReturnNull_WhenTypeMismatch()
+    {
+        // Arrange
+        await using var context = InMemoryDbContextFactory.Create();
+        var repo = new UserRepository(context);
+
+        var token = SecurityToken.Create("same-code", TimeSpan.FromHours(1), UserTokenType.EmailChange);
+
+        var user = this.CreateTestUser();
+        typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
+
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+
+        var result = await repo.GetBySecurityTokenAsync(token.Value, UserTokenType.PasswordReset);
+
+        // Assert
+        Assert.Null(result);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.GetBySecurityTokenAsync"/>
+    /// returns a tracked entity so it can be updated.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task GetBySecurityToken_ShouldTrackReturnedEntity()
+    {
+        // Arrange
+        await using var context = InMemoryDbContextFactory.Create();
+        var repo = new UserRepository(context);
+
+        var token = SecurityToken.Create("track-token", TimeSpan.FromHours(1), UserTokenType.EmailChange);
+
+        var user = this.CreateTestUser();
+        typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
+
+        await context.Users.AddAsync(user);
+        await context.SaveChangesAsync();
+        context.ChangeTracker.Clear();
+
+        // Act
+        var result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotEqual(EntityState.Detached, context.Entry(result).State);
     }
 
     private UserEntity CreateTestUser(string email = "test@example.com", string username = "testuser")

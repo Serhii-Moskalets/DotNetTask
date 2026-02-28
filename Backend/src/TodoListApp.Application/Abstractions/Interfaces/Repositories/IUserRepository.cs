@@ -1,4 +1,5 @@
 ﻿using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Abstractions.Interfaces.Repositories;
@@ -63,4 +64,16 @@ public interface IUserRepository : IRepository<UserEntity>
     /// by using a projection to fetch only the necessary columns instead of the entire user entity.
     /// </remarks>
     Task<(string SecurityStamp, bool MustChangePassword)?> GetUsersSecurityInfoAsync(Guid userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves a user entity that matches the specified security token and token type.
+    /// </summary>
+    /// <remarks>This method searches for a user entity whose current or revert token matches the provided
+    /// token and token type. Ensure that the token and type correspond to a valid and active user token.</remarks>
+    /// <param name="token">The security token used to identify the user. This value must not be null or empty.</param>
+    /// <param name="tokenType">The type of the security token, which determines the context in which the token is valid.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the user entity if a matching token
+    /// and type are found; otherwise, null.</returns>
+    Task<UserEntity?> GetBySecurityTokenAsync(string token, UserTokenType tokenType, CancellationToken cancellationToken = default);
 }
