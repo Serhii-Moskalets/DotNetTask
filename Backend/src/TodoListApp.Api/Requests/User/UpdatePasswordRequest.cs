@@ -1,4 +1,4 @@
-﻿namespace TodoListApp.Api.Requests.Auth;
+﻿namespace TodoListApp.Api.Requests.User;
 
 /// <summary>
 /// Represents a request to update the password of an authenticated user.

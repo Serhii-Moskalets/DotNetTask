@@ -7,7 +7,6 @@ using TodoListApp.Application.Users.Commands.ConfirmPasswordReset;
 using TodoListApp.Application.Users.Commands.LoginUser;
 using TodoListApp.Application.Users.Commands.RegisterUser;
 using TodoListApp.Application.Users.Commands.ResetPassword;
-using TodoListApp.Application.Users.Commands.UpdatePassword;
 
 namespace TodoListApp.Api.Controllers;
 
@@ -15,6 +14,7 @@ namespace TodoListApp.Api.Controllers;
 /// Provides HTTP endpoints for authentication and user account management,
 /// including registration, login, and password recovery.
 /// </summary>
+[AllowAnonymous]
 [Route("api/auth")]
 public sealed class AuthController(ISender mediator) : BaseController(mediator)
 {
@@ -43,16 +43,16 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     /// <summary>
     /// Confirms the user's email address using a secure verification token.
     /// </summary>
-    /// <param name="request">The confirmation details including User ID and token.</param>
+    /// <param name="token">The secure token received via email for confirmation.</param>
     /// <returns>No content on success.</returns>
     /// <response code="204">Email confirmed successfully.</response>
     /// <response code="400">If the token is invalid, expired, or the user is not found.</response>
     [HttpPost("confirm-email")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> ConfirmEmail([FromBody] ConfirmEmailVerificationRequest request)
+    public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
     {
-        var command = new ConfirmEmailCommand(request.UserId, request.Token);
+        var command = new ConfirmEmailCommand(token);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -75,30 +75,12 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     }
 
     /// <summary>
-    /// Updates the password for the currently authenticated user.
-    /// </summary>
-    /// <param name="request">The current and new password details.</param>
-    /// <returns>No content on success.</returns>
-    /// <response code="204">Password updated successfully.</response>
-    /// <response code="400">If the current password is incorrect.</response>
-    [Authorize]
-    [HttpPut("update-password")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordRequest request)
-    {
-        var command = new UpdatePasswordCommand(request.CurrentPassword, request.NewPassword, this.CurrentUserId);
-        var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
-        return this.HandleNoContent(result);
-    }
-
-    /// <summary>
     /// Initiates the password recovery process by sending a reset link to the user's email.
     /// </summary>
     /// <param name="request">The email address of the account.</param>
     /// <returns>No content.</returns>
     /// <response code="204">If the request was processed (always returns 204 for security reasons).</response>
-    [HttpPut("forgot-password")]
+    [HttpPost("forgot-password")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
@@ -119,10 +101,7 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResetPassword([FromBody] ConfirmPasswordResetRequest request)
     {
-        var command = new ConfirmPasswordResetCommand(
-            request.UserId,
-            request.NewPassword,
-            request.Token);
+        var command = new ConfirmPasswordResetCommand(request.NewPassword, request.Token);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
