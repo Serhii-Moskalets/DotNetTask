@@ -12,9 +12,6 @@ public class ConfirmChangeEmailCommandValidator : AbstractValidator<ConfirmChang
     /// </summary>
     public ConfirmChangeEmailCommandValidator()
     {
-        this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
-
         this.RuleFor(x => x.Token)
             .NotEmpty().WithMessage("Token is required.");
     }
