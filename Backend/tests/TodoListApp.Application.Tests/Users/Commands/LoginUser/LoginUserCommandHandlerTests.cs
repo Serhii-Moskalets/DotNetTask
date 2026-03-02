@@ -49,7 +49,7 @@ public class LoginUserCommandHandlerTests
 
         const string generatedToken = "valid_jwt_token";
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
@@ -79,7 +79,7 @@ public class LoginUserCommandHandlerTests
         // Arrange
         var command = new LoginUserCommand("nonexistent@test.com", "any_password");
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
 
         // Act
@@ -104,7 +104,7 @@ public class LoginUserCommandHandlerTests
         var command = new LoginUserCommand("john@test.com", "WrongPassword!");
         var user = new UserEntity("John", "johndoe", command.Email, new('a', 64), "Doe");
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
@@ -139,9 +139,9 @@ public class LoginUserCommandHandlerTests
         var revertToken = "revert";
         user.RequestEmailChange(Email.Create("new@test.com"), "token", revertToken, TimeSpan.FromHours(1));
         user.ConfirmEmailChange("token", DateTime.UtcNow);
-        user.RevertEmailChange(revertToken, DateTime.UtcNow);
+        user.RevertEmailChange(revertToken, DateTime.UtcNow, "reset-token", TimeSpan.FromMinutes(15));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
             .Returns(true);
@@ -168,7 +168,7 @@ public class LoginUserCommandHandlerTests
         var command = new LoginUserCommand("john@test.com", "Password123!");
         var user = new UserEntity("John", "johndoe", command.Email, new('a', 64));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
         this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
             .Returns(true);

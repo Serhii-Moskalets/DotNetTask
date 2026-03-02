@@ -13,8 +13,8 @@ using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Persistence.UnitOfWork;
 using TodoListApp.Infrastructure.Security;
+using TodoListApp.Infrastructure.Security.Settings;
 using TodoListApp.Infrastructure.Services;
-using TodoListApp.Infrastructure.Test.Security.Settings;
 
 namespace TodoListApp.Infrastructure.Extensions;
 

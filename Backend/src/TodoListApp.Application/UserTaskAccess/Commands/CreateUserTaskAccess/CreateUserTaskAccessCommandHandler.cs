@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
 
@@ -28,9 +29,10 @@ public class CreateUserTaskAccessCommandHandler(
     /// </returns>
     public async Task<Result<bool>> Handle(CreateUserTaskAccessCommand command, CancellationToken cancellationToken)
     {
-        var email = command.Email!.Trim().ToLowerInvariant();
-
-        var sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(email, cancellationToken);
+        var sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(
+            Email.Create(command.Email),
+            asNoTracking: true,
+            cancellationToken);
 
         var accessValidation = await this._userTaskAccessService
             .CanGrantAccessAsync(command.TaskId, command.OwnerId, sharedUser, cancellationToken);

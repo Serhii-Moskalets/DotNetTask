@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ChangeEmail;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ChangeEmail;
 
@@ -46,7 +47,7 @@ public class ChangeEmailCommandHandlerTests
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(command.NewEmail, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         this._tokenGeneratorMock.Setup(x => x.GenerateSecureToken())
@@ -104,7 +105,7 @@ public class ChangeEmailCommandHandlerTests
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(command.NewEmail, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act
@@ -141,7 +142,7 @@ public class ChangeEmailCommandHandlerTests
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.ValidationError);
         result.Error.Message.Should().Be("New email is same as current.");
 
-        this._unitOfWorkMock.Verify(x => x.Users.ExistsByEmailAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never());
+        this._unitOfWorkMock.Verify(x => x.Users.ExistsByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()), Times.Never());
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never());
     }

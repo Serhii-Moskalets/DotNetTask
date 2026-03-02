@@ -36,7 +36,7 @@ public class UpdateUsernameCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "New Username is same as current.");
         }
 
-        if (await this.UnitOfWork.Users.ExistsByUserNameAsync(newUserName.Value, cancellationToken))
+        if (await this.UnitOfWork.Users.ExistsByUserNameAsync(newUserName, cancellationToken))
         {
             return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Username is already taken.");
         }

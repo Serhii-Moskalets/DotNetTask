@@ -4,7 +4,9 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ConfirmPasswordReset;
+using TodoListApp.Application.Users.Commands.RevertEmailChange;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmPasswordReset;
@@ -45,11 +47,11 @@ public class ConfirmPasswordResetCommandHandlerTests
     {
         // Arrange
         var user = new UserEntity("John", "johndoe", CurrentEmail, this._oldPasswordHashString);
-        var command = new ConfirmPasswordResetCommand(user.Id, "NewPassword123!", "valid-token");
+        var command = new ConfirmPasswordResetCommand("NewPassword123!", "valid-token");
 
         user.RequestPasswordReset("valid-token", TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.PasswordReset, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._passwordHasherMock.Setup(x => x.HashPassword(command.NewPassword))
@@ -67,29 +69,6 @@ public class ConfirmPasswordResetCommandHandlerTests
     }
 
     /// <summary>
-    /// Verifies that the handler returns a failure when the user is not found.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Handle_Should_ReturnFailure_When_UserDoesNotExist()
-    {
-        // Arrange
-        var command = new ConfirmPasswordResetCommand(Guid.NewGuid(), "Pass123!", "token");
-
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserEntity?)null);
-
-        // Act
-        var result = await this._sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
-
-        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    /// <summary>
     /// Verifies that the handler throws a <see cref="DomainException"/> when the token is invalid.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
@@ -98,11 +77,11 @@ public class ConfirmPasswordResetCommandHandlerTests
     {
         // Arrange
         var user = new UserEntity("John", "johndoe", CurrentEmail, this._oldPasswordHashString);
-        var command = new ConfirmPasswordResetCommand(user.Id, "NewPass123!", "wrong-token");
+        var command = new ConfirmPasswordResetCommand("NewPass123!", "wrong-token");
 
         user.RequestPasswordReset("correct-token", TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.PasswordReset, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._passwordHasherMock.Setup(x => x.HashPassword(command.NewPassword))
@@ -113,6 +92,32 @@ public class ConfirmPasswordResetCommandHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<DomainException>();
+        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Verifies that the handler returns a NotFound error when attempting to revert an email change with a non-existent
+    /// security token.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Handle_Should_ReturnNotFound_When_TokenDoesNotExist()
+    {
+        // Arrange
+        var command = new ConfirmPasswordResetCommand("NewPass123!", "unknown-token");
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(
+                command.Token,
+                UserTokenType.PasswordReset,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserEntity?)null);
+
+        // Act
+        var result = await this._sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

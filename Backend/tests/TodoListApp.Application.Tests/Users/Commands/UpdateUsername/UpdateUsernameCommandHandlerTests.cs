@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.UpdateUsername;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.UpdateUsername;
 
@@ -39,7 +40,7 @@ public class UpdateUsernameCommandHandlerTests
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync("NewUserName", It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync(It.IsAny<UserName>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
         // Act
@@ -99,7 +100,7 @@ public class UpdateUsernameCommandHandlerTests
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
         result.Error.Message.Should().Be("New Username is same as current.");
 
-        this._unitOfWorkMock.Verify(x => x.Users.ExistsByUserNameAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        this._unitOfWorkMock.Verify(x => x.Users.ExistsByUserNameAsync(It.IsAny<UserName>(), It.IsAny<CancellationToken>()), Times.Never);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -119,7 +120,7 @@ public class UpdateUsernameCommandHandlerTests
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync("TakenName", It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync(It.IsAny<UserName>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
         // Act

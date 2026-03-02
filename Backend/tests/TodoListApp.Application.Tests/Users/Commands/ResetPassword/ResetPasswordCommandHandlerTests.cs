@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ResetPassword;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ResetPassword;
 
@@ -44,7 +45,7 @@ public class ResetPasswordCommandHandlerTests
         var user = new UserEntity("John", "johndoe", command.Email, this._passwordHashString);
         const string secureToken = "secure-token-123";
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._tokenGeneratorMock.Setup(x => x.GenerateSecureToken())
@@ -73,7 +74,7 @@ public class ResetPasswordCommandHandlerTests
         // Arrange
         var command = new ResetPasswordCommand("nonexistent@test.com");
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(command.Email, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
 
         // Act

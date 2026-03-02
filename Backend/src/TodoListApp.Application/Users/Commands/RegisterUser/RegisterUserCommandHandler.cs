@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.RegisterUser;
 
@@ -26,44 +27,58 @@ public class RegisterUserCommandHandler(
     /// <summary>
     /// Processes the user registration request.
     /// </summary>
-    /// <param name="request">The command containing user registration details.</param>
+    /// <param name="command">The command containing user registration details.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>
     /// A <see cref="Result{T}"/> containing the new user's unique identifier on success,
     /// or a failure result with a validation error if the email or username is already taken.
     /// </returns>
-    public async Task<Result<Guid>> Handle(RegisterUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
     {
-        var emailExists = await this._unitOfWork.Users.ExistsByEmailAsync(request.Email, cancellationToken);
-
-        if (emailExists)
+        var user = await this._unitOfWork.Users.GetByEmailAsync(Email.Create(command.Email), asNoTracking: false, cancellationToken);
+        if (user?.EmailConfirmed is true)
         {
             return await Result<Guid>.FailureAsync(ErrorCode.ValidationError, "Email is already exists.");
         }
 
-        var userNameExists = await this._unitOfWork.Users.ExistsByUserNameAsync(request.UserName, cancellationToken);
+        var userNameExists = await this._unitOfWork.Users.ExistsByUserNameAsync(
+            UserName.Create(command.UserName),
+            cancellationToken);
 
-        if (userNameExists)
+        if (userNameExists && (user == null || user.UserName.Value != command.UserName))
         {
             return await Result<Guid>.FailureAsync(ErrorCode.ValidationError, "User name is already exists.");
         }
 
-        var passwordHash = this._passwordHasher.HashPassword(request.Password);
-
-        var user = new UserEntity(
-            request.FirstName,
-            request.UserName,
-            request.Email,
-            passwordHash,
-            request.LastName);
-
+        var passwordHash = this._passwordHasher.HashPassword(command.Password);
         var token = this._tokenGenerator.GenerateSecureToken();
 
-        user.RequestEmailVerification(token, TimeSpan.FromMinutes(15));
+        if (user is not null)
+        {
+            user.UpdateUnconfirmedRegistration(
+                FirstName.Create(command.FirstName),
+                UserName.Create(command.UserName),
+                PasswordHash.Create(passwordHash),
+                token,
+                TimeSpan.FromMinutes(15),
+                LastName.Create(command.LastName));
+        }
+        else
+        {
+            user = new UserEntity(
+                command.FirstName,
+                command.UserName,
+                command.Email,
+                passwordHash,
+                command.LastName);
 
-        await this._unitOfWork.Users.AddAsync(user, cancellationToken);
+            user.RequestEmailVerification(token, TimeSpan.FromMinutes(15));
+
+            await this._unitOfWork.Users.AddAsync(user, cancellationToken);
+        }
+
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return user.Id;
+        return await Result<Guid>.SuccessAsync(user.Id);
     }
 }

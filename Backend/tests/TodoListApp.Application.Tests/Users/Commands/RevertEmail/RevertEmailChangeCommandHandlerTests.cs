@@ -1,9 +1,11 @@
 ﻿using FluentAssertions;
 using Moq;
+using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
 using TodoListApp.Application.Users.Commands.RevertEmailChange;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -20,6 +22,7 @@ public class RevertEmailChangeCommandHandlerTests
     private const string ConfirmToken = "confirm-token";
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ITokenGenerator> _tokenGenerator;
     private readonly RevertEmailChangeCommandHandler _sut;
 
     /// <summary>
@@ -28,7 +31,8 @@ public class RevertEmailChangeCommandHandlerTests
     public RevertEmailChangeCommandHandlerTests()
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._sut = new RevertEmailChangeCommandHandler(this._unitOfWorkMock.Object);
+        this._tokenGenerator = new Mock<ITokenGenerator>();
+        this._sut = new RevertEmailChangeCommandHandler(this._unitOfWorkMock.Object, this._tokenGenerator.Object);
     }
 
     /// <summary>
@@ -41,11 +45,13 @@ public class RevertEmailChangeCommandHandlerTests
     {
         // Arrange
         var user = CreateUser();
-        var command = new RevertEmailChangeCommand(user.Id, RevertToken);
+        var command = new RevertEmailChangeCommand(RevertToken);
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        this._tokenGenerator.Setup(x => x.GenerateSecureToken()).Returns("new-return-token");
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -55,34 +61,9 @@ public class RevertEmailChangeCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         user.Email.Value.Should().Be(OldEmail);
         user.EmailConfirmed.Should().BeTrue();
-        user.CurrentToken.Should().BeNull();
         user.RevertToken.Should().BeNull();
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    /// <summary>
-    /// Verifies that the handler returns a failure result with a <c>NotFound</c> error code
-    /// when the user identifier specified in the command does not exist.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    [Fact]
-    public async Task Handle_Should_ReturnNotFound_When_UserDoesNotExist()
-    {
-        // Arrange
-        var command = new RevertEmailChangeCommand(Guid.NewGuid(), RevertToken);
-
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserEntity?)null);
-
-        // Act
-        var result = await this._sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
-
-        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     /// <summary>
@@ -95,11 +76,11 @@ public class RevertEmailChangeCommandHandlerTests
     {
         // Arrange
         var user = CreateUser();
-        var command = new RevertEmailChangeCommand(user.Id, "wrong-token");
+        var command = new RevertEmailChangeCommand("wrong-token");
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -109,6 +90,29 @@ public class RevertEmailChangeCommandHandlerTests
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Invalid or expired email change revert token.");
 
+        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Verifies that the handler returns a NotFound error when attempting to revert an email change with a non-existent
+    /// security token.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Handle_Should_ReturnNotFound_When_TokenDoesNotExist()
+    {
+        // Arrange
+        var command = new RevertEmailChangeCommand("unknown-token");
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserEntity?)null);
+
+        // Act
+        var result = await this._sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 

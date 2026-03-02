@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Notifications;
 using TodoListApp.Application.Users.Events;
@@ -45,30 +46,33 @@ public class EmailChangeRequestedDomainEventHandlerTests
     {
         // Arrange
         var user = CreateTestUser();
-        var confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange);
+        var confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange, "new@email.com");
         var revertToken = SecurityToken.Create("revert-123", TimeSpan.FromHours(1), UserTokenType.EmailChangeRevert, "old@email.com");
 
         var domainEvent = new EmailChangeRequestedDomainEvent(user, confirmToken, revertToken);
 
-        this._urlProviderMock.Setup(x => x.GetEmailChangeLink(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<string>()))
+        this._urlProviderMock.Setup(x => x.GetEmailChangeLink(It.IsAny<string>()))
             .Returns("http://confirm-link.com");
-        this._urlProviderMock.Setup(x => x.GetEmailRevertLink(It.IsAny<Guid>(), It.IsAny<string>()))
+        this._urlProviderMock.Setup(x => x.GetEmailRevertLink(It.IsAny<string>()))
             .Returns("http://revert-link.com");
 
         // Act
         await this._sut.Handle(domainEvent, CancellationToken.None);
 
         // Assert
+        confirmToken.Metadata.Should().NotBeNull();
+        revertToken.Metadata.Should().NotBeNull();
+
         this._emailServiceMock.Verify(
             x => x.SendEmailChangeConfirmationAsync(
-                user.Email.Value,
+                confirmToken.Metadata,
                 user.UserName.Value,
                 "http://confirm-link.com",
                 It.IsAny<CancellationToken>()), Times.Once);
 
         this._emailServiceMock.Verify(
             x => x.SendEmailChangeSecurityAlertAsync(
-                "old@email.com",
+                revertToken.Metadata,
                 user.Email.Value,
                 user.UserName.Value,
                 "http://revert-link.com",

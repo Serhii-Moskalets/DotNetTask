@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Domain.Entities;
-using TodoListApp.Infrastructure.Test.Security.Settings;
+using TodoListApp.Infrastructure.Security.Settings;
 
 namespace TodoListApp.Infrastructure.Security;
 
@@ -46,7 +46,7 @@ public class JwtTokenGenerator(IOptions<JwtSettings> jwtOptions) : IJwtTokenGene
             new (JwtRegisteredClaimNames.Email, user.Email.Value),
             new (JwtRegisteredClaimNames.UniqueName, user.UserName.Value),
             new (JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-            new ("security_stamp", user.SecurityStamp.Value),
+            new (CustomClaims.SecurityStamp, user.SecurityStamp.Value),
         };
 
         var token = new JwtSecurityToken(

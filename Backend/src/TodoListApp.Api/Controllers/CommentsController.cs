@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Api.Requests.Comment;
 using TodoListApp.Application.Comment.Commands.CreateComment;
@@ -12,9 +14,19 @@ namespace TodoListApp.Api.Controllers;
 /// <summary>
 /// Provides HTTP endpoints for managing comments related to tasks.
 /// </summary>
+[Authorize]
 [Route("api/tasks/{taskId:guid}/comments")]
 public class CommentsController : BaseController
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CommentsController"/> class.
+    /// </summary>
+    /// <param name="mediator">The Mediatr sender for dispatching commands and queries.</param>
+    public CommentsController(ISender mediator)
+        : base(mediator)
+    {
+    }
+
     /// <summary>
     /// Retrieves all comments associated with a specific task.
     /// </summary>
@@ -25,7 +37,7 @@ public class CommentsController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetComments([FromRoute] Guid taskId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var query = new GetCommentsQuery(taskId, CurrentUserId, page, pageSize);
+        var query = new GetCommentsQuery(taskId, this.CurrentUserId, page, pageSize);
         var result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -36,17 +48,21 @@ public class CommentsController : BaseController
     /// <param name="taskId">The unique identifier of the task.</param>
     /// <param name="request">The request containing the comment text.</param>
     /// <returns>
-    /// A <see cref="CreatedAtActionResult"/> containing the created comment identifier
-    /// if the operation succeeds; otherwise, a <see cref="BadRequestObjectResult"/>
-    /// containing error details.
+    /// A <see cref="CreatedAtActionResult"/> with the created comment identifier and a Location header
+    /// pointing to the task's comment collection if the operation succeeds; otherwise, a <see cref="ProblemDetails"/>
+    /// error response.
     /// </returns>
     [HttpPost]
-    public async Task<IActionResult> CreateComment(
-        [FromRoute] Guid taskId,
-        [FromBody] CommentTextRequest request)
+    public async Task<IActionResult> CreateComment([FromRoute] Guid taskId, [FromBody] CommentTextRequest request)
     {
-        var command = new CreateCommentCommand(taskId, CurrentUserId, request.Text);
+        var command = new CreateCommentCommand(taskId, this.CurrentUserId, request.Text);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+
+        if (result.IsSuccess)
+        {
+            return this.CreatedAtAction(nameof(this.GetComments), new { taskId }, result.Value);
+        }
+
         return this.HandleResult(result);
     }
 
@@ -61,7 +77,7 @@ public class CommentsController : BaseController
     [HttpDelete("~/api/comments/{commentId:guid}")]
     public async Task<IActionResult> DeleteComment([FromRoute] Guid commentId)
     {
-        var command = new DeleteCommentCommand(commentId, CurrentUserId);
+        var command = new DeleteCommentCommand(commentId, this.CurrentUserId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -76,11 +92,9 @@ public class CommentsController : BaseController
     /// otherwise, returns <see cref="BadRequestObjectResult"/> with error details.
     /// </returns>
     [HttpPut("~/api/comments/{commentId:guid}")]
-    public async Task<IActionResult> UpdateComment(
-        [FromRoute] Guid commentId,
-        [FromBody] CommentTextRequest request)
+    public async Task<IActionResult> UpdateComment([FromRoute] Guid commentId, [FromBody] CommentTextRequest request)
     {
-        var command = new UpdateCommentCommand(commentId, CurrentUserId, request.Text);
+        var command = new UpdateCommentCommand(commentId, this.CurrentUserId, request.Text);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

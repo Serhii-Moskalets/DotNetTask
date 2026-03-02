@@ -18,30 +18,13 @@ public class RevertEmailChangeCommandValidatorTests
     public void Should_NotHaveError_When_CommandIsValid()
     {
         // Arrange
-        var command = new RevertEmailChangeCommand(Guid.NewGuid(), "valid-token");
+        var command = new RevertEmailChangeCommand("valid-token");
 
         // Act
         var result = this._validator.TestValidate(command);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    /// <summary>
-    /// Verifies that an empty user id triggers a validation error.
-    /// </summary>
-    [Fact]
-    public void Should_HaveError_When_UserIdIsEmpty()
-    {
-        // Arrange
-        var command = new RevertEmailChangeCommand(Guid.Empty, "valid-token");
-
-        // Act
-        var result = this._validator.TestValidate(command);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.UserId)
-            .WithErrorMessage("User ID is required.");
     }
 
     /// <summary>
@@ -54,7 +37,7 @@ public class RevertEmailChangeCommandValidatorTests
     public void Should_HaveError_When_TokenIsNullOrEmpty(string? token)
     {
         // Arrange
-        var command = new RevertEmailChangeCommand(Guid.NewGuid(), token!);
+        var command = new RevertEmailChangeCommand(token!);
 
         // Act
         var result = this._validator.TestValidate(command);

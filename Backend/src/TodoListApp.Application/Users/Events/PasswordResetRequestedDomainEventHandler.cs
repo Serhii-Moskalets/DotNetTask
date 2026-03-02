@@ -22,10 +22,9 @@ public class PasswordResetRequestedDomainEventHandler(
         ArgumentNullException.ThrowIfNull(notification);
 
         var userEmail = notification.User.Email.Value;
-        var userId = notification.User.Id;
         var tokenValue = notification.ResetToken.Value;
 
-        var resetLink = this._urlPrivider.GetPasswordResetLink(userId, tokenValue);
+        var resetLink = this._urlPrivider.GetPasswordResetLink(tokenValue);
 
         await this._emailService.SendPasswordResetEmailAsync(
             userEmail,

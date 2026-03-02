@@ -18,6 +18,7 @@ public class UserEntityTests
 
     private const string TokenValue = "token123";
     private const string RevertToken = "revert_secret";
+    private const string ResetToken = "reset_secret";
 
     private readonly Email _newEmail = Email.Create("newEmail@example.com");
     private readonly string _passwordHashString = new('a', 64);
@@ -229,7 +230,7 @@ public class UserEntityTests
         user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
 
         // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
         user.Email.Value.Should().Be(CurrentEmail);
@@ -249,7 +250,7 @@ public class UserEntityTests
         var stampAfterConfirm = user.SecurityStamp;
 
         // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
         user.Email.Value.Should().Be(CurrentEmail);
@@ -272,7 +273,7 @@ public class UserEntityTests
         var stampAfterHacker = user.SecurityStamp;
 
         // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
         user.SecurityStamp.Should().NotBe(stampAfterHacker);
@@ -291,7 +292,7 @@ public class UserEntityTests
         user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
 
         // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
         user.MustChangePassword.Should().BeTrue();
@@ -310,10 +311,9 @@ public class UserEntityTests
         user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
 
         // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow);
+        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
-        user.CurrentToken.Should().BeNull();
         user.RevertToken.Should().BeNull();
     }
 
@@ -332,7 +332,7 @@ public class UserEntityTests
         var expiredTime = DateTime.UtcNow.AddMinutes(2);
 
         // Act
-        var result = () => user.RevertEmailChange(RevertToken, expiredTime);
+        var result = () => user.RevertEmailChange(RevertToken, expiredTime, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
         result.Should().Throw<DomainException>();
@@ -351,7 +351,7 @@ public class UserEntityTests
         var expiredTime = DateTime.UtcNow;
 
         // Act
-        var result = () => user.RevertEmailChange(RevertToken, expiredTime);
+        var result = () => user.RevertEmailChange(RevertToken, expiredTime, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
         result.Should().Throw<DomainException>();
@@ -591,6 +591,34 @@ public class UserEntityTests
         // Act & Assert
         user.Invoking(u => u.ConfirmEmailVerification("invalidtoken", DateTime.UtcNow))
             .Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserEntity.UpdateUnconfirmedRegistration"/> correctly updates all user properties
+    /// and generates a new security token when the user's email has not yet been confirmed.
+    /// </summary>
+    [Fact]
+    public void UpdateUnconfirmedRegistration_Should_UpdateProperties_When_EmailNotConfirmed()
+    {
+        var user = this.CreateUser();
+        var newFirst = FirstName.Create("NewFirst");
+        var newLast = LastName.Create("NewLast");
+        var newUsername = UserName.Create("newusername");
+        var newPasswordHash = PasswordHash.Create(this._newPasswordHashString);
+
+        user.UpdateUnconfirmedRegistration(
+            newFirst,
+            newUsername,
+            newPasswordHash,
+            TokenValue,
+            this._duration,
+            newLast);
+
+        user.FirstName.Value.Should().Be(newFirst.Value);
+        user.LastName!.Value.Should().Be(newLast!.Value);
+        user.UserName.Value.Should().Be(newUsername.Value);
+        user.PasswordHash.Value.Should().Be(newPasswordHash.Value);
+        user.CurrentToken.Should().NotBeNull();
     }
 
     private UserEntity CreateUser()

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Api.Requests.TaskList;
 using TodoListApp.Application.TaskList.Commands.CreateTaskList;
@@ -14,8 +16,18 @@ namespace TodoListApp.Api.Controllers;
 /// Provides API endpoints to manage task lists for the current user.
 /// Supports creating, updating, deleting, and retrieving task lists.
 /// </summary>
+[Authorize]
 public class TaskListsController : BaseController
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskListsController"/> class.
+    /// </summary>
+    /// <param name="mediator">The Mediatr sender for dispatching commands and queries.</param>
+    public TaskListsController(ISender mediator)
+        : base(mediator)
+    {
+    }
+
     /// <summary>
     /// Retrieves all task lists for the current user.
     /// </summary>
@@ -25,7 +37,7 @@ public class TaskListsController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetTaskLists([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var query = new GetTaskListsQuery(CurrentUserId, page, pageSize);
+        var query = new GetTaskListsQuery(this.CurrentUserId, page, pageSize);
         var result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -42,8 +54,14 @@ public class TaskListsController : BaseController
     [HttpPost]
     public async Task<IActionResult> CreateTaskList([FromBody] TaskListTitleRequest request)
     {
-        var command = new CreateTaskListCommand(CurrentUserId, request.Title);
+        var command = new CreateTaskListCommand(this.CurrentUserId, request.Title);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+
+        if (result.IsSuccess)
+        {
+            return this.CreatedAtAction(nameof(this.GetTaskLists), result.Value);
+        }
+
         return this.HandleResult(result);
     }
 
@@ -58,7 +76,7 @@ public class TaskListsController : BaseController
     [HttpDelete("{taskListId:guid}")]
     public async Task<IActionResult> DeleteTaskList([FromRoute] Guid taskListId)
     {
-        var command = new DeleteTaskListCommand(taskListId, CurrentUserId);
+        var command = new DeleteTaskListCommand(taskListId, this.CurrentUserId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -75,7 +93,7 @@ public class TaskListsController : BaseController
     [HttpPut("{taskListId:guid}")]
     public async Task<IActionResult> UpdateTaskList([FromRoute] Guid taskListId, [FromBody] TaskListTitleRequest request)
     {
-        var command = new UpdateTaskListCommand(taskListId, CurrentUserId, request.Title);
+        var command = new UpdateTaskListCommand(taskListId, this.CurrentUserId, request.Title);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

@@ -24,13 +24,10 @@ public class EmailChangeRequestedDomainEventHandler(
         var originalEmail = notification.RevertToken.Metadata;
         ArgumentNullException.ThrowIfNull(originalEmail);
 
-        var userNewEmail = notification.User.Email.Value;
-        var userId = notification.User.Id;
+        var userNewEmail = notification.ConfirmationToken.Metadata;
+        ArgumentNullException.ThrowIfNull(userNewEmail);
 
-        var changeLink = this._urlProvider.GetEmailChangeLink(
-            userId,
-            notification.ConfirmationToken.Value,
-            userNewEmail);
+        var changeLink = this._urlProvider.GetEmailChangeLink(notification.ConfirmationToken.Value);
 
         var confirmTask = this._emailService.SendEmailChangeConfirmationAsync(
             userNewEmail,
@@ -38,9 +35,7 @@ public class EmailChangeRequestedDomainEventHandler(
             changeLink,
             cancellationToken);
 
-        var revertLink = this._urlProvider.GetEmailRevertLink(
-            userId,
-            notification.RevertToken.Value);
+        var revertLink = this._urlProvider.GetEmailRevertLink(notification.RevertToken.Value);
 
         var alertTask = this._emailService.SendEmailChangeSecurityAlertAsync(
             originalEmail,

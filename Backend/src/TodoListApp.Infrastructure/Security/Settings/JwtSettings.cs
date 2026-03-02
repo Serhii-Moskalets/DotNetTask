@@ -1,4 +1,4 @@
-﻿namespace TodoListApp.Infrastructure.Test.Security.Settings;
+﻿namespace TodoListApp.Infrastructure.Security.Settings;
 
 /// <summary>
 /// Represents configuration settings used for JSON Web Token (JWT) generation.

@@ -3,6 +3,7 @@ using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.ResetPassword;
 
@@ -32,7 +33,10 @@ public class ResetPasswordCommandHandler(
     /// </returns>
     public async Task<Result<bool>> Handle(ResetPasswordCommand command, CancellationToken cancellationToken)
     {
-        var user = await this.UnitOfWork.Users.GetByEmailAsync(command.Email, cancellationToken);
+        var user = await this.UnitOfWork.Users.GetByEmailAsync(
+            Email.Create(command.Email),
+            asNoTracking: false,
+            cancellationToken);
 
         if (user is null)
         {

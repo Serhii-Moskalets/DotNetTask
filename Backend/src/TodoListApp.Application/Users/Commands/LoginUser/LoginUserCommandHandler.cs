@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.LoginUser;
 
@@ -21,17 +22,19 @@ public class LoginUserCommandHandler(
     /// <summary>
     /// Processes the login request by validating credentials and generating a security token.
     /// </summary>
-    /// <param name="request">The command containing authentication credentials.</param>
+    /// <param name="command">The command containing authentication credentials.</param>
     /// <param name="cancellationToken">The cancellation token.</param>
     /// <returns>
     /// A <see cref="Result{T}"/> containing the <see cref="LoginResponse"/> on success,
     /// or a failure result with a validation error if credentials are incorrect.
     /// </returns>
-    public async Task<Result<LoginResponse>> Handle(LoginUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<LoginResponse>> Handle(LoginUserCommand command, CancellationToken cancellationToken)
     {
-        var user = await this._unitOfWork.Users.GetByEmailAsync(request.Email, cancellationToken);
+        var email = Email.Create(command.Email);
 
-        if (user is null || !this._passwordHasher.VerifyPassword(request.Password, user.PasswordHash.Value))
+        var user = await this._unitOfWork.Users.GetByEmailAsync(email, asNoTracking: true, cancellationToken);
+
+        if (user is null || !this._passwordHasher.VerifyPassword(command.Password, user.PasswordHash.Value))
         {
             return await Result<LoginResponse>.FailureAsync(
                 ErrorCode.ValidationError,

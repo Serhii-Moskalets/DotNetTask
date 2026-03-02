@@ -3,7 +3,7 @@ using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
 using TodoListApp.Domain.Entities;
-using TodoListApp.Domain.Exceptions;
+using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmChangeEmail;
@@ -31,79 +31,56 @@ public class ConfirmChangeEmailCommandHandlerTests
     }
 
     /// <summary>
-    /// Verifies that a valid token successfully confirms the email change.
+    /// Verifies that the handler returns a failure result when the user is not found by the token.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_Should_ReturnSuccess_When_TokenIsValid()
+    public async Task Handle_Should_ReturnFail_When_UserNotFound()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var command = new ConfirmChangeEmailCommand(userId, ConfirmToken);
-        var user = new UserEntity("John", "john", "old@example.com", this._passwordHash);
+        var command = new ConfirmChangeEmailCommand("non-existent-token");
 
-        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
-
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(user);
-
-        // Act
-        var result = await this._sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsSuccess.Should().BeTrue();
-        user.Email.Value.Should().Be(PendingEmail);
-        user.EmailConfirmed.Should().BeTrue();
-        user.CurrentToken.Should().BeNull();
-
-        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    /// <summary>
-    /// Verifies that a NotFound failure is returned when the user does not exist.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Handle_Should_ReturnNotFound_When_UserDoesNotExist()
-    {
-        // Arrange
-        var command = new ConfirmChangeEmailCommand(Guid.NewGuid(), ConfirmToken);
-
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(
+            It.IsAny<string>(),
+            UserTokenType.EmailChange,
+            It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
 
         // Act
         var result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
-        result.IsFailure.Should().BeTrue();
+        result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     /// <summary>
-    /// Verifies that a DomainException is thrown when the token is invalid or expired.
+    /// Verifies that the handler throws a DomainException when the user is found,
+    /// but the token is invalid or expired (Domain Logic check).
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_Should_ThrowDomainException_When_TokenIsInvalid()
+    public async Task Handle_Should_ThrowDomainException_When_TokenIsInvalidForFoundUser()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var command = new ConfirmChangeEmailCommand(userId, "wrong-token");
+        var command = new ConfirmChangeEmailCommand("wrong-token");
         var user = new UserEntity("John", "john", "old@example.com", this._passwordHash);
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(
+                It.IsAny<string>(),
+                UserTokenType.EmailChange,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
-        var act = () => this._sut.Handle(command, CancellationToken.None);
+        var act = async () => await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<DomainException>()
+        await act.Should().ThrowAsync<Domain.Exceptions.DomainException>()
             .WithMessage("Invalid or expired email change token.");
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);

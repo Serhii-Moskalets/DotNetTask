@@ -47,7 +47,7 @@ public class ChangeEmailCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "New email is same as current.");
         }
 
-        var emailExist = await this.UnitOfWork.Users.ExistsByEmailAsync(newEmail.Value, cancellationToken);
+        var emailExist = await this.UnitOfWork.Users.ExistsByEmailAsync(newEmail, cancellationToken);
         if (emailExist)
         {
             return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "This email is already in use.");
