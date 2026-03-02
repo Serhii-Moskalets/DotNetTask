@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Moq;
+using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
 using TodoListApp.Application.Users.Commands.RevertEmailChange;
@@ -21,6 +22,7 @@ public class RevertEmailChangeCommandHandlerTests
     private const string ConfirmToken = "confirm-token";
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<ITokenGenerator> _tokenGenerator;
     private readonly RevertEmailChangeCommandHandler _sut;
 
     /// <summary>
@@ -29,7 +31,8 @@ public class RevertEmailChangeCommandHandlerTests
     public RevertEmailChangeCommandHandlerTests()
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._sut = new RevertEmailChangeCommandHandler(this._unitOfWorkMock.Object);
+        this._tokenGenerator = new Mock<ITokenGenerator>();
+        this._sut = new RevertEmailChangeCommandHandler(this._unitOfWorkMock.Object, this._tokenGenerator.Object);
     }
 
     /// <summary>
@@ -46,6 +49,8 @@ public class RevertEmailChangeCommandHandlerTests
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
 
+        this._tokenGenerator.Setup(x => x.GenerateSecureToken()).Returns("new-return-token");
+
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -56,7 +61,6 @@ public class RevertEmailChangeCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         user.Email.Value.Should().Be(OldEmail);
         user.EmailConfirmed.Should().BeTrue();
-        user.CurrentToken.Should().BeNull();
         user.RevertToken.Should().BeNull();
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);

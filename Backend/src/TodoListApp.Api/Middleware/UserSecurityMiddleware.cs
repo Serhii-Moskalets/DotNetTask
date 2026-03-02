@@ -52,7 +52,7 @@ public class UserSecurityMiddleware(RequestDelegate next)
 
             if (mustChangePassword)
             {
-                bool isChangePasswordEndpoint = context.Request.Path.StartsWithSegments("/auth/change-password", StringComparison.OrdinalIgnoreCase);
+                bool isChangePasswordEndpoint = context.Request.Path.StartsWithSegments("/auth/reset-password", StringComparison.OrdinalIgnoreCase);
 
                 if (!isChangePasswordEndpoint)
                 {

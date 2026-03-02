@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using TinyResult;
+using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 
@@ -13,27 +14,32 @@ namespace TodoListApp.Application.Users.Commands.RevertEmailChange;
 /// updates security credentials (must change password, security stamp),
 /// and persists changes via the unit of work.
 /// </remarks>
-public class RevertEmailChangeCommandHandler(IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<RevertEmailChangeCommand, Result<bool>>
+public class RevertEmailChangeCommandHandler(
+    IUnitOfWork unitOfWork,
+    ITokenGenerator tokenGenerator) : HandlerBase(unitOfWork), IRequestHandler<RevertEmailChangeCommand, Result<string>>
 {
+    private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
+
     /// <summary>
     /// Processes the revert request.
     /// </summary>
     /// <param name="command">The revert command containing user ID and security token.</param>
     /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A <see cref="Result{T}"/> indicating success or failure (e.g., if user not found).</returns>
-    public async Task<Result<bool>> Handle(RevertEmailChangeCommand command, CancellationToken cancellationToken)
+    public async Task<Result<string>> Handle(RevertEmailChangeCommand command, CancellationToken cancellationToken)
     {
         var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChangeRevert, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email revert token.");
+            return await Result<string>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email revert token.");
         }
 
-        user.RevertEmailChange(command.Token, DateTime.UtcNow);
+        var resetToken = this._tokenGenerator.GenerateSecureToken();
+
+        user.RevertEmailChange(command.Token, DateTime.UtcNow, resetToken, TimeSpan.FromMinutes(15));
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return await Result<string>.SuccessAsync(resetToken);
     }
 }

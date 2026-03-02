@@ -233,11 +233,13 @@ public class UserEntity : BaseEntity
     /// <summary>
     /// Reverts the email change to the original address using the revert token.
     /// </summary>
-    /// <param name="token">The revert token sent to the original email address.</param>
+    /// <param name="revertToken">The revert token sent to the original email address.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    public void RevertEmailChange(string token, DateTime currentTime)
+    /// <param name="resetToken">TThe unique secure token for password reset.</param>
+    /// <param name="duration">The timeframe during which the token remains valid.</param>
+    public void RevertEmailChange(string revertToken, DateTime currentTime, string resetToken, TimeSpan duration)
     {
-        if (this.RevertToken?.IsValid(token, UserTokenType.EmailChangeRevert, currentTime) is not true)
+        if (this.RevertToken?.IsValid(revertToken, UserTokenType.EmailChangeRevert, currentTime) is not true)
         {
             throw new DomainException("Invalid or expired email change revert token.");
         }
@@ -250,7 +252,7 @@ public class UserEntity : BaseEntity
         this.UpdateSecurityStamp();
         this.MustChangePassword = true;
 
-        this.CurrentToken = null;
+        this.CurrentToken = SecurityToken.Create(resetToken, duration, UserTokenType.PasswordReset);
         this.RevertToken = null;
     }
 

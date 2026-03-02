@@ -139,7 +139,7 @@ public class LoginUserCommandHandlerTests
         var revertToken = "revert";
         user.RequestEmailChange(Email.Create("new@test.com"), "token", revertToken, TimeSpan.FromHours(1));
         user.ConfirmEmailChange("token", DateTime.UtcNow);
-        user.RevertEmailChange(revertToken, DateTime.UtcNow);
+        user.RevertEmailChange(revertToken, DateTime.UtcNow, "reset-token", TimeSpan.FromMinutes(15));
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
