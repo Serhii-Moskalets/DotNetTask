@@ -32,11 +32,11 @@ public class ConfirmPasswordResetCommandHandler(
     /// </returns>
     public async Task<Result<bool>> Handle(ConfirmPasswordResetCommand command, CancellationToken cancellationToken)
     {
-        var user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
+        var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.PasswordReset, cancellationToken);
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.InvalidOperation, "...");
+            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired password reset token.");
         }
 
         var hash = this._passwordHasher.HashPassword(command.NewPassword);

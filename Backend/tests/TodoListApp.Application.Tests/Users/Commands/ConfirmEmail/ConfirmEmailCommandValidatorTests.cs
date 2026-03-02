@@ -17,30 +17,13 @@ public class ConfirmEmailCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        var command = new ConfirmEmailCommand(Guid.NewGuid(), "secure-verification-token");
+        var command = new ConfirmEmailCommand("secure-verification-token");
 
         // Act
         var result = this._validator.TestValidate(command);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
-    }
-
-    /// <summary>
-    /// Verifies that an empty user id triggers a validation error.
-    /// </summary>
-    [Fact]
-    public void Should_Have_Error_When_UserId_Is_Empty()
-    {
-        // Arrange
-        var command = new ConfirmEmailCommand(Guid.Empty, "some-token");
-
-        // Act
-        var result = this._validator.TestValidate(command);
-
-        // Assert
-        result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User ID is required.");
     }
 
     /// <summary>
@@ -53,7 +36,7 @@ public class ConfirmEmailCommandValidatorTests
     public void Should_Have_Error_When_Token_Is_Empty(string? token)
     {
         // Arrange
-        var command = new ConfirmEmailCommand(Guid.NewGuid(), token!);
+        var command = new ConfirmEmailCommand(token!);
 
         // Act
         var result = this._validator.TestValidate(command);

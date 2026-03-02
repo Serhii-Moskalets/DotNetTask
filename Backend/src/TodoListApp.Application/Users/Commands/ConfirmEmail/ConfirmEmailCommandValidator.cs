@@ -12,9 +12,6 @@ public class ConfirmEmailCommandValidator : AbstractValidator<ConfirmEmailComman
     /// </summary>
     public ConfirmEmailCommandValidator()
     {
-        this.RuleFor(x => x.UserId)
-           .NotEmpty().WithMessage("User ID is required.");
-
         this.RuleFor(x => x.Token)
             .NotEmpty().WithMessage("Token is required.");
     }

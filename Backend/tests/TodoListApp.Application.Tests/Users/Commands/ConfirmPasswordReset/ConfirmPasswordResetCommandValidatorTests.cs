@@ -9,7 +9,6 @@ namespace TodoListApp.Application.Tests.Users.Commands.ConfirmPasswordReset;
 public class ConfirmPasswordResetCommandValidatorTests
 {
     private readonly ConfirmPasswordResetCommandValidator _validator;
-    private readonly Guid userId = Guid.NewGuid();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConfirmPasswordResetCommandValidatorTests"/> class.
@@ -27,7 +26,6 @@ public class ConfirmPasswordResetCommandValidatorTests
     {
         // Arrange
         var command = new ConfirmPasswordResetCommand(
-            this.userId,
             "SecurePass123!",
             "ValidToken123");
 
@@ -43,27 +41,12 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Token_Is_Empty()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand(this.userId, "SecurePass123!", string.Empty);
+        var command = new ConfirmPasswordResetCommand("SecurePass123!", string.Empty);
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.Token)
               .WithErrorMessage("Token is required.");
-    }
-
-    /// <summary>
-    /// Verifies that an empty userId triggers a validation error.
-    /// </summary>
-    [Fact]
-    public void Should_Have_Error_When_UserId_Is_Empty()
-    {
-        // Arrange
-        var command = new ConfirmPasswordResetCommand(Guid.Empty, "SecurePass123!", "token");
-
-        // Act & Assert
-        var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("UserId is required.");
     }
 
     /// <summary>
@@ -73,7 +56,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Is_Too_Short()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand(this.userId, "token", "Short1!");
+        var command = new ConfirmPasswordResetCommand("token", "Short1!");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -88,7 +71,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Uppercase()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand(this.userId, "lowercase123!", "token");
+        var command = new ConfirmPasswordResetCommand("lowercase123!", "token");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -103,7 +86,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Lowercase()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand(this.userId, "UPPERCASE123!", "token");
+        var command = new ConfirmPasswordResetCommand("UPPERCASE123!", "token");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -118,7 +101,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Number()
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand(this.userId, "NoNumbers!", "token");
+        var command = new ConfirmPasswordResetCommand("NoNumbers!", "token");
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
@@ -136,7 +119,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Allowed_Special_Character(string password)
     {
         // Arrange
-        var command = new ConfirmPasswordResetCommand(this.userId, "token", password);
+        var command = new ConfirmPasswordResetCommand("token", password);
 
         // Act & Assert
         var result = this._validator.TestValidate(command);

@@ -24,10 +24,10 @@ public class RevertEmailChangeCommandHandler(IUnitOfWork unitOfWork)
     /// <returns>A <see cref="Result{T}"/> indicating success or failure (e.g., if user not found).</returns>
     public async Task<Result<bool>> Handle(RevertEmailChangeCommand command, CancellationToken cancellationToken)
     {
-        var user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
+        var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChangeRevert, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "User not found.");
+            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email revert token.");
         }
 
         user.RevertEmailChange(command.Token, DateTime.UtcNow);

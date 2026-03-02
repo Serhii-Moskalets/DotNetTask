@@ -19,10 +19,10 @@ public class ConfirmEmailCommandHandler(IUnitOfWork unitOfWork)
     /// <returns>A success result if verified, otherwise a failure.</returns>
     public async Task<Result<bool>> Handle(ConfirmEmailCommand command, CancellationToken cancellationToken)
     {
-        var user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
+        var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailVerification, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "User not found.");
+            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email verification token.");
         }
 
         user.ConfirmEmailVerification(command.Token, DateTime.UtcNow);

@@ -1,8 +1,11 @@
 ﻿using FluentAssertions;
 using Moq;
+using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ConfirmEmail;
+using TodoListApp.Application.Users.Commands.ConfirmPasswordReset;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmEmail;
@@ -33,14 +36,13 @@ public class ConfirmEmailCommandHandlerTests
     public async Task Handle_Should_ReturnSuccess_When_TokenIsValid()
     {
         // Arrange
-        var userId = Guid.NewGuid();
         const string token = "valid-token";
-        var command = new ConfirmEmailCommand(userId, token);
+        var command = new ConfirmEmailCommand(token);
         var user = new UserEntity("John", "john", "test@example.com", this._passwordHash);
 
         user.RequestEmailVerification(token, TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -55,29 +57,6 @@ public class ConfirmEmailCommandHandlerTests
     }
 
     /// <summary>
-    /// Verifies that a NotFound failure is returned when the user does not exist.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Handle_Should_ReturnNotFound_When_UserDoesNotExist()
-    {
-        // Arrange
-        var command = new ConfirmEmailCommand(Guid.NewGuid(), "any-token");
-
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserEntity?)null);
-
-        // Act
-        var result = await this._sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
-
-        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    /// <summary>
     /// Verifies that a DomainException is thrown when the token is invalid or expired.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
@@ -85,13 +64,12 @@ public class ConfirmEmailCommandHandlerTests
     public async Task Handle_Should_ThrowDomainException_When_TokenIsInvalid()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var command = new ConfirmEmailCommand(userId, "wrong-token");
+        var command = new ConfirmEmailCommand("wrong-token");
         var user = new UserEntity("John", "john", "test@example.com", this._passwordHash);
 
         user.RequestEmailVerification("valid-token", TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -101,6 +79,29 @@ public class ConfirmEmailCommandHandlerTests
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Invalid or expired email verification token.");
 
+        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Verifies that the handler returns a NotFound error when attempting to revert an email change with a non-existent
+    /// security token.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Handle_Should_ReturnNotFound_When_TokenDoesNotExist()
+    {
+        // Arrange
+        var command = new ConfirmEmailCommand("unknown-token");
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailVerification, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserEntity?)null);
+
+        // Act
+        var result = await this._sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

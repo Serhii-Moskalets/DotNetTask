@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
 using TodoListApp.Application.Users.Commands.RevertEmailChange;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -41,11 +42,11 @@ public class RevertEmailChangeCommandHandlerTests
     {
         // Arrange
         var user = CreateUser();
-        var command = new RevertEmailChangeCommand(user.Id, RevertToken);
+        var command = new RevertEmailChangeCommand(RevertToken);
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -62,30 +63,6 @@ public class RevertEmailChangeCommandHandlerTests
     }
 
     /// <summary>
-    /// Verifies that the handler returns a failure result with a <c>NotFound</c> error code
-    /// when the user identifier specified in the command does not exist.
-    /// </summary>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
-    [Fact]
-    public async Task Handle_Should_ReturnNotFound_When_UserDoesNotExist()
-    {
-        // Arrange
-        var command = new RevertEmailChangeCommand(Guid.NewGuid(), RevertToken);
-
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((UserEntity?)null);
-
-        // Act
-        var result = await this._sut.Handle(command, CancellationToken.None);
-
-        // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
-
-        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-    }
-
-    /// <summary>
     /// Verifies that the handler propagates a <see cref="DomainException"/> and does not persist any changes
     /// if the provided revert token is incorrect or expired.
     /// </summary>
@@ -95,11 +72,11 @@ public class RevertEmailChangeCommandHandlerTests
     {
         // Arrange
         var user = CreateUser();
-        var command = new RevertEmailChangeCommand(user.Id, "wrong-token");
+        var command = new RevertEmailChangeCommand("wrong-token");
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -109,6 +86,29 @@ public class RevertEmailChangeCommandHandlerTests
         await act.Should().ThrowAsync<DomainException>()
             .WithMessage("Invalid or expired email change revert token.");
 
+        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Verifies that the handler returns a NotFound error when attempting to revert an email change with a non-existent
+    /// security token.
+    /// </summary>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Fact]
+    public async Task Handle_Should_ReturnNotFound_When_TokenDoesNotExist()
+    {
+        // Arrange
+        var command = new RevertEmailChangeCommand("unknown-token");
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((UserEntity?)null);
+
+        // Act
+        var result = await this._sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
