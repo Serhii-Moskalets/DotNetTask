@@ -49,7 +49,7 @@ public class PasswordResetRequestedDomainEventHandlerTests
         const string expectedLink = "https://todolist.com/reset-password?userId=...&token=...";
 
         this._urlProviderMock
-            .Setup(x => x.GetPasswordResetLink(user.Id, token.Value))
+            .Setup(x => x.GetPasswordResetLink(token.Value))
             .Returns(expectedLink);
 
         // Act

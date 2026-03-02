@@ -17,8 +17,6 @@ public class UrlProviderTests
     private const string Token = "Security-token";
     private const string TokenWithSpecialCharacters = "abc/123+def==";
 
-    private readonly Guid userId = Guid.NewGuid();
-
     private readonly Mock<IConfiguration> _configurationMock;
     private readonly UrlProvider _sut;
 
@@ -51,7 +49,7 @@ public class UrlProviderTests
         var sut = new UrlProvider(this._configurationMock.Object);
 
         // Act
-        var result = sut.GetEmailConfirmationLink(this.userId, Token);
+        var result = sut.GetEmailConfirmationLink(Token);
 
         // Assert
         result.Should().StartWith(baseUrl);
@@ -66,12 +64,11 @@ public class UrlProviderTests
     public void GetEmailConfirmationLink_ShouldEncodeSpecialCharacters()
     {
         // Act
-        var result = this._sut.GetEmailConfirmationLink(this.userId, TokenWithSpecialCharacters);
+        var result = this._sut.GetEmailConfirmationLink(TokenWithSpecialCharacters);
 
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain($"userId={this.userId}");
         result.Should().Contain("/confirm-email");
     }
 
@@ -89,10 +86,8 @@ public class UrlProviderTests
         this._configurationMock.Setup(x => x["FrontendSettings:BaseUrl"]).Returns(baseUrl);
         var sut = new UrlProvider(this._configurationMock.Object);
 
-        const string NewEmail = "newexample@gmail.com";
-
         // Act
-        var result = sut.GetEmailChangeLink(this.userId, Token, NewEmail);
+        var result = sut.GetEmailChangeLink(Token);
 
         // Assert
         result.Should().StartWith(baseUrl);
@@ -106,16 +101,12 @@ public class UrlProviderTests
     [Fact]
     public void GetEmailChangeLink_ShouldEncodeSpecialCharacters()
     {
-        // Arrange
-        const string NewEmail = "newexample@gmail.com";
-
         // Act
-        var result = this._sut.GetEmailChangeLink(this.userId, TokenWithSpecialCharacters, NewEmail);
+        var result = this._sut.GetEmailChangeLink(TokenWithSpecialCharacters);
 
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain($"userId={this.userId}");
         result.Should().Contain("/confirm-email-change");
     }
 
@@ -134,11 +125,11 @@ public class UrlProviderTests
         var sut = new UrlProvider(this._configurationMock.Object);
 
         // Act
-        var result = sut.GetEmailRevertLink(this.userId, Token);
+        var result = sut.GetEmailRevertLink(Token);
 
         // Assert
         result.Should().StartWith(baseUrl);
-        result.Should().Contain("/revert-confirm-email");
+        result.Should().Contain("/revert-email-change");
     }
 
     /// <summary>
@@ -149,17 +140,16 @@ public class UrlProviderTests
     public void GetEmailRevertLink_ShouldEncodeSpecialCharacters()
     {
         // Act
-        var result = this._sut.GetEmailRevertLink(this.userId, TokenWithSpecialCharacters);
+        var result = this._sut.GetEmailRevertLink(TokenWithSpecialCharacters);
 
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain($"userId={this.userId}");
-        result.Should().Contain("/revert-confirm-email");
+        result.Should().Contain("/revert-email-change");
     }
 
     /// <summary>
-    /// Verifies that <see cref="UrlProvider.GetPasswordResetLink(Guid, string)"/> correctly handles different protocols
+    /// Verifies that <see cref="UrlProvider.GetPasswordResetLink(string)"/> correctly handles different protocols
     /// (HTTP and HTTPS) provided in the configuration.
     /// </summary>
     /// <param name="baseUrl">The base URL string to be tested.</param>
@@ -173,7 +163,7 @@ public class UrlProviderTests
         var sut = new UrlProvider(this._configurationMock.Object);
 
         // Act
-        var result = sut.GetPasswordResetLink(this.userId, Token);
+        var result = sut.GetPasswordResetLink(Token);
 
         // Assert
         result.Should().StartWith(baseUrl);
@@ -188,12 +178,11 @@ public class UrlProviderTests
     public void GetPasswordResetLink_ShouldEncodeSpecialCharacters()
     {
         // Act
-        var result = this._sut.GetPasswordResetLink(this.userId, TokenWithSpecialCharacters);
+        var result = this._sut.GetPasswordResetLink(TokenWithSpecialCharacters);
 
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain($"userId={this.userId}");
         result.Should().Contain("/reset-password");
     }
 
@@ -210,7 +199,7 @@ public class UrlProviderTests
         var sut = new UrlProvider(this._configurationMock.Object);
 
         // Act
-        var result = sut.GetEmailConfirmationLink(this.userId, Token);
+        var result = sut.GetEmailConfirmationLink(Token);
 
         // Assert
         result.Should().Contain("site.com/confirm-email");

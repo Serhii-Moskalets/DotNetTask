@@ -27,11 +27,10 @@ public class UserRegisteredDomainEventHandler(
         ArgumentNullException.ThrowIfNull(notification);
 
         var userEmail = notification.User.Email.Value;
-        var userId = notification.User.Id;
         var userName = notification.User.UserName.Value;
         var tokenValue = notification.VerificationToken.Value;
 
-        var confirmationLink = this._urlProvider.GetEmailConfirmationLink(userId, tokenValue);
+        var confirmationLink = this._urlProvider.GetEmailConfirmationLink(tokenValue);
 
         await this._emailService.SendConfirmationEmailAsync(
             userEmail,
