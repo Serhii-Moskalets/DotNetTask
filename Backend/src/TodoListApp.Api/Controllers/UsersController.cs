@@ -2,12 +2,14 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Api.Requests.User;
+using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Users.Commands.ChangeEmail;
 using TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
 using TodoListApp.Application.Users.Commands.RevertEmailChange;
 using TodoListApp.Application.Users.Commands.UpdatePassword;
 using TodoListApp.Application.Users.Commands.UpdateUsername;
 using TodoListApp.Application.Users.Commands.UpdateUserProfile;
+using TodoListApp.Application.Users.Queries.GetUserProfile;
 
 namespace TodoListApp.Api.Controllers;
 
@@ -19,6 +21,22 @@ namespace TodoListApp.Api.Controllers;
 [Route("api/users")]
 public sealed class UsersController(ISender mediator) : BaseController(mediator)
 {
+    /// <summary>
+    /// Returns the profile information of the currently authenticated user.
+    /// </summary>
+    /// <returns>The user's profile data.</returns>
+    [HttpGet("profile")]
+    [ProducesResponseType(typeof(UserBriefDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<IActionResult> GetUserProfile()
+    {
+        var command = new GetUserProfileQuery(this.CurrentUserId);
+        var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        return this.HandleResult(result);
+    }
+
     /// <summary>
     /// Initiates the email change process for the currently authenticated user.
     /// </summary>
@@ -50,7 +68,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     /// <response code="204">Email change confirmed and updated successfully.</response>
     /// <response code="400">If the token is invalid, expired, or the user is not found.</response>
     [AllowAnonymous]
-    [HttpPost("confirm-change-email")]
+    [HttpPost("confirm-email-change")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ConfirmEmailChange([FromQuery] string token)
@@ -61,25 +79,23 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     }
 
     /// <summary>
-    /// Reverts a recent email address change using a secure security token.
+    /// Reverts a pending email change request for a user by validating the provided token.
     /// </summary>
-    /// <remarks>
-    /// This endpoint is typically used by the owner of the original email address
-    /// to cancel an unauthorized or accidental email change request.
-    /// </remarks>
-    /// <param name="token">The secure token received via the original email address to revert the change.</param>
-    /// <returns>No content on success.</returns>
-    /// <response code="204">Email address reverted to its previous value successfully.</response>
-    /// <response code="400">If the token is invalid, expired, or the user is not found.</response>
+    /// <remarks>This action is accessible without authentication and is intended for scenarios where a user
+    /// needs to undo a previously requested email change. Ensure that the token is securely generated and transmitted
+    /// to prevent unauthorized access.</remarks>
+    /// <param name="token">The token that identifies the email change request to be reverted. The token must be valid and not expired.</param>
+    /// <returns>An HTTP 200 response containing the unique identifier of the user whose email change was reverted if successful;
+    /// otherwise, an error response.</returns>
     [AllowAnonymous]
     [HttpPost("revert-email-change")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(Guid), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RevertEmailChange([FromQuery] string token)
     {
         var command = new RevertEmailChangeCommand(token);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
-        return this.HandleNoContent(result);
+        return this.HandleResult(result);
     }
 
     /// <summary>
