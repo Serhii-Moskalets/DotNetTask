@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Application.Tasks.Commands.DeleteOverdueTasks;
 
@@ -12,10 +14,19 @@ namespace TodoListApp.Api.Controllers;
 /// This controller acts as an API layer and delegates
 /// all business logic to application command and query handlers.
 /// </remarks>
-[ApiController]
+[Authorize]
 [Route("api/task-lists/{taskListId:guid}/tasks")]
 public class TaskListTasksController : BaseController
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="TaskListTasksController"/> class.
+    /// </summary>
+    /// <param name="mediator">The Mediatr sender for dispatching commands and queries.</param>
+    public TaskListTasksController(ISender mediator)
+        : base(mediator)
+    {
+    }
+
     /// <summary>
     /// Deletes all overdue tasks in the specified task list.
     /// </summary>
@@ -27,7 +38,7 @@ public class TaskListTasksController : BaseController
     [HttpDelete("overdue")]
     public async Task<IActionResult> DeleteOverdueTasks([FromRoute] Guid taskListId)
     {
-        var command = new DeleteOverdueTasksCommand(taskListId, CurrentUserId);
+        var command = new DeleteOverdueTasksCommand(taskListId, this.CurrentUserId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }

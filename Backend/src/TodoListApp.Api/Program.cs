@@ -1,19 +1,14 @@
-using System;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Builder;
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Sinks.PostgreSQL;
 using TodoListApp.Api.Middleware;
-using TodoListApp.Application.Abstractions.Interfaces.TodoListAppDbContext;
 using TodoListApp.Application.Common.Extensions;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Infrastructure.Extensions;
-using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,10 +40,11 @@ builder.Logging.ClearProviders();
 builder.Host.UseSerilog();
 
 // DI
-builder.Services.AddDbContext<ITodoListAppDbContext, TodoListAppDbContext>(options =>
-    options.UseNpgsql(connectionString));
+builder.Services.AddProblemDetails();
 
-builder.Services.AddInfrastructure(connectionString);
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+
+builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddApplicationServices();
 
@@ -56,11 +52,59 @@ builder.Services.AddControllers();
 
 builder.Services.AddEndpointsApiExplorer();
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+    var secret = jwtSettings.GetValue<string>("Secret");
+
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = jwtSettings.GetValue<string>("Issuer"),
+        ValidAudience = jwtSettings.GetValue<string>("Audience"),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret!)),
+    };
+});
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = "Bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter JWT token in format: Bearer {your_token}",
+    });
+
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = "Bearer",
+                },
+            },
+            Array.Empty<string>()
+        },
+    });
+});
 
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseExceptionHandler();
 
 app.UseSerilogRequestLogging(options =>
 {
@@ -84,8 +128,12 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
+
 app.UseAuthorization();
+
+app.UseMiddleware<UserSecurityMiddleware>();
 
 app.MapControllers();
 
-await app.RunAsync();
+app.Run();

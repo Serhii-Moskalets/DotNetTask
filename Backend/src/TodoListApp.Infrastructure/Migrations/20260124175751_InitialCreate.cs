@@ -27,10 +27,7 @@ namespace TodoListApp.Infrastructure.Migrations
                     token_expires = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     token_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: true),
                 },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_users", x => x.Id);
-                });
+                constraints: table => table.PrimaryKey("PK_users", x => x.Id));
 
             migrationBuilder.CreateTable(
                 name: "tags",

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
+using TodoListApp.Domain.Common;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 

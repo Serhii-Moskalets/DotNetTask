@@ -1,6 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Enums;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 
 namespace TodoListApp.Infrastructure.Persistence.Repositories;
@@ -19,86 +22,109 @@ public class UserRepository(TodoListAppDbContext context)
     : BaseRepository<UserEntity>(context), IUserRepository
 {
     /// <summary>
-    /// Checks if a user with the specified email exists in the repository.
+    /// Checks if a user with the specified email exists.
     /// </summary>
-    /// <param name="email">The email of the user to check.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that returns <c>true</c> if a user with the email exists; otherwise, <c>false</c>.</returns>
-    /// /// <remarks>
-    /// Uses `EF.Functions.Like` for real databases, and case-insensitive comparison for InMemory provider.
-    /// </remarks>
-    public async Task<bool> ExistsByEmailAsync(string email, CancellationToken cancellationToken = default)
-    {
-        if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
-        {
-            return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => x.Email.ToLowerInvariant() == email.ToLowerInvariant(), cancellationToken);
-        }
-
-        return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => EF.Functions.Like(x.Email, email), cancellationToken);
-    }
+    /// <param name="email">The email value object to check.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns><c>true</c> if the email is taken; otherwise, <c>false</c>.</returns>
+    public async Task<bool> ExistsByEmailAsync(Email email, CancellationToken cancellationToken = default)
+        => await this.DbSet.AsNoTracking()
+            .AnyAsync(x => x.Email == email, cancellationToken);
 
     /// <summary>
-    /// Checks if a user with the specified username exists in the repository.
+    /// Checks if a user with the specified username exists.
     /// </summary>
-    /// <param name="userName">The username of the user to check.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that returns <c>true</c> if a user with the username exists; otherwise, <c>false</c>.</returns>
-    /// /// <remarks>
-    /// Uses `EF.Functions.Like` for real databases, and case-insensitive comparison for InMemory provider.
-    /// </remarks>
-    public async Task<bool> ExistsByUserNameAsync(string userName, CancellationToken cancellationToken = default)
-    {
-        if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
-        {
-            return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => x.UserName.ToLowerInvariant() == userName.ToLowerInvariant(), cancellationToken);
-        }
-
-        return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => EF.Functions.Like(x.UserName, userName), cancellationToken);
-    }
+    /// <param name="userName">The username value object to check.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns><c>true</c> if the username is taken; otherwise, <c>false</c>.</returns>
+    public async Task<bool> ExistsByUserNameAsync(UserName userName, CancellationToken cancellationToken = default)
+        => await this.DbSet.AsNoTracking()
+                .AnyAsync(x => x.UserName == userName, cancellationToken);
 
     /// <summary>
     /// Retrieves a user entity by its email.
     /// </summary>
-    /// <param name="email">The email of the user to retrieve.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that returns the user entity if found; otherwise, <c>null</c>.</returns>
-    /// /// <remarks>
-    /// Uses `EF.Functions.Like` for real databases, and case-insensitive comparison for InMemory provider.
-    /// </remarks>
-    public async Task<UserEntity?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
+    /// <param name="email">The email value object.</param>
+    /// <param name="asNoTracking">
+    /// If <c>true</c>, the query will not track changes in the retrieved entity,
+    /// which can improve performance for read-only operations.
+    /// </param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The <see cref="UserEntity"/> if found; otherwise, <c>null</c>.</returns>
+    public async Task<UserEntity?> GetByEmailAsync(Email email, bool asNoTracking = true, CancellationToken cancellationToken = default)
     {
-        if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+        var query = this.DbSet.AsQueryable();
+
+        if (asNoTracking)
         {
-            return await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.Email.ToLowerInvariant() == email.ToLowerInvariant(), cancellationToken);
+            query = query.AsNoTracking();
         }
 
-        return await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => EF.Functions.Like(x.Email, email), cancellationToken);
+        return await query.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
+
+    /// <summary>
+    /// Retrieves a user entity that matches the specified security token and token type.
+    /// </summary>
+    /// <remarks>This method searches for a user entity whose current or revert token matches the provided
+    /// token and token type. Ensure that the token and type correspond to a valid and active user token.</remarks>
+    /// <param name="token">The security token used to identify the user. This value must not be null or empty.</param>
+    /// <param name="tokenType">The type of the security token, which determines the context in which the token is valid.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the asynchronous operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the user entity if a matching token
+    /// and type are found; otherwise, null.</returns>
+    public async Task<UserEntity?> GetBySecurityTokenAsync(string token, UserTokenType tokenType, CancellationToken cancellationToken = default)
+     => await this.DbSet.FirstOrDefaultAsync(
+            x =>
+                (x.CurrentToken != null && x.CurrentToken.Value == token && x.CurrentToken.Type == tokenType) ||
+                (x.RevertToken != null && x.RevertToken.Value == token && x.RevertToken.Type == tokenType),
+            cancellationToken);
 
     /// <summary>
     /// Retrieves a user entity by its username.
     /// </summary>
-    /// <param name="userName">The username of the user to retrieve.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
-    /// <returns>A task that returns the user entity if found; otherwise, <c>null</c>.</returns>
-    /// /// <remarks>
-    /// Uses `EF.Functions.Like` for real databases, and case-insensitive comparison for InMemory provider.
-    /// </remarks>
-    public async Task<UserEntity?> GetByUserNameAsync(string userName, CancellationToken cancellationToken = default)
+    /// <param name="userName">The username value object.</param>
+    /// <param name="asNoTracking">
+    /// If <c>true</c>, the query will not track changes in the retrieved entity,
+    /// which can improve performance for read-only operations.
+    /// </param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>The <see cref="UserEntity"/> if found; otherwise, <c>null</c>.</returns>
+    public async Task<UserEntity?> GetByUserNameAsync(UserName userName, bool asNoTracking = true, CancellationToken cancellationToken = default)
     {
-        if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
+        var query = this.DbSet.AsQueryable();
+
+        if (asNoTracking)
         {
-            return await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => x.UserName.ToLowerInvariant() == userName.ToLowerInvariant(), cancellationToken);
+            query = query.AsNoTracking();
         }
 
-        return await this.DbSet.AsNoTracking()
-            .FirstOrDefaultAsync(x => EF.Functions.Like(x.UserName, userName), cancellationToken);
+        return await query.FirstOrDefaultAsync(x => x.UserName == userName, cancellationToken);
+    }
+
+    /// <summary>
+    /// Retrieves minimal security-related information for a specific user.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A tuple with SecurityStamp and MustChangePassword, or null if user not found.</returns>
+    /// <remarks>
+    /// Optimized with projection to avoid fetching the entire entity.
+    /// </remarks>
+    public async Task<(string SecurityStamp, bool MustChangePassword)?> GetUsersSecurityInfoAsync(
+        Guid userId,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await this.DbSet
+            .Where(u => u.Id == userId)
+            .Select(u => new { u.SecurityStamp.Value, u.MustChangePassword })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (user is null)
+        {
+            return null;
+        }
+
+        return (user.Value, user.MustChangePassword);
     }
 }

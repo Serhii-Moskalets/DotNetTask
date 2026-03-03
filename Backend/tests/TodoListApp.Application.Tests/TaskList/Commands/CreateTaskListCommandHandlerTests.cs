@@ -18,6 +18,7 @@ public class CreateTaskListCommandHandlerTests
     private readonly Mock<IUniqueNameService> _uniqueNameServiceMock;
     private readonly Mock<ITaskListRepository> _taskListRepoMock;
     private readonly CreateTaskListCommandHandler _handler;
+    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateTaskListCommandHandlerTests"/> class.
@@ -65,7 +66,7 @@ public class CreateTaskListCommandHandlerTests
     public async Task Handle_ShouldCreateTaskList_WhenNameIsUnique()
     {
         // Arrange
-        var user = new UserEntity("John", "john", "john@example.com", "hash");
+        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
 
         this._uowMock.Setup(u => u.Users.GetByIdAsync(user.Id, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync(user);

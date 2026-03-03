@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
+using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Api.Requests.UserTaskAccess;
 using TodoListApp.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
@@ -18,9 +20,19 @@ namespace TodoListApp.Api.Controllers;
 /// Provides endpoints to retrieve shared tasks, get users with access to a task,
 /// and manage access assignments and deletions.
 /// </summary>
+[Authorize]
 [Route("api/access")]
 public class UserTaskAccessesController : BaseController
 {
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserTaskAccessesController"/> class.
+    /// </summary>
+    /// <param name="mediator">The Mediatr sender for dispatching commands and queries.</param>
+    public UserTaskAccessesController(ISender mediator)
+        : base(mediator)
+    {
+    }
+
     /// <summary>
     /// Retrieves a shared task by its ID for the current user.
     /// </summary>
@@ -29,7 +41,7 @@ public class UserTaskAccessesController : BaseController
     [HttpGet("tasks/{taskId:guid}/shared")]
     public async Task<IActionResult> GetSharedTaskById([FromRoute] Guid taskId)
     {
-        var query = new GetSharedTaskByIdQuery(taskId, CurrentUserId);
+        var query = new GetSharedTaskByIdQuery(taskId, this.CurrentUserId);
         var result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -43,7 +55,7 @@ public class UserTaskAccessesController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetSharedTasksByUserId([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var query = new GetSharedTasksByUserIdQuery(CurrentUserId, page, pageSize);
+        var query = new GetSharedTasksByUserIdQuery(this.CurrentUserId, page, pageSize);
         var result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -58,7 +70,7 @@ public class UserTaskAccessesController : BaseController
     [HttpGet("tasks/{taskId:guid}/users")]
     public async Task<IActionResult> GetUsersWithTaskAccess([FromRoute] Guid taskId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var query = new GetUsersWithTaskAccessQuery(taskId, CurrentUserId, page, pageSize);
+        var query = new GetUsersWithTaskAccessQuery(taskId, this.CurrentUserId, page, pageSize);
         var result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -72,7 +84,7 @@ public class UserTaskAccessesController : BaseController
     [HttpPost("tasks/{taskId:guid}/share-task")]
     public async Task<IActionResult> CreateUserTaskAccess([FromRoute] Guid taskId, [FromBody] AccessEmailRequest request)
     {
-        var command = new CreateUserTaskAccessCommand(taskId, CurrentUserId, request.Email);
+        var command = new CreateUserTaskAccessCommand(taskId, this.CurrentUserId, request.Email ?? string.Empty);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -86,7 +98,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("tasks/{taskId:guid}/by-email")]
     public async Task<IActionResult> DeleteTaskAccessByEmail([FromRoute] Guid taskId, [FromQuery] string? email)
     {
-        var command = new DeleteTaskAccessByUserEmailCommand(taskId, CurrentUserId, email);
+        var command = new DeleteTaskAccessByUserEmailCommand(taskId, this.CurrentUserId, email ?? string.Empty);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -100,7 +112,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("tasks/{taskId:guid}/users/{userId:guid}")]
     public async Task<IActionResult> DeleteTaskAccessById([FromRoute] Guid taskId, [FromRoute] Guid userId)
     {
-        var command = new DeleteTaskAccessByIdCommand(taskId, userId, CurrentUserId);
+        var command = new DeleteTaskAccessByIdCommand(taskId, userId, this.CurrentUserId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -113,7 +125,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("tasks/{taskId:guid}")]
     public async Task<IActionResult> DeleteTaskAccessesByTask([FromRoute] Guid taskId)
     {
-        var command = new DeleteTaskAccessesByTaskCommand(taskId, CurrentUserId);
+        var command = new DeleteTaskAccessesByTaskCommand(taskId, this.CurrentUserId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -125,7 +137,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("users/my")]
     public async Task<IActionResult> DeleteTasksAccessesByUser()
     {
-        var command = new DeleteTaskAccessesByUserCommand(CurrentUserId);
+        var command = new DeleteTaskAccessesByUserCommand(this.CurrentUserId);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

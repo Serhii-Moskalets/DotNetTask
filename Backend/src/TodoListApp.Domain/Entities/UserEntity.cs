@@ -1,15 +1,22 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using TodoListApp.Domain.Common;
 using TodoListApp.Domain.Enums;
+using TodoListApp.Domain.Events;
 using TodoListApp.Domain.Exceptions;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Domain.Entities;
 
 /// <summary>
 /// Represents an application user with tasks, task lists, comments, and tags.
 /// </summary>
-[Table("users")]
 public class UserEntity : BaseEntity
 {
+    private readonly HashSet<CommentEntity> _comments = new();
+    private readonly HashSet<TagEntity> _tags = new();
+    private readonly HashSet<TaskListEntity> _taskLists = new();
+    private readonly HashSet<TaskEntity> _tasks = new();
+    private readonly HashSet<UserTaskAccessEntity> _userAccesses = new();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="UserEntity"/> class.
     /// </summary>
@@ -21,41 +28,18 @@ public class UserEntity : BaseEntity
     /// <exception cref="DomainException">
     /// Thrown when
     /// <paramref name="firstName"/>, <paramref name="userName"/>,
-    /// <paramref name="email"/>, <paramref name="passwordHash"/>,
+    /// <paramref name="email"/>, <paramref name="passwordHash"/>
     /// is null, empty, or consists only of white-space characters.
+    /// Thrown when <paramref name="firstName"/> contain more than 20 characters.
+    /// Thrown when <paramref name="lastName"/> contain more than 30 characters.
     /// </exception>
     public UserEntity(string firstName, string userName, string email, string passwordHash, string? lastName = null)
     {
-        if (string.IsNullOrWhiteSpace(firstName))
-        {
-            throw new DomainException("First name cannot be empty.");
-        }
-
-        if (string.IsNullOrWhiteSpace(userName))
-        {
-            throw new DomainException("User name cannot be empty.");
-        }
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            throw new DomainException("Email cannot be empty.");
-        }
-
-        if (string.IsNullOrWhiteSpace(passwordHash))
-        {
-            throw new DomainException("Password hash cannot be empty.");
-        }
-
-        if ((lastName?.Trim())?.Length == 0)
-        {
-            lastName = null;
-        }
-
-        this.FirstName = firstName.Trim();
-        this.LastName = lastName?.Trim();
-        this.UserName = userName.Trim();
-        this.Email = email.Trim();
-        this.PasswordHash = passwordHash;
+        this.FirstName = FirstName.Create(firstName);
+        this.UserName = UserName.Create(userName);
+        this.Email = Email.Create(email);
+        this.PasswordHash = PasswordHash.Create(passwordHash);
+        this.LastName = LastName.Create(lastName);
     }
 
     private UserEntity() { }
@@ -63,298 +47,327 @@ public class UserEntity : BaseEntity
     /// <summary>
     /// Gets the first name of the user.
     /// </summary>
-    [Column("first_name")]
-    public string FirstName { get; private set; } = null!;
+    public FirstName FirstName { get; private set; } = null!;
 
     /// <summary>
     /// Gets the last name of the user.
     /// </summary>
-    [Column("last_name")]
-    public string? LastName { get; private set; }
+    public LastName? LastName { get; private set; }
 
     /// <summary>
     /// Gets the username of the user.
     /// </summary>
-    [Column("user_name")]
-    public string UserName { get; private set; } = null!;
+    public UserName UserName { get; private set; } = null!;
 
     /// <summary>
     /// Gets the email address of the user.
     /// </summary>
-    [Column("email")]
-    public string Email { get; private set; } = null!;
-
-    /// <summary>
-    /// Gets the pending email address for email change operations.
-    /// </summary>
-    [Column("pending_email")]
-    public string? PendingEmail { get; private set; }
-
-    /// <summary>
-    /// Gets the hashed password of the user.
-    /// </summary>
-    [Column("password_hash")]
-    public string PasswordHash { get; private set; } = null!;
+    public Email Email { get; private set; } = null!;
 
     /// <summary>
     /// Gets a value indicating whether the user's email is confirmed.
     /// </summary>
-    [Column("email_confirmed")]
     public bool EmailConfirmed { get; private set; }
 
     /// <summary>
-    /// Gets the token value for email verification, password reset, or email change.
+    /// Gets a value indicating whether the user is required to change their password on the next login.
     /// </summary>
-    [Column("token_value")]
-    public string? TokenValue { get; private set; }
+    public bool MustChangePassword { get; private set; } = false;
 
     /// <summary>
-    /// Gets the expiration date of the current token.
+    /// Gets a random value that changes whenever the user's security credentials are updated.
+    /// Used for invalidating active sessions.
     /// </summary>
-    [Column("token_expires")]
-    public DateTime? TokenExpires { get; private set; }
+    public SecurityStamp SecurityStamp { get; private set; } = SecurityStamp.New();
 
     /// <summary>
-    /// Gets the type of the current token.
+    /// Gets the current security token assigned to the user for verification or resets.
     /// </summary>
-    [Column("token_type")]
-    public UserTokenType? TokenType { get; private set; }
+    public SecurityToken? CurrentToken { get; private set; }
+
+    /// <summary>
+    /// Gets the security token assigned to the user for revert email change.
+    /// </summary>
+    public SecurityToken? RevertToken { get; private set; }
+
+    /// <summary>
+    /// Gets the hashed password of the user.
+    /// </summary>
+    public PasswordHash PasswordHash { get; private set; } = null!;
 
     /// <summary>
     /// Gets the comments created by the user.
     /// </summary>
-    public virtual ICollection<CommentEntity> Comments { get; init; } = new HashSet<CommentEntity>();
+    public virtual IReadOnlyCollection<CommentEntity> Comments => this._comments;
 
     /// <summary>
     /// Gets the tags owned by the user.
     /// </summary>
-    public virtual ICollection<TagEntity> Tags { get; init; } = new HashSet<TagEntity>();
+    public virtual IReadOnlyCollection<TagEntity> Tags => this._tags;
 
     /// <summary>
     /// Gets the task lists owned by the user.
     /// </summary>
-    public virtual ICollection<TaskListEntity> TaskLists { get; init; } = new HashSet<TaskListEntity>();
+    public virtual IReadOnlyCollection<TaskListEntity> TaskLists => this._taskLists;
 
     /// <summary>
     /// Gets the tasks owned by the user.
     /// </summary>
-    public virtual ICollection<TaskEntity> OwnedTasks { get; init; } = new HashSet<TaskEntity>();
+    public virtual IReadOnlyCollection<TaskEntity> OwnedTasks => this._tasks;
 
     /// <summary>
     /// Gets the task access records for the user.
     /// </summary>
-    public virtual ICollection<UserTaskAccessEntity> TaskAccesses { get; init; } = new HashSet<UserTaskAccessEntity>();
+    public virtual IReadOnlyCollection<UserTaskAccessEntity> TaskAccesses => this._userAccesses;
 
     /// <summary>
-    /// Sets an email verification token for the user.
+    /// Initiates an email verification request by generating a token.
     /// </summary>
-    /// <param name="token">The token value to set.</param>
-    /// <param name="expires">The expiration date and time of the token.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="token"/> is null, empty, or consists only of white-space characters.
-    /// </exception>
-    public void SetEmailVerificationToken(string token, DateTime expires)
+    /// <param name="token">The token value.</param>
+    /// <param name="duration">How long the token is valid.</param>
+    public void RequestEmailVerification(string token, TimeSpan duration)
     {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            throw new DomainException("Token cannot be empty.");
-        }
-
-        this.SetToken(token, expires, UserTokenType.EmailVerification);
-    }
-
-    /// <summary>
-    /// Sets a password reset token for the user.
-    /// </summary>
-    /// <param name="token">The token value to set.</param>
-    /// <param name="expires">The expiration date and time of the token.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="token"/> is null, empty, or consists only of white-space characters.
-    /// </exception>
-    public void SetPasswordResetToken(string token, DateTime expires)
-    {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            throw new DomainException("Token cannot be empty.");
-        }
-
-        this.SetToken(token, expires, UserTokenType.PasswordReset);
-    }
-
-    /// <summary>
-    /// Sets an email change token for the user.
-    /// </summary>
-    /// <param name="token">The token value to set.</param>
-    /// <param name="expires">The expiration date and time of the token.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="token"/> is null, empty, or consists only of white-space characters.
-    /// </exception>
-    public void SetEmailChangeToken(string token, DateTime expires)
-    {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            throw new DomainException("Token cannot be empty.");
-        }
-
-        this.SetToken(token, expires, UserTokenType.EmailChange);
-    }
-
-    /// <summary>
-    /// Sets a pending email for email change operations.
-    /// </summary>
-    /// <param name="newEmail">The new pending email address.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="newEmail"/> is null, empty, or consists only of white-space characters or
-    /// new email queals old current email.
-    /// </exception>
-    public void SetPendingEmail(string newEmail)
-    {
-        if (string.IsNullOrWhiteSpace(newEmail))
-        {
-            throw new DomainException("New email cannot be empty.");
-        }
-
-        if (string.Equals(newEmail?.Trim(), this.Email, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new DomainException("New email cannot be the same as current email.");
-        }
-
+        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification);
         this.EmailConfirmed = false;
-        this.PendingEmail = newEmail!.Trim();
+
+        this.AddDomainEvent(new UserRegisteredDomainEvent(this, this.CurrentToken));
     }
 
     /// <summary>
-    /// Confirms the email change using the pending email and token.
+    /// Confirms the email verification using the provided token.
     /// </summary>
-    public void ConfirmEmailChange()
+    /// <param name="token">The verification token.</param>
+    /// <param name="currentTime">The current UTC time.</param>
+    public void ConfirmEmailVerification(string token, DateTime currentTime)
     {
-        this.ValidateToken(UserTokenType.EmailChange);
-
-        if (string.IsNullOrWhiteSpace(this.PendingEmail))
+        if (this.CurrentToken?.IsValid(token, UserTokenType.EmailVerification, currentTime) is not true)
         {
-            throw new DomainException("Pending email is not set.");
+            throw new DomainException("Invalid or expired email verification token.");
         }
 
-        this.Email = this.PendingEmail;
         this.EmailConfirmed = true;
-        this.ClearPendingEmail();
-        this.ClearToken();
+        this.CurrentToken = null;
     }
 
     /// <summary>
-    /// Clears the pending email.
+    /// Updates the registration details for a user whose email address has not yet been confirmed. This method resets
+    /// the user's registration information and generates a new email verification token.
     /// </summary>
-    public void ClearPendingEmail()
-        => this.PendingEmail = null;
-
-    /// <summary>
-    /// Clears the current token values.
-    /// </summary>
-    public void ClearToken()
+    /// <remarks>This method should only be called for users who have not yet confirmed their email address.
+    /// Calling this method will reset the user's registration details and invalidate any previous email verification
+    /// tokens.</remarks>
+    /// <param name="firsName">The first name to assign to the user during the registration update.</param>
+    /// <param name="userName">The username to assign to the user during the registration update.</param>
+    /// <param name="passwordHash">The hashed password to associate with the user during the registration update.</param>
+    /// <param name="token">The token string to use for creating a new email verification token.</param>
+    /// <param name="duration">The duration for which the email verification token remains valid.</param>
+    /// <param name="lastName">The last name to assign to the user during the registration update. This parameter is optional.</param>
+    /// <exception cref="DomainException">Thrown if the user's email address has already been confirmed.</exception>
+    public void UpdateUnconfirmedRegistration(
+        FirstName firsName,
+        UserName userName,
+        PasswordHash passwordHash,
+        string token,
+        TimeSpan duration,
+        LastName? lastName = null)
     {
-        this.TokenValue = null;
-        this.TokenExpires = null;
-        this.TokenType = null;
+        if (this.EmailConfirmed)
+        {
+            throw new DomainException("Cannot update registration details after email is confirmed.");
+        }
+
+        this.FirstName = firsName;
+        this.LastName = lastName;
+        this.PasswordHash = passwordHash;
+        this.UserName = userName;
+
+        this.RequestEmailVerification(token, duration);
+
+        this.UpdateSecurityStamp();
     }
 
     /// <summary>
-    /// Confirms the user's email and clears the token.
+    /// Initiates an email change request.
     /// </summary>
-    public void ConfirmEmail()
+    /// <param name="newEmail">The requested new email address.</param>
+    /// <param name="confirmationToken">The unique secure token for confirming the new email.</param>
+    /// <param name="revertToken">The unique secure token for reverting the change.</param>
+    /// <param name="duration">How long the tokens is valid.</param>
+    public void RequestEmailChange(Email newEmail, string confirmationToken, string revertToken, TimeSpan duration)
     {
-        this.ValidateToken(UserTokenType.EmailVerification);
+        if (newEmail == this.Email)
+        {
+            throw new DomainException("New email is same as current.");
+        }
+
+        string oldEmail = this.Email.Value;
+
+        this.CurrentToken = SecurityToken.Create(confirmationToken, duration, UserTokenType.EmailChange, newEmail.Value);
+        this.RevertToken = SecurityToken.Create(revertToken, duration, UserTokenType.EmailChangeRevert, oldEmail);
+
+        this.AddDomainEvent(new EmailChangeRequestedDomainEvent(this, this.CurrentToken, this.RevertToken));
+    }
+
+    /// <summary>
+    /// Confirms the pending email change using the confirmation token.
+    /// </summary>
+    /// <param name="token">The change token sent to the new email address.</param>
+    /// <param name="currentTime">The current UTC time.</param>
+    public void ConfirmEmailChange(string token, DateTime currentTime)
+    {
+        if (this.CurrentToken?.IsValid(token, UserTokenType.EmailChange, currentTime) is not true)
+        {
+            throw new DomainException("Invalid or expired email change token.");
+        }
+
+        var pendingEmail = this.CurrentToken.Metadata ?? throw new DomainException("Pending email data is missing.");
+
+        this.Email = Email.Create(pendingEmail);
         this.EmailConfirmed = true;
-        this.ClearToken();
+
+        this.CurrentToken = null;
+
+        this.UpdateSecurityStamp();
+    }
+
+    /// <summary>
+    /// Reverts the email change to the original address using the revert token.
+    /// </summary>
+    /// <param name="revertToken">The revert token sent to the original email address.</param>
+    /// <param name="currentTime">The current UTC time.</param>
+    /// <param name="resetToken">TThe unique secure token for password reset.</param>
+    /// <param name="duration">The timeframe during which the token remains valid.</param>
+    public void RevertEmailChange(string revertToken, DateTime currentTime, string resetToken, TimeSpan duration)
+    {
+        if (this.RevertToken?.IsValid(revertToken, UserTokenType.EmailChangeRevert, currentTime) is not true)
+        {
+            throw new DomainException("Invalid or expired email change revert token.");
+        }
+
+        var oldEmail = this.RevertToken.Metadata ?? throw new DomainException("Original email data is missing.");
+
+        this.Email = Email.Create(oldEmail);
+        this.EmailConfirmed = true;
+
+        this.UpdateSecurityStamp();
+        this.MustChangePassword = true;
+
+        this.CurrentToken = SecurityToken.Create(resetToken, duration, UserTokenType.PasswordReset);
+        this.RevertToken = null;
+    }
+
+    /// <summary>
+    /// Initiates a password reset request.
+    /// </summary>
+    /// <param name="token">The unique secure token for password reset.</param>
+    /// <param name="duration">The timeframe during which the token remains valid.</param>
+    public void RequestPasswordReset(string token, TimeSpan duration)
+    {
+        this.MustChangePassword = false;
+        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.PasswordReset);
+        this.AddDomainEvent(new PasswordResetRequestedDomainEvent(this, this.CurrentToken));
+    }
+
+    /// <summary>
+    /// Confirms the password reset and updates the password hash.
+    /// </summary>
+    /// <param name="newPasswordHash">The new password hash.</param>
+    /// <param name="token">The reset token to validate.</param>
+    /// <param name="currentTime">The current time to check token expiration.</param>
+    /// <exception cref="DomainException">
+    /// Thrown when the token is invalid, expired, or the new password is the same as the old one.
+    /// </exception>
+    public void ConfirmPasswordReset(PasswordHash newPasswordHash, string token, DateTime currentTime)
+    {
+        if (this.CurrentToken?.IsValid(token, UserTokenType.PasswordReset, currentTime) is not true)
+        {
+            throw new DomainException("Invalid or expired password reset token.");
+        }
+
+        this.UpdateSecurityStamp();
+        this.SetPasswordHash(newPasswordHash);
+
+        this.MustChangePassword = false;
+        this.CurrentToken = null;
+        this.EmailConfirmed = true;
+    }
+
+    /// <summary>
+    /// Changes the user's password for authenticated users.
+    /// </summary>
+    /// <param name="newPasswordHash">The new password hash to be set.</param>
+    public void ChangePassword(PasswordHash newPasswordHash)
+    {
+        this.UpdateSecurityStamp();
+        this.SetPasswordHash(newPasswordHash);
+        this.MustChangePassword = false;
+    }
+
+    /// <summary>
+    /// Updates the user's first name.
+    /// </summary>
+    /// <param name="newFirstName">The new first name.</param>
+    /// <returns>True if the first name was changed; otherwise, false.</returns>
+    public bool ChangeFirstName(FirstName newFirstName)
+    {
+        if (this.FirstName == newFirstName)
+        {
+            return false;
+        }
+
+        this.FirstName = newFirstName;
+        return true;
+    }
+
+    /// <summary>
+    /// Updates the user's last name.
+    /// </summary>
+    /// <param name="newLastName">The new last name.</param>
+    /// <returns>True if the last name was changed; otherwise, false..</returns>
+    public bool ChangeLastName(LastName? newLastName)
+    {
+        if (this.LastName == newLastName)
+        {
+            return false;
+        }
+
+        this.LastName = newLastName;
+        return true;
+    }
+
+    /// <summary>
+    /// Updates the user's account username.
+    /// </summary>
+    /// <param name="userName">The new username.</param>
+    public void ChangeUserName(UserName userName)
+    {
+        if (this.UserName.Value.Equals(userName.Value, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new DomainException("New Username is same as current.");
+        }
+
+        this.UserName = userName;
     }
 
     /// <summary>
     /// Sets the new password hash.
     /// </summary>
-    /// <param name="newHash">The new password hash.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="newHash"/> is null, empty, or consists only of white-space characters.
-    /// </exception>
-    public void SetPasswordHash(string newHash)
+    /// <param name="newPasswordHash">The new password hash.</param>
+    private void SetPasswordHash(PasswordHash newPasswordHash)
     {
-        if (string.IsNullOrWhiteSpace(newHash))
+        if (this.PasswordHash == newPasswordHash)
         {
-            throw new DomainException("Password cannot be empty.");
+            throw new DomainException("New password cannot be the same as the old one");
         }
 
-        this.PasswordHash = newHash;
+        this.PasswordHash = newPasswordHash;
     }
 
     /// <summary>
-    /// Resets the user's password using a password reset token.
+    /// Sets the new security stamp.
     /// </summary>
-    /// <param name="newHash">The new password hash.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="newHash"/> is null, empty, or consists only of white-space characters.
-    /// </exception>
-    public void ResetPassword(string newHash)
+    private void UpdateSecurityStamp()
     {
-        if (string.IsNullOrWhiteSpace(newHash))
-        {
-            throw new DomainException("Password cannot be empty.");
-        }
-
-        this.ValidateToken(UserTokenType.PasswordReset);
-        this.PasswordHash = newHash;
-        this.ClearToken();
-    }
-
-    /// <summary>
-    /// Updates the first and last name of the user.
-    /// </summary>
-    /// <param name="newFirstName">The new first name.</param>
-    /// <param name="newLastName">The new last name (optional).</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="newFirstName"/> is null, empty, or consists only of white-space characters.
-    /// </exception>
-    public void UpdateFirstAndLastName(string newFirstName, string? newLastName = null)
-    {
-        if (string.IsNullOrWhiteSpace(newFirstName))
-        {
-            throw new DomainException("First name cannot be empty.");
-        }
-
-        this.FirstName = newFirstName.Trim();
-        this.LastName = string.IsNullOrWhiteSpace(newLastName?.Trim())
-            ? null
-            : newLastName.Trim();
-    }
-
-    /// <summary>
-    /// Sets the token value, expiration, and type.
-    /// </summary>
-    /// <param name="token">The token value to set.</param>
-    /// <param name="expires">The expiration date and time of the token.</param>
-    /// <param name="tokenType">The type of the token.</param>
-    private void SetToken(string token, DateTime expires, UserTokenType tokenType)
-    {
-        this.TokenValue = token;
-        this.TokenExpires = expires;
-        this.TokenType = tokenType;
-    }
-
-    /// <summary>
-    /// Validates the current token against the expected type and expiration.
-    /// </summary>
-    /// <param name="expectedType">The expected <see cref="UserTokenType"/> of the token.</param>
-    /// <exception cref="DomainException">
-    /// Thrown if the token type does not match <paramref name="expectedType"/>
-    /// or if the token has expired.
-    /// </exception>
-    private void ValidateToken(UserTokenType expectedType)
-    {
-        if (this.TokenType != expectedType)
-        {
-            throw new DomainException($"Invalid token type. Expected {expectedType}.");
-        }
-
-        if (this.TokenExpires is null || this.TokenExpires < DateTime.UtcNow)
-        {
-            throw new DomainException("Token has expired.");
-        }
+        this.SecurityStamp = SecurityStamp.New();
     }
 }

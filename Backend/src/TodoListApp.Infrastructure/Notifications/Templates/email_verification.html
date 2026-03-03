@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Confirmation</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f5f7fa; font-family: Arial, sans-serif;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" bgcolor="#f5f7fa">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table width="600" border="0" cellspacing="0" cellpadding="0" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
+
+                    <tr>
+                        <td align="center" bgcolor="#4a5cd6" style="background: linear-gradient(135deg, #4a5cd6 0%, #5d3a8c 100%); padding: 40px 30px;">
+                            <div style="font-size: 24px; font-weight: 700; color: #ffffff; margin-bottom: 10px;">To-Do Application</div>
+                            <h1 style="font-size: 28px; font-weight: 600; color: #ffffff; margin: 0;">Verify Your Email Address</h1>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td style="padding: 40px 30px; line-height: 1.6; color: #4a5568;">
+                            <p style="font-size: 18px; margin-bottom: 25px;">Hi, <strong>{{USER_NAME}}</strong>!</p>
+                            <p>Thanks for signing up! To get started, please confirm your email address by clicking the button below.</p>
+
+                            <div style="text-align: center; margin: 35px 0;">
+                                <a href="{{VERIFY_LINK}}" style="display: inline-block; padding: 16px 40px; background-color: #4a5cd6; background: linear-gradient(135deg, #4a5cd6 0%, #5d3a8c 100%); color: #ffffff; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 16px;">
+                                    Confirm Email Address
+                                </a>
+                            </div>
+
+                            <p style="font-size: 14px; text-align: center; color: #718096;">
+                                If the button doesn't work, copy and paste this link:<br>
+                                <a href="{{VERIFY_LINK}}" style="color: #4a5cd6; word-break: break-all;">{{VERIFY_LINK}}</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td align="center" style="padding: 30px; background-color: #f8f9fa; border-top: 1px solid #e2e8f0; font-size: 12px; color: #718096;">
+                            <p>If you didn't create this account, you can safely ignore this email.</p>
+                            <div style="margin: 15px 0;">
+                                <a href="#" style="color: #4a5568; text-decoration: none; margin: 0 10px;">Help Center</a>
+                                <a href="#" style="color: #4a5568; text-decoration: none; margin: 0 10px;">Privacy Policy</a>
+                            </div>
+                            <p>&copy; 2026 To-Do Application. All rights reserved.</p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

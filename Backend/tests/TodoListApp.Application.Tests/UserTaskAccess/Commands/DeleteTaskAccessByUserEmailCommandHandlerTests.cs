@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessByUserEmail;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
 
@@ -16,6 +17,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<IUserTaskAccessRepository> _utaRepository;
     private readonly DeleteTaskAccessByUserEmailCommandHandler _handler;
+    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeleteTaskAccessByUserEmailCommandHandlerTests"/> class.
@@ -65,7 +67,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
 
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(command.Email!, It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync((UserEntity?)null);
 
         // Act
@@ -74,7 +76,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("Opperation error.", result.Error.Message);
+        Assert.Equal("Operation error.", result.Error.Message);
     }
 
     /// <summary>
@@ -85,13 +87,13 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenDeleteFails()
     {
         // Arrange
-        var user = new UserEntity("John", "john", "test@test.com", "hash");
-        var command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), user.Email);
+        var user = new UserEntity("John", "john", "test@test.com", this._passwordHash);
+        var command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), user.Email.Value);
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
 
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Users.GetByEmailAsync(user.Email, asNoTracking: true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(user);
 
         this._uowMock.Setup(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()))
@@ -103,7 +105,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("Access doesn't deleted.", result.Error.Message);
+        Assert.Equal("Access wasn't deleted.", result.Error.Message);
     }
 
     /// <summary>
@@ -114,13 +116,13 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     public async Task Handle_ShouldDeleteAccess_WhenAllChecksPass()
     {
         // Arrange
-        var user = new UserEntity("John", "john", "test@test.com", "hash");
-        var command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), user.Email);
+        var user = new UserEntity("John", "john", "test@test.com", this._passwordHash);
+        var command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), user.Email.Value);
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
 
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(user.Email, It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Users.GetByEmailAsync(user.Email, asNoTracking: true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(user);
 
         this._uowMock.Setup(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()))
@@ -153,13 +155,13 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         // Arrange
         var rawEmail = "  User@Test.com  ";
         var normalizedEmail = "user@test.com";
-        var user = new UserEntity("John", "john", normalizedEmail, "hash");
+        var user = new UserEntity("John", "john", normalizedEmail, this._passwordHash);
         var command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), rawEmail);
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
 
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(normalizedEmail, It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(user);
 
         this._uowMock.Setup(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()))
@@ -169,6 +171,11 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        this._uowMock.Verify(u => u.Users.GetByEmailAsync(normalizedEmail, It.IsAny<CancellationToken>()), Times.Once);
+        this._uowMock.Verify(
+            u => u.Users.GetByEmailAsync(
+                It.Is<Email>(e => e.Value == normalizedEmail),
+                asNoTracking: true,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

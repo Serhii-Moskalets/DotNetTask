@@ -12,8 +12,8 @@ using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 namespace TodoListApp.Infrastructure.Migrations
 {
     [DbContext(typeof(TodoListAppDbContext))]
-    [Migration("20260125130442_SetTimestamptzForDateTime")]
-    partial class SetTimestamptzForDateTime
+    [Migration("20260221203228_UpdateUserSecurityStampToValueObject")]
+    partial class UpdateUserSecurityStampToValueObject
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -28,7 +28,8 @@ namespace TodoListApp.Infrastructure.Migrations
             modelBuilder.Entity("TodoListApp.Domain.Entities.CommentEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
@@ -60,7 +61,12 @@ namespace TodoListApp.Infrastructure.Migrations
             modelBuilder.Entity("TodoListApp.Domain.Entities.TagEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -82,7 +88,8 @@ namespace TodoListApp.Infrastructure.Migrations
             modelBuilder.Entity("TodoListApp.Domain.Entities.TaskEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
@@ -132,7 +139,8 @@ namespace TodoListApp.Infrastructure.Migrations
             modelBuilder.Entity("TodoListApp.Domain.Entities.TaskListEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
@@ -158,7 +166,12 @@ namespace TodoListApp.Infrastructure.Migrations
             modelBuilder.Entity("TodoListApp.Domain.Entities.UserEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
 
                     b.Property<string>("Email")
                         .IsRequired()
@@ -181,28 +194,21 @@ namespace TodoListApp.Infrastructure.Migrations
                         .HasColumnType("character varying(30)")
                         .HasColumnName("last_name");
 
+                    b.Property<bool>("MustChangePassword")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false)
+                        .HasColumnName("must_change_password");
+
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("password_hash");
 
-                    b.Property<string>("PendingEmail")
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("pending_email");
-
-                    b.Property<DateTime?>("TokenExpires")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("token_expires");
-
-                    b.Property<string>("TokenType")
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("token_type");
-
-                    b.Property<string>("TokenValue")
+                    b.Property<string>("SecurityStamp")
+                        .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("token_value");
+                        .HasColumnName("security_stamp");
 
                     b.Property<string>("UserName")
                         .IsRequired()
@@ -218,7 +224,7 @@ namespace TodoListApp.Infrastructure.Migrations
                     b.HasIndex("UserName")
                         .IsUnique();
 
-                    b.ToTable("users");
+                    b.ToTable("users", (string)null);
                 });
 
             modelBuilder.Entity("TodoListApp.Domain.Entities.UserTaskAccessEntity", b =>
@@ -230,6 +236,10 @@ namespace TodoListApp.Infrastructure.Migrations
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uuid")
                         .HasColumnName("task_id");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_date");
 
                     b.HasKey("UserId", "TaskId");
 
@@ -303,6 +313,79 @@ namespace TodoListApp.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("TodoListApp.Domain.Entities.UserEntity", b =>
+                {
+                    b.OwnsOne("TodoListApp.Domain.ValueObjects.SecurityToken", "CurrentToken", b1 =>
+                        {
+                            b1.Property<Guid>("UserEntityId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateTime>("ExpiresAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("token_expires_at");
+
+                            b1.Property<string>("Metadata")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("token_metadata");
+
+                            b1.Property<string>("Type")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("token_type");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("token_value");
+
+                            b1.HasKey("UserEntityId");
+
+                            b1.ToTable("users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserEntityId");
+                        });
+
+                    b.OwnsOne("TodoListApp.Domain.ValueObjects.SecurityToken", "RevertToken", b1 =>
+                        {
+                            b1.Property<Guid>("UserEntityId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<DateTime>("ExpiresAt")
+                                .HasColumnType("timestamp with time zone")
+                                .HasColumnName("revert_token_expires_at");
+
+                            b1.Property<string>("Metadata")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)")
+                                .HasColumnName("revert_token_metadata");
+
+                            b1.Property<string>("Type")
+                                .IsRequired()
+                                .HasColumnType("text")
+                                .HasColumnName("revert_token_type");
+
+                            b1.Property<string>("Value")
+                                .IsRequired()
+                                .HasMaxLength(255)
+                                .HasColumnType("character varying(255)")
+                                .HasColumnName("revert_token_value");
+
+                            b1.HasKey("UserEntityId");
+
+                            b1.ToTable("users");
+
+                            b1.WithOwner()
+                                .HasForeignKey("UserEntityId");
+                        });
+
+                    b.Navigation("CurrentToken");
+
+                    b.Navigation("RevertToken");
                 });
 
             modelBuilder.Entity("TodoListApp.Domain.Entities.UserTaskAccessEntity", b =>

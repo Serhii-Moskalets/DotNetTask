@@ -9,6 +9,8 @@ namespace TodoListApp.Application.Tests.Comment.Mappers;
 /// </summary>
 public class CommentMapperTests
 {
+    private readonly string _passwordHash = new('a', 64);
+
     /// <summary>
     /// Verifies that all properties are correctly mapped from <see cref="CommentEntity"/> to <see cref="CommentDto"/>.
     /// </summary>
@@ -17,7 +19,7 @@ public class CommentMapperTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var user = new UserEntity("John", "johnd", "john@example.com", "hash", "Joe");
+        var user = new UserEntity("John", "johnd", "john@example.com", this._passwordHash, "Joe");
         var comment = new CommentEntity(taskId, user.Id, "This is a test comment", user);
 
         // Act
@@ -29,10 +31,10 @@ public class CommentMapperTests
         Assert.Equal(comment.CreatedDate, result.CreatedDate);
 
         Assert.NotNull(result.User);
-        Assert.Equal(user.UserName, result.User.UserName);
-        Assert.Equal(user.FirstName, result.User.FirstName);
-        Assert.Equal(user.LastName, result.User.LastName);
-        Assert.Equal(user.Email, result.User.Email);
+        Assert.Equal(user.UserName.Value, result.User.UserName);
+        Assert.Equal(user.FirstName.Value, result.User.FirstName);
+        Assert.Equal(user.LastName!.Value, result.User.LastName);
+        Assert.Equal(user.Email.Value, result.User.Email);
     }
 
     /// <summary>
@@ -43,7 +45,7 @@ public class CommentMapperTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var user = new UserEntity("Alice", "alice", "alice@test.com", "hash");
+        var user = new UserEntity("Alice", "alice", "alice@test.com", this._passwordHash);
         var entities = new List<CommentEntity>
         {
             new(taskId, user.Id, "Comment 1", user),
@@ -67,7 +69,7 @@ public class CommentMapperTests
     public void Map_UserEntityToUserBriefDto_ReturnsCorrectDto()
     {
         // Arrange
-        var user = new UserEntity("John", "johnd", "john@example.com", "hash", "Joe");
+        var user = new UserEntity("John", "johnd", "john@example.com", this._passwordHash, "Joe");
 
         // Act
         var result = CommentMapper.Map(user);
@@ -75,8 +77,9 @@ public class CommentMapperTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(user.Id, result.Id);
-        Assert.Equal(user.UserName, result.UserName);
-        Assert.Equal(user.FirstName, result.FirstName);
-        Assert.Equal(user.LastName, result.LastName);
+        Assert.Equal(user.UserName.Value, result.UserName);
+        Assert.Equal(user.FirstName.Value, result.FirstName);
+        Assert.Equal(user.Email.Value, result.Email);
+        Assert.Equal(user.LastName!.Value, result.LastName);
     }
 }

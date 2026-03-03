@@ -6,6 +6,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
 
@@ -21,6 +22,7 @@ public class CreateUserTaskAccessCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<IUserTaskAccessRepository> _accessRepoMock;
     private readonly CreateUserTaskAccessCommandHandler _handler;
+    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateUserTaskAccessCommandHandlerTests"/> class.
@@ -51,10 +53,10 @@ public class CreateUserTaskAccessCommandHandlerTests
     {
         // Arrange
         var email = "test@test.com";
-        var user = new UserEntity("Name", "Nick", email, "pass");
+        var user = new UserEntity("Name", "Nick", email, this._passwordHash);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
-        this._userRepoMock.Setup(r => r.GetByEmailAsync(email, It.IsAny<CancellationToken>()))
+        this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         var failureResult = await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Already shared");
@@ -84,10 +86,10 @@ public class CreateUserTaskAccessCommandHandlerTests
     {
         // Arrange
         var email = "share@test.com";
-        var user = new UserEntity("Name", "Nick", email, "pass");
+        var user = new UserEntity("Name", "Nick", email, this._passwordHash);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
-        this._userRepoMock.Setup(r => r.GetByEmailAsync(email.ToLowerInvariant(), It.IsAny<CancellationToken>()))
+        this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._serviceMock.Setup(s => s.CanGrantAccessAsync(command.TaskId, command.OwnerId, user, It.IsAny<CancellationToken>()))

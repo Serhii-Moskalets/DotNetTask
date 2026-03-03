@@ -15,6 +15,7 @@ public class UserTaskAccessServiceTests
 {
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly UserTaskAccessService _service;
+    private readonly string _passwordHash = new('a', 60);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserTaskAccessServiceTests"/> class.
@@ -58,7 +59,7 @@ public class UserTaskAccessServiceTests
     {
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", "hash");
+        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
@@ -81,7 +82,7 @@ public class UserTaskAccessServiceTests
         // Arrange
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", "hash");
+        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), "Task");
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
@@ -104,7 +105,7 @@ public class UserTaskAccessServiceTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", "hash");
+        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         var ownerId = sharedUser.Id;
         var task = new TaskEntity(ownerId, Guid.NewGuid(), "Task");
 
@@ -130,7 +131,7 @@ public class UserTaskAccessServiceTests
         // Arrange
         var ownerId = Guid.NewGuid();
         var taskId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", "hash");
+        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         var task = new TaskEntity(ownerId, Guid.NewGuid(), "Task");
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
@@ -158,7 +159,7 @@ public class UserTaskAccessServiceTests
         // Arrange
         var ownerId = Guid.NewGuid();
         var taskId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", "hash");
+        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         var task = new TaskEntity(ownerId, Guid.NewGuid(), "Task");
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))

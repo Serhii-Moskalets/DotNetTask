@@ -2,9 +2,9 @@ name: .NET Core CI
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "**" ]
   pull_request:
-    branches: [ "main", "dev" ]
+    branches: [ "**" ]
 
 jobs:
   build:
@@ -12,13 +12,19 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Enforce PR source branch (main only from dev)
+      if: github.base_ref == 'main' && github.head_ref != 'dev'
+      run: |
+        echo "ERROR: Merging into 'main' is only allowed from the 'dev' branch."
+        echo "Current source branch: ${{ github.head_ref }}"
+        exit 1
     
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 8.0.x # або 9.0.x
+        dotnet-version: 10.0.x
 
-    # Вказуємо шлях до папки Backend для всіх команд
     - name: Restore dependencies
       run: dotnet restore Backend/
 
@@ -26,4 +32,17 @@ jobs:
       run: dotnet build Backend/ --no-restore
 
     - name: Test
+      env:
+        EmailSettings__Host: "smtp.gmail.com"
+        EmailSettings__Port: 587
+        EmailSettings__FromEmail: "monsters.inc.verif@gmail.com"
+        EmailSettings__FromName: "To-Do App"
+        EmailSettings__UserName: "monsters.inc.verif@gmail.com"
+        EmailSettings__Password: ${{ secrets.EMAIL_PASSWORD }}
+        EmailSettings__EnableSsl: "true"
+
+        JwtSettings__Secret: ${{ secrets.JWT_SECRET }}
+        JwtSettings__Issuer: "TodoListApp"
+        JwtSettings__Audience: "TodoListApp-Users"
+        JwtSettings__ExpiryMinutes: 60
       run: dotnet test Backend/ --no-build --verbosity normal
