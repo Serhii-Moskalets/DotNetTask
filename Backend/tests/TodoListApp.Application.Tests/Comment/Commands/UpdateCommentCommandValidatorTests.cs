@@ -1,5 +1,7 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Comment.Commands.UpdateComment;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Comment.Commands;
 
@@ -49,8 +51,8 @@ public class UpdateCommentCommandValidatorTests
 
         var result = this._validator.TestValidate(command);
 
-        result.ShouldHaveValidationErrorFor(c => c.NewText)
-              .WithErrorMessage("New text cannot be null or empty.");
+        result.ShouldHaveValidationErrorFor(c => c.NewContent)
+              .WithErrorMessage("New content cannot be null or empty.");
     }
 
     /// <summary>
@@ -59,13 +61,13 @@ public class UpdateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_NewText_Exceeds_MaxLength()
     {
-        var longText = new string('a', 1001);
+        var longText = new string('a', CommentContent.MaxLength + 1);
         var command = new UpdateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), longText);
 
         var result = this._validator.TestValidate(command);
 
-        result.ShouldHaveValidationErrorFor(c => c.NewText)
-              .WithErrorMessage("Comment text cannot exceed 1000 characters.");
+        result.ShouldHaveValidationErrorFor(c => c.NewContent)
+              .WithErrorMessage($"Comment content cannot exceed {CommentContent.MaxLength} characters.");
     }
 
     /// <summary>

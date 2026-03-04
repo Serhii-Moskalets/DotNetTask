@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Infrastructure.Persistence.Configurations;
 
@@ -16,22 +17,32 @@ public class CommentEntityConfiguration : IEntityTypeConfiguration<CommentEntity
     /// <param name="builder">The builder used to configure the entity.</param>
     public void Configure(EntityTypeBuilder<CommentEntity> builder)
     {
-        // Set primary key
+        builder.ToTable("comments");
+
         builder.HasKey(c => c.Id);
+        builder.Property(c => c.Id)
+            .HasColumnType("uuid")
+            .ValueGeneratedNever();
 
-        // Configure properties
-        builder.Property(c => c.Id).HasColumnType("uuid").ValueGeneratedNever();
-        builder.Property(c => c.UserId).HasColumnType("uuid");
-        builder.Property(c => c.TaskId).HasColumnType("uuid");
-        builder.Property(c => c.Text).IsRequired().HasMaxLength(4000);
+        builder.Property(c => c.UserId)
+            .HasColumnName("user_id")
+            .HasColumnType("uuid");
 
-        // Configure relationship with User
+        builder.Property(c => c.TaskId)
+            .HasColumnName("task_id")
+            .HasColumnType("uuid");
+
+        builder.Property(c => c.Content)
+            .HasConversion(c => c.Value, v => CommentContent.Create(v))
+            .HasColumnName("content")
+            .IsRequired()
+            .HasMaxLength(CommentContent.MaxLength);
+
         builder.HasOne(c => c.User)
             .WithMany(u => u.Comments)
             .HasForeignKey(c => c.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Configure relationship with Task
         builder.HasOne(t => t.Task)
             .WithMany(t => t.Comments)
             .HasForeignKey(c => c.TaskId)

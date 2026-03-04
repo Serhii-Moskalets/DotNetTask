@@ -1,4 +1,5 @@
 ﻿using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
 
@@ -49,7 +50,7 @@ public class CommentRepositoryTests
         await context.SaveChangesAsync();
 
         var taskId = Guid.NewGuid();
-        var comment = new CommentEntity(taskId, user.Id, "Test Comment");
+        var comment = new CommentEntity(taskId, user.Id, CommentContent.Create("Comment"));
         await repo.AddAsync(comment);
         await context.SaveChangesAsync();
 
@@ -80,7 +81,7 @@ public class CommentRepositoryTests
 
         for (int i = 1; i <= 5; i++)
         {
-            var comment = new CommentEntity(taskId, user.Id, $"Text_{i}");
+            var comment = new CommentEntity(taskId, user.Id, CommentContent.Create($"Text_{i}"));
             await repo.AddAsync(comment);
         }
 
@@ -91,6 +92,6 @@ public class CommentRepositoryTests
         // Assert
         Assert.Equal(5, totalCount);
         Assert.Equal(2, items.Count);
-        Assert.Equal("Text_3", items.First().Text);
+        Assert.Equal("Text_3", items.First().Content.Value);
     }
 }

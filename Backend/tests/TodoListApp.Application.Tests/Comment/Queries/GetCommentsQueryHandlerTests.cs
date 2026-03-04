@@ -1,10 +1,12 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Queries.GetComments;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Comment.Queries;
 
@@ -55,9 +57,10 @@ public class GetCommentsQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("You don't have access to this task.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be("You don't have access to this task.");
     }
 
     /// <summary>
@@ -76,8 +79,8 @@ public class GetCommentsQueryHandlerTests
         var author = new UserEntity("Alice", "alice", "alice@example.com", this._passwordHash);
         var comments = new List<CommentEntity>
         {
-            new(taskId, author.Id, "Comment 1", author),
-            new(taskId, author.Id, "Comment 2", author),
+            new(taskId, author.Id, CommentContent.Create("Comment_1"), author),
+            new(taskId, author.Id, CommentContent.Create("Comment_2"), author),
         };
 
         // Налаштовуємо доступ
@@ -95,10 +98,10 @@ public class GetCommentsQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(2, result.Value.TotalCount);
-        Assert.Equal(2, result.Value.Items.Count);
-        Assert.Equal("Comment 1", result.Value.Items.First().Text);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.TotalCount.Should().Be(2);
+        result.Value.Items.Should().HaveCount(2);
+        result.Value.Items.First().Content.Should().Be("Comment_1");
     }
 }

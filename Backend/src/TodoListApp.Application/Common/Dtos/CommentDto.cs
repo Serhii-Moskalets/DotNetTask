@@ -13,7 +13,7 @@ public class CommentDto
     /// <summary>
     /// Gets the text content of the comment.
     /// </summary>
-    public string Text { get; init; } = null!;
+    public string Content { get; init; } = null!;
 
     /// <summary>
     /// Gets the date and time when the comment was created.

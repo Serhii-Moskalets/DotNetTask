@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Comment.Commands.CreateComment;
 
@@ -37,9 +38,9 @@ public class CreateCommentCommandHandler(
             return await Result<Guid>.FailureAsync(ErrorCode.InvalidOperation, "You don't have access to this task.");
         }
 
-        var text = command.Text!;
+        var content = CommentContent.Create(command.Content);
 
-        var commentEntity = new CommentEntity(command.TaskId, command.UserId, text);
+        var commentEntity = new CommentEntity(command.TaskId, command.UserId, content);
 
         await this.UnitOfWork.Comments.AddAsync(commentEntity, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);

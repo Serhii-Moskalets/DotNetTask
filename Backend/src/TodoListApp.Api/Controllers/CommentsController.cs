@@ -55,7 +55,7 @@ public class CommentsController : BaseController
     [HttpPost]
     public async Task<IActionResult> CreateComment([FromRoute] Guid taskId, [FromBody] CommentTextRequest request)
     {
-        var command = new CreateCommentCommand(taskId, this.CurrentUserId, request.Text);
+        var command = new CreateCommentCommand(taskId, this.CurrentUserId, request.Content);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
 
         if (result.IsSuccess)
@@ -94,7 +94,7 @@ public class CommentsController : BaseController
     [HttpPut("~/api/comments/{commentId:guid}")]
     public async Task<IActionResult> UpdateComment([FromRoute] Guid commentId, [FromBody] CommentTextRequest request)
     {
-        var command = new UpdateCommentCommand(commentId, this.CurrentUserId, request.Text);
+        var command = new UpdateCommentCommand(commentId, this.CurrentUserId, request.Content);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

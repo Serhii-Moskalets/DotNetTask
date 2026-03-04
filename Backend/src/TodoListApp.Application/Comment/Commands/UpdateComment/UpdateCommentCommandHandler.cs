@@ -3,6 +3,8 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Comment.Commands.UpdateComment;
 
@@ -31,8 +33,9 @@ public class UpdateCommentCommandHandler(IUnitOfWork unitOfWork)
             return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "You don't have permission to update this comment.");
         }
 
-        var newText = command.NewText!;
-        comment.Update(newText);
+        var newContent = CommentContent.Create(command.NewContent);
+
+        comment.Update(newContent);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);
