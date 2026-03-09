@@ -22,7 +22,7 @@ public class TagRepository(TodoListAppDbContext context)
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns><c>true</c> if a tag with the specified name exists for the user; otherwise, <c>false</c>.</returns>
     public Task<bool> ExistsByNameAsync(string name, Guid userId, CancellationToken cancellationToken = default)
-        => this.DbSet.AsNoTracking().AnyAsync(x => x.UserId == userId && x.Name == name, cancellationToken);
+        => this.DbSet.AsNoTracking().AnyAsync(x => x.UserId == userId && x.Name.Value == name, cancellationToken);
 
     /// <summary>
     /// Retrieves all tags associated with a specific user.

@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Infrastructure.Persistence.Configurations;
 
@@ -16,15 +17,23 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<TagEntity>
     /// <param name="builder">The builder used to configure the entity.</param>
     public void Configure(EntityTypeBuilder<TagEntity> builder)
     {
-        // Set primary key
+        builder.ToTable("tags");
+
         builder.HasKey(t => t.Id);
+        builder.Property(t => t.Id)
+            .HasColumnType("uuid")
+            .ValueGeneratedNever();
 
-        // Configure properties
-        builder.Property(t => t.Id).HasColumnType("uuid").ValueGeneratedNever();
-        builder.Property(t => t.Name).IsRequired().HasMaxLength(100);
-        builder.Property(t => t.UserId).HasColumnType("uuid");
+        builder.Property(t => t.Name)
+            .HasConversion(t => t.Value, v => TagName.Create(v))
+            .HasColumnName("name")
+            .IsRequired()
+            .HasMaxLength(TagName.MaxLength);
 
-        // Configure relationship with User
+        builder.Property(t => t.UserId)
+            .HasColumnName("user_id")
+            .HasColumnType("uuid");
+
         builder.HasOne(t => t.User)
             .WithMany(t => t.Tags)
             .HasForeignKey(t => t.UserId)

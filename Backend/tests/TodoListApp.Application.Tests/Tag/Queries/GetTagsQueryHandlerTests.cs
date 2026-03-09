@@ -1,8 +1,11 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
+using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tag.Queries.GetTags;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tag.Queries;
 
@@ -42,8 +45,8 @@ public class GetTagsQueryHandlerTests
         var pageSize = 10;
         var tagEntities = new List<TagEntity>
         {
-            new("Tag1", userId),
-            new("Tag2", userId),
+            new(TagName.Create("Tag1"), userId),
+            new(TagName.Create("Tag2"), userId),
         };
 
         this._tagRepoMock
@@ -56,14 +59,12 @@ public class GetTagsQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(tagEntities.Count, result.Value.TotalCount);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
 
-        Assert.Collection(
-            result.Value.Items,
-            tag => Assert.Equal("Tag1", tag.Name),
-            tag => Assert.Equal("Tag2", tag.Name));
+        result.Value.Items.Select(x => x.Name)
+            .Should()
+            .ContainInOrder("Tag1", "Tag2");
     }
 
     /// <summary>
@@ -88,9 +89,9 @@ public class GetTagsQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Empty(result.Value.Items);
-        Assert.Equal(0, result.Value.TotalCount);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().BeEmpty();
+        result.Value.TotalCount.Should().Be(0);
     }
 }

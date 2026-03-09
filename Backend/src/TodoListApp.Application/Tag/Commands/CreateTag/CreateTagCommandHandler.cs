@@ -4,8 +4,8 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
-using TodoListApp.Application.Tasks.Commands.AddTagToTask;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tag.Commands.CreateTag;
 
@@ -26,21 +26,26 @@ public class CreateTagCommandHandler(
     /// <returns>A <see cref="Result{T}"/> indicating whether the operation was successful.</returns>
     public async Task<Result<Guid>> Handle(CreateTagCommand command, CancellationToken cancellationToken)
     {
-        var uniqueName = await uniqueNameService.GetUniqueNameAsync(
-            command.Name!,
-            (name, ct) => this.UnitOfWork.Tags.ExistsByNameAsync(name, command.UserId, ct),
-            cancellationToken);
-
-        var tagEntity = new TagEntity(uniqueName, command.UserId);
-        await this.UnitOfWork.Tags.AddAsync(tagEntity, cancellationToken);
-
-        var task = await this.UnitOfWork.Tasks
-        .GetTaskByIdForUserAsync(command.TaskId, command.UserId, false, cancellationToken);
+        var task = await this.UnitOfWork.Tasks.GetTaskByIdForUserAsync(
+           command.TaskId,
+           command.UserId,
+           false,
+           cancellationToken);
 
         if (task is null)
         {
             return await Result<Guid>.FailureAsync(ErrorCode.NotFound, "Task not found.");
         }
+
+        var uniqueName = await uniqueNameService.GetUniqueNameAsync(
+            command.Name,
+            (name, ct) => this.UnitOfWork.Tags.ExistsByNameAsync(name, command.UserId, ct),
+            cancellationToken);
+
+        var tagName = TagName.Create(uniqueName);
+
+        var tagEntity = new TagEntity(tagName, command.UserId);
+        await this.UnitOfWork.Tags.AddAsync(tagEntity, cancellationToken);
 
         task.SetTag(tagEntity.Id);
 

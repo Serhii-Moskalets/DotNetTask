@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tag.Commands.CreateTag;
 
@@ -20,6 +21,6 @@ public class CreateTagCommandValidator : AbstractValidator<CreateTagCommand>
 
         this.RuleFor(x => x.Name)
             .NotEmpty().WithMessage("Tag name cannot be null or empty.")
-            .MaximumLength(50).WithMessage("Tag name cannot exceed 50 characters.");
+            .MaximumLength(TagName.MaxLength).WithMessage($"Tag name cannot exceed {TagName.MaxLength} characters.");
     }
 }

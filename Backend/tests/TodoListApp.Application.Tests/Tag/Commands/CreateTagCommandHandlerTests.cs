@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
@@ -48,10 +49,9 @@ public class CreateTagCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var taskId = Guid.NewGuid();
-        var command = new CreateTagCommand(userId, taskId, "Tag");
-
         var task = new TaskEntity(userId, Guid.NewGuid(), "Task");
+
+        var command = new CreateTagCommand(userId, task.Id, "Tag");
 
         this._uniqueNameServiceMock
             .Setup(s => s.GetUniqueNameAsync(
@@ -63,16 +63,23 @@ public class CreateTagCommandHandlerTests
             .ReturnsAsync("Tag");
 
         this._taskRepoMock
-            .Setup(r => r.GetTaskByIdForUserAsync(taskId, userId, false, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetTaskByIdForUserAsync(task.Id, userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
         // Act
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(result.Value, task.TagId);
-        this._tagRepoMock.Verify(r => r.AddAsync(It.Is<TagEntity>(t => t.Name == "Tag"), It.IsAny<CancellationToken>()), Times.Once);
+        result.IsSuccess.Should().BeTrue();
+
+        result.Value.Should().Be(task.TagId!.Value);
+        this._tagRepoMock.Verify(
+            r => r.AddAsync(It.IsAny<TagEntity>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        this._tagRepoMock.Verify(
+            r => r.AddAsync(It.Is<TagEntity>(t => t.Name.Value == "Tag"),It.IsAny<CancellationToken>()),
+            Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -113,8 +120,9 @@ public class CreateTagCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error?.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }
