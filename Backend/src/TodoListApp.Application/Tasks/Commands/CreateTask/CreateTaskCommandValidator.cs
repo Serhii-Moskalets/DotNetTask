@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tasks.Commands.CreateTask;
 
@@ -20,7 +22,7 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
 
         this.RuleFor(x => x.Dto.Title)
             .NotEmpty().WithMessage("Task title cannot be empty.")
-            .MaximumLength(100).WithMessage("Title cannot exceed 100 characters.");
+            .MaximumLength(TaskTitle.MaxLength).WithMessage($"Title cannot exceed {TaskTitle.MaxLength} characters.");
 
         this.RuleFor(x => x.Dto.DueDate)
             .Must((dueDate) => dueDate == null || dueDate.Value >= DateTime.UtcNow)

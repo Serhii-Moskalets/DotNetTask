@@ -3,6 +3,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Queries.GetUsersWithTaskAccess;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Queries;
 
@@ -66,7 +67,7 @@ public class GetUsersWithTaskAccessQueryHandlerTests
     {
         // Arrange
         var ownerId = Guid.NewGuid();
-        var task = new TaskEntity(ownerId, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(ownerId, Guid.NewGuid(), TaskTitle.Create("Task"));
         var query = new GetUsersWithTaskAccessQuery(task.Id, ownerId);
 
         this._tasksRepoMock.Setup(r => r.GetTaskByIdForUserAsync(task.Id, ownerId, true, It.IsAny<CancellationToken>()))

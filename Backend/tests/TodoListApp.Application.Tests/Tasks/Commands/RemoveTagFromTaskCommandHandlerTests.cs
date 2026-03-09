@@ -1,9 +1,11 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.RemoveTagFromTask;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -13,6 +15,8 @@ namespace TodoListApp.Application.Tests.Tasks.Commands;
 /// </summary>
 public class RemoveTagFromTaskCommandHandlerTests
 {
+    private static readonly TaskTitle Title = TaskTitle.Create("Title");
+
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<ITaskRepository> _taskRepoMock;
     private readonly RemoveTagFromTaskCommandHandler _handler;
@@ -52,8 +56,9 @@ public class RemoveTagFromTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
     }
 
     /// <summary>
@@ -66,7 +71,7 @@ public class RemoveTagFromTaskCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Title");
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
 
         task.SetTag(null);
 
@@ -85,7 +90,7 @@ public class RemoveTagFromTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -98,7 +103,7 @@ public class RemoveTagFromTaskCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Title");
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
 
         task.SetTag(Guid.NewGuid());
 
@@ -119,8 +124,8 @@ public class RemoveTagFromTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Null(task.TagId);
+        result.IsSuccess.Should().BeTrue();
+        task.TagId.Should().BeNull(); ;
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

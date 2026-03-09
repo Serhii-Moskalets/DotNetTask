@@ -1,16 +1,19 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-using TodoListApp.Domain.Common;
+﻿using TodoListApp.Domain.Common;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Domain.Entities;
 
 /// <summary>
 /// Represents a task within a task list, including its owner, status, due date, and related comments.
 /// </summary>
-[Table("tasks")]
 public class TaskEntity : BaseEntity
 {
+    private readonly HashSet<CommentEntity> _comments = new();
+
+    private readonly HashSet<UserTaskAccessEntity> _userAccesses = new();
+
     /// <summary>
     /// Initializes a new instance of the <see cref="TaskEntity"/> class.
     /// </summary>
@@ -19,42 +22,23 @@ public class TaskEntity : BaseEntity
     /// <param name="title">The title of the task.</param>
     /// <param name="dueDate">The due date of the task.</param>
     /// <param name="description">The Description of the task.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="title"/> is null, empty, or consists only of white-space characters or exceed 50 characters.
-    /// Thrown when <paramref name="dueDate"/> in the past.
-    /// Throw when <paramref name="description"/> exceed 1000 charecters.
-    /// </exception>
+    /// <exception cref="DomainException">Thrown when <paramref name="dueDate"/> in the past.</exception>
     public TaskEntity(
         Guid ownerId,
         Guid taskListId,
-        string title,
+        TaskTitle title,
         DateTime? dueDate = null,
-        string? description = null)
+        TaskDescription? description = null)
     {
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            throw new DomainException("Title cannot be empty.");
-        }
-
-        if (title.Length > 100)
-        {
-            throw new DomainException("Title cannot exceed 100 characters.");
-        }
-
         if (dueDate < DateTime.UtcNow)
         {
             throw new DomainException("Due date cannot be in the past.");
         }
 
-        if (description?.Length > 1000)
-        {
-            throw new DomainException("Description cannot exceed 1000 characters.");
-        }
-
         this.OwnerId = ownerId;
         this.TaskListId = taskListId;
-        this.Title = title.Trim();
-        this.Description = description?.Trim();
+        this.Title = title;
+        this.Description = description;
         this.Status = StatusTask.NotStarted;
         this.DueDate = dueDate;
     }
@@ -64,43 +48,36 @@ public class TaskEntity : BaseEntity
     /// <summary>
     /// Gets the title of the task.
     /// </summary>
-    [Column("title")]
-    public string Title { get; private set; } = null!;
+    public TaskTitle Title { get; private set; } = null!;
 
     /// <summary>
     /// Gets the description of the task.
     /// </summary>
-    [Column("description")]
-    public string? Description { get; private set; }
+    public TaskDescription? Description { get; private set; }
 
     /// <summary>
     /// Gets the due date of the task.
     /// </summary>
-    [Column("due_date")]
     public DateTime? DueDate { get; private set; }
 
     /// <summary>
     /// Gets the status of the task.
     /// </summary>
-    [Column("status")]
     public StatusTask Status { get; private set; }
 
     /// <summary>
     /// Gets the ID of the user who owns the task.
     /// </summary>
-    [Column("owner_id")]
-    public Guid OwnerId { get; init; }
+    public Guid OwnerId { get; private init; }
 
     /// <summary>
     /// Gets the ID of the task list that this task belongs to.
     /// </summary>
-    [Column("task_list_id")]
-    public Guid TaskListId { get; init; }
+    public Guid TaskListId { get; private init; }
 
     /// <summary>
     /// Gets the ID of the tag associated with the task, if any.
     /// </summary>
-    [Column("tag_id")]
     public Guid? TagId { get; private set; }
 
     /// <summary>
@@ -111,52 +88,49 @@ public class TaskEntity : BaseEntity
     /// <summary>
     /// Gets the task list to which this task belongs.
     /// </summary>
-    public virtual TaskListEntity TaskList { get; init; } = null!;
+    public virtual TaskListEntity TaskList { get; private init; } = null!;
 
     /// <summary>
     /// Gets the owner of the task.
     /// </summary>
-    public virtual UserEntity Owner { get; init; } = null!;
+    public virtual UserEntity Owner { get; private init; } = null!;
 
     /// <summary>
     /// Gets the collection of comments associated with this task.
     /// </summary>
-    public virtual ICollection<CommentEntity> Comments { get; init; } = new HashSet<CommentEntity>();
+    public virtual IReadOnlyCollection<CommentEntity> Comments => this._comments;
 
     /// <summary>
     /// Gets the collection of user accesses associated with this task.
     /// </summary>
-    public virtual ICollection<UserTaskAccessEntity> UserAccesses { get; init; } = new HashSet<UserTaskAccessEntity>();
+    public virtual IReadOnlyCollection<UserTaskAccessEntity> UserAccesses => this._userAccesses;
 
     /// <summary>
     /// Updates the task title, description, and due date.
     /// </summary>
     /// <param name="title">The new title of the task.</param>
-    /// <param name="description">The new description of the task.</param>
-    /// <param name="dueDate">The new due date of the task.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="title"/> or <paramref name="description"/> exceed their length limits,
-    /// or when <paramref name="dueDate"/> is in the past.
-    /// </exception>
-    public virtual void UpdateDetails(string? title, string? description = null, DateTime? dueDate = null)
+    /// <param name="description">
+    /// The new description of the task.
+    /// Passing null will remove the existing description.
+    /// </param>
+    /// <param name="dueDate">
+    /// The new due date of the task. If null, the current due date remains unchanged.
+    /// Must not be in the past.
+    /// </param>
+    /// <remarks>
+    /// To remove the description, pass <c>null</c> for <paramref name="description"/>.
+    /// To keep the title or due date unchanged, pass <c>null</c> for the corresponding parameter.
+    /// </remarks>
+    /// <exception cref="DomainException">Throws when <paramref name="dueDate"/> is in the past.</exception>
+    public virtual void UpdateDetails(TaskTitle? title, TaskDescription? description = null, DateTime? dueDate = null)
     {
-        if (title?.Length > 100)
-        {
-            throw new DomainException("Title cannot exceed 100 characters.");
-        }
-
         if (dueDate.HasValue && dueDate < DateTime.UtcNow)
         {
             throw new DomainException("Due date cannot be in the past.");
         }
 
-        if (description?.Length > 1000)
-        {
-            throw new DomainException("Description cannot exceed 1000 characters.");
-        }
-
-        this.Title = !string.IsNullOrEmpty(title) ? title.Trim() : this.Title;
-        this.Description = description?.Trim();
+        this.Title = title ?? this.Title;
+        this.Description = description;
         this.DueDate = dueDate ?? this.DueDate;
     }
 
@@ -164,6 +138,10 @@ public class TaskEntity : BaseEntity
     /// Sets or removes the tag associated with the task by ID.
     /// </summary>
     /// <param name="tagId">The ID of the tag to associate, or null to remove it.</param>
+    /// <remarks>
+    /// If the provided <paramref name="tagId"/> is the same as the current tag, no changes are made.
+    /// Passing <c>null</c> removes the tag association.
+    /// </remarks>
     public void SetTag(Guid? tagId)
     {
         if (this.TagId == tagId)

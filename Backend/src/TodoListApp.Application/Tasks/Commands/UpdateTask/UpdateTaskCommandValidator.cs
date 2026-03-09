@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tasks.Commands.UpdateTask;
 
@@ -21,10 +23,10 @@ public class UpdateTaskCommandValidator : AbstractValidator<UpdateTaskCommand>
             .NotEmpty().WithMessage("User ID is required.");
 
         this.RuleFor(x => x.Dto.Title)
-            .MaximumLength(100).WithMessage("Title cannot exceed 100 characters.");
+            .MaximumLength(TaskTitle.MaxLength).WithMessage($"Title cannot exceed {TaskTitle.MaxLength} characters.");
 
         this.RuleFor(x => x.Dto.Description)
-            .MaximumLength(1000).WithMessage("Description cannot exceed 1000 characters.");
+            .MaximumLength(TaskDescription.MaxLength).WithMessage($"Description cannot exceed {TaskDescription.MaxLength} characters.");
 
         this.RuleFor(x => x.Dto.DueDate)
             .Must((dueDate) => dueDate == null || dueDate.Value >= DateTime.UtcNow)

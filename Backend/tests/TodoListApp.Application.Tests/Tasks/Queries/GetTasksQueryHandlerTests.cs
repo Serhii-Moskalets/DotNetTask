@@ -1,9 +1,11 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Queries.GetTasks;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Queries;
 
@@ -49,8 +51,8 @@ public class GetTasksQueryHandlerTests
 
         var entities = new List<TaskEntity>
         {
-            new(userId, taskListId, "Task 1"),
-            new(userId, taskListId, "Task 2"),
+            new(userId, taskListId, TaskTitle.Create("Task 1")),
+            new(userId, taskListId, TaskTitle.Create("Task 2")),
         };
 
         this._taskRepositoryMock
@@ -71,11 +73,11 @@ public class GetTasksQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(2, result.Value!.TotalCount);
-        Assert.Equal(query.Page, result.Value.Page);
-        Assert.Equal(2, result.Value.Items.Count);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.TotalCount.Should().Be(2);
+        result.Value.Page.Should().Be(query.Page);
+        result.Value.Items.Should().HaveCount(2);
     }
 
     /// <summary>

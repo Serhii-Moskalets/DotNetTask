@@ -6,6 +6,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tag.Commands.CreateTag;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tag.Commands;
 
@@ -49,7 +50,7 @@ public class CreateTagCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Title"));
 
         var command = new CreateTagCommand(userId, task.Id, "Tag");
 
@@ -78,7 +79,7 @@ public class CreateTagCommandHandlerTests
             Times.Once);
 
         this._tagRepoMock.Verify(
-            r => r.AddAsync(It.Is<TagEntity>(t => t.Name.Value == "Tag"),It.IsAny<CancellationToken>()),
+            r => r.AddAsync(It.Is<TagEntity>(t => t.Name.Value == "Tag"), It.IsAny<CancellationToken>()),
             Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

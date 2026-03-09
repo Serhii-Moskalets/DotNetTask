@@ -1,9 +1,12 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
+using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.DeleteTask;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -52,8 +55,10 @@ public class DeleteTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be("Task not found.");
     }
 
     /// <summary>
@@ -67,7 +72,7 @@ public class DeleteTaskCommandHandlerTests
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
         var taskListId = Guid.NewGuid();
-        var task = new TaskEntity(ownerId, taskListId, "Sample task");
+        var task = new TaskEntity(ownerId, taskListId, TaskTitle.Create("Title"));
 
         this._taskRepoMock.Setup(r => r.GetTaskByIdForUserAsync(taskId, ownerId, false, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(task);
@@ -81,7 +86,8 @@ public class DeleteTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
+
         this._taskRepoMock.Verify(r => r.DeleteAsync(task, It.IsAny<CancellationToken>()), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

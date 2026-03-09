@@ -1,5 +1,4 @@
 ﻿using FluentValidation.TestHelper;
-using TodoListApp.Application.Tasks.Queries.GetTaskByTitle;
 using TodoListApp.Application.Tasks.Queries.GetTasks;
 
 namespace TodoListApp.Application.Tests.Tasks.Queries;

@@ -3,6 +3,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessesByTask;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
 
@@ -73,7 +74,7 @@ public class DeleteTaskAccessesByTaskCommandHandlerTests
         // Arrange
         var taskId = Guid.NewGuid();
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Test Task");
+        var task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Test Task"));
         var command = new DeleteTaskAccessesByTaskCommand(taskId, userId);
 
         this._tasksRepoMock.Setup(r => r.GetTaskByIdForUserAsync(taskId, userId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))

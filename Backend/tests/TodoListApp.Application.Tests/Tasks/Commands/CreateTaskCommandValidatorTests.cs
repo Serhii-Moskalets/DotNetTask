@@ -1,6 +1,8 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Commands.CreateTask;
 using TodoListApp.Application.Tasks.Dtos;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -79,7 +81,7 @@ public class CreateTaskCommandValidatorTests
     public void Should_HaveError_When_Title_TooLong()
     {
         // Arrange
-        var longTitle = new string('A', 101);
+        var longTitle = new string('A', TaskTitle.MaxLength + 1);
         var command = new CreateTaskCommand(
             new CreateTaskDto
             {
@@ -90,7 +92,7 @@ public class CreateTaskCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.Dto.Title)
-            .WithErrorMessage("Title cannot exceed 100 characters.");
+            .WithErrorMessage($"Title cannot exceed {TaskTitle.MaxLength} characters.");
     }
 
     /// <summary>

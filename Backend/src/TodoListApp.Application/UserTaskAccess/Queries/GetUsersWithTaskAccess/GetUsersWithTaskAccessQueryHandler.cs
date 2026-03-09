@@ -44,7 +44,7 @@ public class GetUsersWithTaskAccessQueryHandler(IUnitOfWork unitOfWork)
         return await Result<TaskAccessListDto>.SuccessAsync(new TaskAccessListDto
         {
             Id = task.Id,
-            Title = task.Title,
+            Title = task.Title.Value,
             Users = items.ToPagedResult(totalCount, query.Page, query.PageSize, TaskAccessForOwnerMapper.Map),
         });
     }

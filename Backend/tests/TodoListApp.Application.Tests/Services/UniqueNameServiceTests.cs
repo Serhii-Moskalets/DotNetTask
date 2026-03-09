@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Common.Services;
@@ -51,7 +52,7 @@ public class UniqueNameServiceTests
             CancellationToken.None);
 
         // Assert
-        Assert.Equal(Title, result);
+        result.Should().Be(Title);
     }
 
     /// <summary>
@@ -77,6 +78,6 @@ public class UniqueNameServiceTests
             CancellationToken.None);
 
         // Assert
-        Assert.Equal("Task List (2)", result);
+        result.Should().Be("Task List (2)");
     }
 }

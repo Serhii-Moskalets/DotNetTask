@@ -3,6 +3,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Queries.GetSharedTasksByUserId;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Queries;
 
@@ -66,7 +67,7 @@ public class GetSharedTasksByUserIdQueryHandlerTests
         var userId = Guid.NewGuid();
         var query = new GetSharedTasksByUserIdQuery(userId, 1, 10);
 
-        var task1 = new TaskEntity(userId, Guid.NewGuid(), "Task 1");
+        var task1 = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Task"));
         var entities = new List<UserTaskAccessEntity>
         {
             new(task1.Id, userId) { Task = task1, User = new UserEntity("Owner", "owner", "o@t.com", this._passwordHash) },

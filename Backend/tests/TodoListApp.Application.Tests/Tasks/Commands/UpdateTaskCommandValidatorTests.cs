@@ -1,6 +1,8 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Commands.UpdateTask;
 using TodoListApp.Application.Tasks.Dtos;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -56,7 +58,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Title_TooLong()
     {
-        var longTitle = new string('A', 101);
+        var longTitle = new string('A', TaskTitle.MaxLength + 1);
         var command = new UpdateTaskCommand(
             new UpdateTaskDto
             {
@@ -67,7 +69,7 @@ public class UpdateTaskCommandValidatorTests
 
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.Dto.Title)
-              .WithErrorMessage("Title cannot exceed 100 characters.");
+              .WithErrorMessage($"Title cannot exceed {TaskTitle.MaxLength} characters.");
     }
 
     /// <summary>
@@ -76,7 +78,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Description_TooLong()
     {
-        var longDescription = new string('B', 1001);
+        var longDescription = new string('B', TaskDescription.MaxLength + 1);
         var command = new UpdateTaskCommand(
             new UpdateTaskDto
             {
@@ -88,7 +90,7 @@ public class UpdateTaskCommandValidatorTests
 
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.Dto.Description)
-              .WithErrorMessage("Description cannot exceed 1000 characters.");
+              .WithErrorMessage($"Description cannot exceed {TaskDescription.MaxLength} characters.");
     }
 
     /// <summary>

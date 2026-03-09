@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tasks.Commands.UpdateTask;
 
@@ -28,16 +29,19 @@ public class UpdateTaskCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Task not found.");
         }
 
-        var updateDto = command.Dto;
+        var dto = command.Dto;
 
-        if (updateDto.Title == task.Title &&
-            updateDto.Description == task.Description &&
-            updateDto.DueDate == task.DueDate)
+        if ((dto.Title == task.Title.Value || dto.Title is null) &&
+            dto.Description == task.Description?.Value &&
+            dto.DueDate == task.DueDate)
         {
             return await Result<bool>.SuccessAsync(true);
         }
 
-        task.UpdateDetails(command.Dto.Title, command.Dto.Description, command.Dto.DueDate);
+        var taskTitle = TaskTitle.CreateOptional(dto.Title);
+        var taskDescription = TaskDescription.CreateOptional(dto.Description);
+
+        task.UpdateDetails(taskTitle, taskDescription, command.Dto.DueDate);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);

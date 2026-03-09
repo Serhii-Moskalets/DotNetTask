@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
@@ -61,8 +62,9 @@ public class CreateTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
     }
 
     /// <summary>
@@ -101,8 +103,8 @@ public class CreateTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotEqual(Guid.Empty, result.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBe(Guid.Empty);
 
         this._taskRepoMock.Verify(
             r =>
@@ -110,7 +112,7 @@ public class CreateTaskCommandHandlerTests
                 It.Is<TaskEntity>(t =>
                 t.OwnerId == userId &&
                 t.TaskListId == taskListId &&
-                t.Title == "New task"),
+                t.Title.Value == "New task"),
                 It.IsAny<CancellationToken>()),
             Times.Once);
 

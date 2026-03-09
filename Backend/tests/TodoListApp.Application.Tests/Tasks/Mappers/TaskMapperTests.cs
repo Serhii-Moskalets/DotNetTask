@@ -1,6 +1,8 @@
-﻿using TodoListApp.Application.Common.Dtos;
+﻿using FluentAssertions;
+using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Tasks.Mappers;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Mappers;
 
@@ -10,6 +12,8 @@ namespace TodoListApp.Application.Tests.Tasks.Mappers;
 /// </summary>
 public class TaskMapperTests
 {
+    private static readonly TaskTitle Title = TaskTitle.Create("Task title");
+    private static readonly TaskDescription Description = TaskDescription.Create("Task description");
     private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
@@ -22,18 +26,18 @@ public class TaskMapperTests
         // Arrange
         var userId = Guid.NewGuid();
         var taskListId = Guid.NewGuid();
-        var entity = new TaskEntity(userId, taskListId, "Complete Project", DateTime.UtcNow.AddDays(1), "Description test");
+        var entity = new TaskEntity(userId, taskListId, Title, DateTime.UtcNow.AddDays(1), Description);
 
         // Act
         var dto = TaskMapper.Map(entity);
 
         // Assert
-        Assert.NotNull(dto);
-        Assert.Equal(entity.Title, dto.Title);
-        Assert.Equal(entity.Description, dto.Description);
-        Assert.Equal(entity.Status, dto.Status);
-        Assert.Equal(entity.DueDate, dto.DueDate);
-        Assert.Equal(entity.CreatedDate, dto.CreatedDate);
+        dto.Should().NotBeNull();
+        dto.Title.Should().Be(entity.Title.Value);
+        dto.Description.Should().Be(entity.Description!.Value);
+        dto.Status.Should().Be(entity.Status);
+        dto.DueDate.Should().Be(entity.DueDate);
+        dto.CreatedDate.Should().Be(entity.CreatedDate);
     }
 
     /// <summary>
@@ -45,16 +49,16 @@ public class TaskMapperTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var entity = new TaskEntity(userId, Guid.NewGuid(), "Brief Task");
+        var entity = new TaskEntity(userId, Guid.NewGuid(), Title);
 
         // Act
         var dto = TaskMapper.MapToBrief(entity);
 
         // Assert
-        Assert.NotNull(dto);
-        Assert.Equal(entity.Title, dto.Title);
-        Assert.Equal(entity.Status, dto.Status);
-        Assert.Null(dto.Tag); // Tag was not set
+        dto.Should().NotBeNull();
+        dto.Title.Should().Be(entity.Title.Value);
+        dto.Status.Should().Be(entity.Status);
+        dto.Tag.Should().BeNull();
     }
 
     /// <summary>
@@ -67,17 +71,17 @@ public class TaskMapperTests
         var userId = Guid.NewGuid();
         var entities = new List<TaskEntity>
         {
-            new(userId, Guid.NewGuid(), "Task 1"),
-            new(userId, Guid.NewGuid(), "Task 2"),
+            new(userId, Guid.NewGuid(), TaskTitle.Create("Task 1")),
+            new(userId, Guid.NewGuid(), TaskTitle.Create("Task 2")),
         };
 
         // Act
         var dtos = TaskMapper.MapToBrief(entities);
 
         // Assert
-        Assert.Equal(entities.Count, dtos.Count);
-        Assert.Contains(dtos, d => d.Title == "Task 1");
-        Assert.Contains(dtos, d => d.Title == "Task 2");
+        dtos.Should().HaveCount(entities.Count);
+        dtos.Should().ContainSingle(d => d.Title == "Task 1");
+        dtos.Should().ContainSingle(d => d.Title == "Task 2");
     }
 
     /// <summary>
@@ -91,14 +95,14 @@ public class TaskMapperTests
 
         var user = new UserEntity("Joe", "joes", "joe@gmail.com", this._passwordHash);
 
-        var entity = new CommentEntity(taskId, user.Id, "Test comment content", user);
+        var entity = new CommentEntity(taskId, user.Id, CommentContent.Create("Content"), user);
 
         // Act
         var dto = TaskMapper.Map(entity);
 
         // Assert
-        Assert.NotNull(dto);
-        Assert.Equal(entity.Text, dto.Text);
-        Assert.Equal(entity.CreatedDate, dto.CreatedDate);
+        dto.Should().NotBeNull();
+        dto.Content.Should().Be(entity.Content.Value);
+        dto.CreatedDate.Should().Be(entity.CreatedDate);
     }
 }

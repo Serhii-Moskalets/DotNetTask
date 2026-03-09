@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
@@ -56,8 +57,9 @@ public class DeleteOverdueTasksCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
 
         this._taskRepoMock.Verify(
             r => r.DeleteOverdueTaskAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -89,8 +91,8 @@ public class DeleteOverdueTasksCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(expectedDeletedCount, result.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(expectedDeletedCount);
 
         this._taskRepoMock.Verify(
             r => r.DeleteOverdueTaskAsync(

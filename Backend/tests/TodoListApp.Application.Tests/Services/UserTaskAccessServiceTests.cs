@@ -1,8 +1,10 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Common.Services;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Services;
 
@@ -13,6 +15,7 @@ namespace TodoListApp.Application.Tests.Services;
 /// </summary>
 public class UserTaskAccessServiceTests
 {
+    private static readonly TaskTitle Title = TaskTitle.Create("Title");
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly UserTaskAccessService _service;
     private readonly string _passwordHash = new('a', 60);
@@ -44,9 +47,10 @@ public class UserTaskAccessServiceTests
         var result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.ValidationError, result.Error!.Code);
-        Assert.Contains("Cannot grant access to this task.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
+        result.Error.Message.Should().Contain("Cannot grant access to this task.");
     }
 
     /// <summary>
@@ -68,8 +72,8 @@ public class UserTaskAccessServiceTests
         var result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.ValidationError, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
     }
 
     /// <summary>
@@ -83,7 +87,7 @@ public class UserTaskAccessServiceTests
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
         var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), "Task");
+        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
@@ -92,8 +96,8 @@ public class UserTaskAccessServiceTests
         var result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.ValidationError, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
     }
 
     /// <summary>
@@ -107,7 +111,7 @@ public class UserTaskAccessServiceTests
         var taskId = Guid.NewGuid();
         var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         var ownerId = sharedUser.Id;
-        var task = new TaskEntity(ownerId, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
@@ -116,9 +120,9 @@ public class UserTaskAccessServiceTests
         var result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.ValidationError, result.Error!.Code);
-        Assert.Contains("cannot be shared with its owner", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
+        result.Error.Message.Should().Contain("cannot be shared with its owner");
     }
 
     /// <summary>
@@ -132,7 +136,7 @@ public class UserTaskAccessServiceTests
         var ownerId = Guid.NewGuid();
         var taskId = Guid.NewGuid();
         var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
-        var task = new TaskEntity(ownerId, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
@@ -144,9 +148,9 @@ public class UserTaskAccessServiceTests
         var result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Contains("already shared with this user", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Contain("already shared with this user");
     }
 
     /// <summary>
@@ -160,7 +164,7 @@ public class UserTaskAccessServiceTests
         var ownerId = Guid.NewGuid();
         var taskId = Guid.NewGuid();
         var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
-        var task = new TaskEntity(ownerId, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
@@ -172,6 +176,6 @@ public class UserTaskAccessServiceTests
         var result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
     }
 }
