@@ -1,11 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
-
-namespace TodoListApp.Domain.Entities;
+﻿namespace TodoListApp.Domain.Entities;
 
 /// <summary>
 /// Represents the access relationship between a user and a task.
 /// </summary>
-[Table("user_task_access")]
 public class UserTaskAccessEntity
 {
     /// <summary>
@@ -24,19 +21,16 @@ public class UserTaskAccessEntity
     /// <summary>
     /// Gets the ID of the task.
     /// </summary>
-    [Column("task_id")]
     public Guid TaskId { get; init; }
 
     /// <summary>
     /// Gets the ID of the user.
     /// </summary>
-    [Column("user_id")]
     public Guid UserId { get; init; }
 
     /// <summary>
     /// Gets the date and time when the shared access was created.
     /// </summary>
-    [Column("created_date")]
     public DateTime CreatedDate { get; init; } = DateTime.UtcNow;
 
     /// <summary>
