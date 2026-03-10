@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
@@ -52,10 +53,10 @@ public class CreateTaskListCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Error);
-        Assert.Equal(ErrorCode.NotFound, result.Error.Code);
-        Assert.Equal("User not found.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be("User not found.");
     }
 
     /// <summary>
@@ -89,10 +90,10 @@ public class CreateTaskListCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._uowMock.Verify(
             u => u.TaskLists.AddAsync(
-                It.Is<TaskListEntity>(t => t.OwnerId == user.Id && t.Title == "My Task List"),
+                It.Is<TaskListEntity>(t => t.OwnerId == user.Id && t.Title.Value == "My Task List"),
                 It.IsAny<CancellationToken>()), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

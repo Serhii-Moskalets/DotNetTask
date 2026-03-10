@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.TaskList.Commands.UpdateTaskList;
 
@@ -14,7 +15,7 @@ public class UpdateTaskListCommandValidator : AbstractValidator<UpdateTaskListCo
     {
         this.RuleFor(x => x.NewTitle)
             .NotEmpty().WithMessage("New title cannot be null or empty.")
-            .MaximumLength(50).WithMessage("Title cannot exceed 50 characters.");
+            .MaximumLength(TaskListTitle.MaxLength).WithMessage($"Title cannot exceed {TaskListTitle.MaxLength} characters.");
 
         this.RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required.");

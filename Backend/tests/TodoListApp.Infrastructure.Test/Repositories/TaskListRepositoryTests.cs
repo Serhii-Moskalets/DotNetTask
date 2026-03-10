@@ -1,5 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FluentAssertions;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
 
@@ -11,6 +12,10 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class TaskListRepositoryTests
 {
+    private static readonly TaskListTitle TaskListTitleA = TaskListTitle.Create("Task_List_Title_A");
+    private static readonly TaskListTitle TaskListTitleB = TaskListTitle.Create("Task_List_Title_B");
+    private static readonly TaskListTitle TaskListTitleC = TaskListTitle.Create("Task_List_Title_C");
+
     /// <summary>
     /// Verifies that <see cref="TaskListRepository.ExistsByTitleAsync"/>
     /// returns true when a task list exists for the user.
@@ -24,16 +29,16 @@ public class TaskListRepositoryTests
         var repo = new TaskListRepository(context);
 
         var userId = Guid.NewGuid();
-        var taskList = new TaskListEntity(userId, title: "Task List");
+        var taskList = new TaskListEntity(userId, title: TaskListTitleA);
 
         await repo.AddAsync(taskList);
         await context.SaveChangesAsync();
 
         // Act
-        var exists = await repo.ExistsByTitleAsync("Task List", userId);
+        var exists = await repo.ExistsByTitleAsync(TaskListTitleA.Value, userId);
 
         // Assert
-        Assert.True(exists);
+        exists.Should().BeTrue();
     }
 
     /// <summary>
@@ -50,10 +55,10 @@ public class TaskListRepositoryTests
         var userId = Guid.NewGuid();
 
         // Act
-        var exists = await repo.ExistsByTitleAsync("Task List", userId);
+        var exists = await repo.ExistsByTitleAsync(TaskListTitleA.Value, userId);
 
         // Assert
-        Assert.False(exists);
+        exists.Should().BeFalse();
     }
 
     /// <summary>
@@ -73,9 +78,11 @@ public class TaskListRepositoryTests
         var repo = new TaskListRepository(context);
         var userId = Guid.NewGuid();
 
-        // Assert&Act
-        await Assert.ThrowsAsync<ArgumentException>(
-            () => repo.ExistsByTitleAsync(title!, userId));
+        // Act
+        var act = async () => await repo.ExistsByTitleAsync(title!, userId);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentException>();
     }
 
     /// <summary>
@@ -93,9 +100,9 @@ public class TaskListRepositoryTests
 
         var taskLists = new List<TaskListEntity>
         {
-            new (userId, "List A"),
-            new (userId, "List B"),
-            new (userId, "List C"),
+            new (userId, TaskListTitleA),
+            new (userId, TaskListTitleB),
+            new (userId, TaskListTitleC),
         };
 
         await context.AddRangeAsync(taskLists);
@@ -105,10 +112,10 @@ public class TaskListRepositoryTests
         var (items, totalCount) = await repo.GetTaskListsAsync(userId, page: 1, pageSize: 2);
 
         // Assert
-        Assert.Equal(3, totalCount);
-        Assert.Equal(2, items.Count);
-        Assert.Equal("List A", items.ElementAt(0).Title);
-        Assert.Equal("List B", items.ElementAt(1).Title);
+        totalCount.Should().Be(3);
+        items.Should().HaveCount(2);
+        items.ElementAt(0).Title.Should().Be(TaskListTitleA);
+        items.ElementAt(1).Title.Should().Be(TaskListTitleB);
     }
 
     /// <summary>
@@ -126,17 +133,17 @@ public class TaskListRepositoryTests
         var user2 = Guid.NewGuid();
 
         await context.AddRangeAsync(
-            new TaskListEntity(user1, "User 1 List"),
-            new TaskListEntity(user2, "User 2 List"));
+            new TaskListEntity(user1, TaskListTitleA),
+            new TaskListEntity(user2, TaskListTitleB));
         await context.SaveChangesAsync();
 
         // Act
         var (items, totalCount) = await repo.GetTaskListsAsync(user1, 1, 10);
 
         // Assert
-        Assert.Equal(1, totalCount);
-        Assert.Single(items);
-        Assert.All(items, x => Assert.Equal(user1, x.OwnerId));
+        totalCount.Should().Be(1);
+        items.Should().ContainSingle()
+             .Which.OwnerId.Should().Be(user1);
     }
 
     /// <summary>
@@ -152,9 +159,9 @@ public class TaskListRepositoryTests
         var repo = new TaskListRepository(context);
         var userId = Guid.NewGuid();
 
-        var listOld = new TaskListEntity(userId, "Old List") { CreatedDate = DateTime.UtcNow.AddMinutes(-10) };
-        var listMiddle = new TaskListEntity(userId, "Middle List") { CreatedDate = DateTime.UtcNow.AddMinutes(-5) };
-        var listNew = new TaskListEntity(userId, "New List") { CreatedDate = DateTime.UtcNow };
+        var listOld = new TaskListEntity(userId, TaskListTitleA) { CreatedDate = DateTime.UtcNow.AddMinutes(-10) };
+        var listMiddle = new TaskListEntity(userId, TaskListTitleB) { CreatedDate = DateTime.UtcNow.AddMinutes(-5) };
+        var listNew = new TaskListEntity(userId, TaskListTitleC) { CreatedDate = DateTime.UtcNow };
 
         await context.AddRangeAsync(listMiddle, listNew, listOld);
         await context.SaveChangesAsync();
@@ -164,10 +171,8 @@ public class TaskListRepositoryTests
         var itemsList = items.ToList();
 
         // Assert
-        Assert.Equal(3, totalCount);
-        Assert.Equal("Old List", itemsList[0].Title);
-        Assert.Equal("Middle List", itemsList[1].Title);
-        Assert.Equal("New List", itemsList[2].Title);
+        items.Should().BeInAscendingOrder(x => x.CreatedDate);
+        items.Select(x => x.Title).Should().Equal(TaskListTitleA, TaskListTitleB, TaskListTitleC);
     }
 
     /// <summary>
@@ -183,7 +188,7 @@ public class TaskListRepositoryTests
         var repo = new TaskListRepository(context);
 
         var userId = Guid.NewGuid();
-        var taskList = new TaskListEntity(userId, title: "Task List");
+        var taskList = new TaskListEntity(userId, title: TaskListTitleA);
 
         await repo.AddAsync(taskList);
         await context.SaveChangesAsync();
@@ -192,8 +197,8 @@ public class TaskListRepositoryTests
         var saved = await repo.GetTaskListByIdForUserAsync(taskList.Id, userId);
 
         // Assert
-        Assert.NotNull(saved);
-        Assert.Equal(taskList.Title, saved.Title);
+        saved.Should().NotBeNull();
+        saved!.Title.Should().Be(taskList.Title);
     }
 
     /// <summary>
@@ -215,7 +220,7 @@ public class TaskListRepositoryTests
         var saved = await repo.GetTaskListByIdForUserAsync(taskListId, userId);
 
         // Assert
-        Assert.Null(saved);
+        saved.Should().BeNull();
     }
 
     /// <summary>
@@ -232,7 +237,7 @@ public class TaskListRepositoryTests
 
         var user1 = Guid.NewGuid();
         var user2 = Guid.NewGuid();
-        var taskList = new TaskListEntity(user1, title: "Task");
+        var taskList = new TaskListEntity(user1, title: TaskListTitleA);
         await repo.AddAsync(taskList);
         await context.SaveChangesAsync();
 
@@ -240,6 +245,6 @@ public class TaskListRepositoryTests
         var result = await repo.GetTaskListByIdForUserAsync(taskList.Id, user2);
 
         // Assert
-        Assert.Null(result);
+        result.Should().BeNull();
     }
 }

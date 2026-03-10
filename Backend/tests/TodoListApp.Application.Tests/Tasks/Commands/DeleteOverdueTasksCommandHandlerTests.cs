@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.DeleteOverdueTasks;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -75,7 +76,7 @@ public class DeleteOverdueTasksCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var expectedDeletedCount = 5;
-        var taskList = new TaskListEntity(userId, "My list");
+        var taskList = new TaskListEntity(userId, TaskListTitle.Create("My list"));
 
         this._taskListRepoMock
             .Setup(r => r.GetTaskListByIdForUserAsync(taskList.Id, userId, true, It.IsAny<CancellationToken>()))

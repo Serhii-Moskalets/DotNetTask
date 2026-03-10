@@ -125,7 +125,7 @@ public class RemoveTagFromTaskCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        task.TagId.Should().BeNull(); ;
+        task.TagId.Should().BeNull();
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

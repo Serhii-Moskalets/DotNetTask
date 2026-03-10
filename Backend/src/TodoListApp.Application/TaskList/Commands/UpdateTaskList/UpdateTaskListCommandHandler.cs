@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.TaskList.Commands.UpdateTaskList;
 
@@ -35,7 +36,7 @@ public class UpdateTaskListCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Task list not found.");
         }
 
-        if (taskList.Title == command.NewTitle)
+        if (taskList.Title.Value == command.NewTitle)
         {
             return await Result<bool>.SuccessAsync(true);
         }
@@ -45,7 +46,9 @@ public class UpdateTaskListCommandHandler(
             (name, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(name, command.UserId, ct),
             cancellationToken);
 
-        taskList.UpdateTitle(uniqueTitle);
+        var title = TaskListTitle.Create(uniqueTitle);
+
+        taskList.UpdateTitle(title);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);

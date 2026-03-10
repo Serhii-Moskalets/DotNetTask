@@ -1,5 +1,6 @@
-﻿using TodoListApp.Domain.Entities;
-using TodoListApp.Domain.Exceptions;
+﻿using FluentAssertions;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Domain.Test.Entities;
 
@@ -8,8 +9,6 @@ namespace TodoListApp.Domain.Test.Entities;
 /// </summary>
 public class TaskListEntityTest
 {
-    private const string Title = "Task list title";
-
     /// <summary>
     /// Verifies that the constructor creates a task list
     /// when valid owner ID and title are provided.
@@ -17,48 +16,17 @@ public class TaskListEntityTest
     [Fact]
     public void Constructor_ShouldCreateTaskList_WhenValidData()
     {
+        // Arrange
         var ownerId = Guid.NewGuid();
+        const string title = "My Task List";
 
-        var taskList = new TaskListEntity(ownerId, Title);
+        // Act
+        var taskList = CreateTaskListEntity(ownerId, title);
 
-        Assert.Equal(ownerId, taskList.OwnerId);
-        Assert.Equal(Title, taskList.Title);
-        Assert.True(DateTime.UtcNow >= taskList.CreatedDate);
-    }
-
-    /// <summary>
-    /// Verifies that the constructor throws an <see cref="DomainException"/>
-    /// when the title is null, empty, or whitespace.
-    /// </summary>
-    /// <param name="invalidTitle">An invalid task list title.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Constructor_ShouldThrow_WhenTitleInvalid(string? invalidTitle)
-    {
-        Assert.Throws<DomainException>(() =>
-        new TaskListEntity(
-            Guid.NewGuid(),
-            invalidTitle!));
-    }
-
-    /// <summary>
-    /// Verifies that the constructor trims whitespace
-    /// from the task list title.
-    /// </summary>
-    /// <param name="title">A title containing leading or trailing whitespace.</param>
-    [Theory]
-    [InlineData("   Task list title   ")]
-    [InlineData("Task list title   ")]
-    [InlineData("   Task list title")]
-    public void Constructor_ShouldTrimTitle(string title)
-    {
-        var taskList = new TaskListEntity(
-            Guid.NewGuid(),
-            title);
-
-        Assert.Equal(Title, taskList.Title);
+        // Assert
+        taskList.OwnerId.Should().Be(ownerId);
+        taskList.Title.Value.Should().Be(title);
+        taskList.CreatedDate.Should().BeCloseTo(DateTime.UtcNow, TimeSpan.FromSeconds(5));
     }
 
     /// <summary>
@@ -68,11 +36,12 @@ public class TaskListEntityTest
     [Fact]
     public void Constructor_ShouldInitializeTasksCollection()
     {
-        var taskList = new TaskListEntity(
-            Guid.NewGuid(),
-            Title);
-        Assert.NotNull(taskList.Tasks);
-        Assert.Empty(taskList.Tasks);
+        // Act
+        var taskList = CreateTaskListEntity(null);
+
+        // Assert
+        taskList.Tasks.Should().NotBeNull();
+        taskList.Tasks.Should().BeEmpty();
     }
 
     /// <summary>
@@ -82,50 +51,17 @@ public class TaskListEntityTest
     [Fact]
     public void Update_ShouldChangeTitle()
     {
-        var taskList = new TaskListEntity(
-            Guid.NewGuid(),
-            Title);
+        // Arrange
+        var taskList = CreateTaskListEntity(null);
+        var newTitle = TaskListTitle.Create("New title");
 
-        taskList.UpdateTitle("New title");
+        // Act
+        taskList.UpdateTitle(newTitle);
 
-        Assert.Equal("New title", taskList.Title);
+        // Assert
+        taskList.Title.Should().Be(newTitle);
     }
 
-    /// <summary>
-    /// Verifies that <see cref="TaskListEntity.UpdateTitle"/>
-    /// throws an <see cref="DomainException"/>
-    /// when the new title is invalid.
-    /// </summary>
-    /// <param name="invalidTitle">An invalid new title.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("  ")]
-    public void Update_ShouldThrow_WhenTitleInvalid(string? invalidTitle)
-    {
-        var taskList = new TaskListEntity(
-            Guid.NewGuid(),
-            "Old title");
-
-        Assert.Throws<DomainException>(() => taskList.UpdateTitle(invalidTitle!));
-    }
-
-    /// <summary>
-    /// Verifies that <see cref="TaskListEntity.UpdateTitle"/>
-    /// trims whitespace from the new title.
-    /// </summary>
-    /// <param name="title">A new title containing leading or trailing whitespace.</param>
-    [Theory]
-    [InlineData("   New title   ")]
-    [InlineData("New title   ")]
-    [InlineData("   New title")]
-    public void Update_ShouldTrimTitle(string title)
-    {
-        var taskList = new TaskListEntity(
-            Guid.NewGuid(),
-            "Old title");
-
-        taskList.UpdateTitle(title);
-        Assert.Equal("New title", taskList.Title);
-    }
+    private static TaskListEntity CreateTaskListEntity(Guid? owner_id, string title = "My Task List")
+    => new (owner_id ?? Guid.NewGuid(), TaskListTitle.Create(title));
 }

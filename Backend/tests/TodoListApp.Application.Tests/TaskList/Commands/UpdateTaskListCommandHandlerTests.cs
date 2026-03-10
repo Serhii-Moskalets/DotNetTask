@@ -1,9 +1,11 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.TaskList.Commands.UpdateTaskList;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.TaskList.Commands;
 
@@ -13,6 +15,8 @@ namespace TodoListApp.Application.Tests.TaskList.Commands;
 /// </summary>
 public class UpdateTaskListCommandHandlerTests
 {
+    private static readonly TaskListTitle Title = TaskListTitle.Create("Title");
+
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<IUniqueNameService> _uniqueNameServiceMock;
     private readonly Mock<ITaskListRepository> _taskListRepoMock;
@@ -54,8 +58,9 @@ public class UpdateTaskListCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal("Task list not found.", result.Error!.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Message.Should().Be("Task list not found.");
     }
 
     /// <summary>
@@ -66,18 +71,19 @@ public class UpdateTaskListCommandHandlerTests
     public async Task Handle_ShouldReturnSuccess_WhenTitleIsUnchanged()
     {
         // Arrange
-        var taskList = new TaskListEntity(Guid.NewGuid(), "SameTitle");
+        var taskList = new TaskListEntity(Guid.NewGuid(), Title);
 
         this._uowMock.Setup(u => u.TaskLists.GetTaskListByIdForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
                .ReturnsAsync(taskList);
 
-        var command = new UpdateTaskListCommand(taskList.Id, Guid.NewGuid(), "SameTitle");
+        var command = new UpdateTaskListCommand(taskList.Id, Guid.NewGuid(), Title.Value);
 
         // Act
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
+
         this._uniqueNameServiceMock.Verify(
             s => s.GetUniqueNameAsync(
             It.IsAny<string>(),
@@ -94,8 +100,9 @@ public class UpdateTaskListCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var taskList = new TaskListEntity(Guid.NewGuid(), "OldTitle");
+        var taskList = new TaskListEntity(Guid.NewGuid(), Title);
         var newTitle = "NewTitle";
+        var uniqueTitle = "NewTitle Unique";
 
         var uowMock = new Mock<IUnitOfWork>();
         uowMock.Setup(u => u.TaskLists.GetTaskListByIdForUserAsync(taskList.Id, userId, false, It.IsAny<CancellationToken>()))
@@ -108,7 +115,7 @@ public class UpdateTaskListCommandHandlerTests
                 It.Is<string>(t => t == newTitle),
                 It.IsAny<Func<string, CancellationToken, Task<bool>>>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync("NewTitle Unique");
+            .ReturnsAsync(uniqueTitle);
 
         var handler = new UpdateTaskListCommandHandler(uowMock.Object, serviceMock.Object);
 
@@ -117,8 +124,9 @@ public class UpdateTaskListCommandHandlerTests
         // Act
         var result = await handler.Handle(command, CancellationToken.None);
 
-        Assert.True(result.IsSuccess);
-        Assert.Equal("NewTitle Unique", taskList.Title);
+        result.IsSuccess.Should().BeTrue();
+        taskList.Title.Value.Should().Be(uniqueTitle);
+
         uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -6,6 +6,7 @@ using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.CreateTask;
 using TodoListApp.Application.Tasks.Dtos;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -77,7 +78,7 @@ public class CreateTaskCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var taskListId = Guid.NewGuid();
-        var taskList = new TaskListEntity(userId, "My list");
+        var taskList = new TaskListEntity(userId, TaskListTitle.Create("My list"));
 
         this._taskListRepoMock
             .Setup(r => r.GetTaskListByIdForUserAsync(

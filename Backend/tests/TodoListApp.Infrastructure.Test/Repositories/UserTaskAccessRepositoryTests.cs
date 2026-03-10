@@ -13,8 +13,9 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class UserTaskAccessRepositoryTests
 {
-    private static readonly TaskTitle Title1 = TaskTitle.Create("Task title 1");
-    private static readonly TaskTitle Title2 = TaskTitle.Create("Task title 2");
+    private static readonly TaskTitle TaskTitle1 = TaskTitle.Create("Task title 1");
+    private static readonly TaskTitle TaskTitle2 = TaskTitle.Create("Task title 2");
+    private static readonly TaskListTitle TaskListTitle = TaskListTitle.Create("Task list title");
     private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
@@ -34,10 +35,10 @@ public class UserTaskAccessRepositoryTests
         var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user_1.Id, taskList.Id, Title1);
+        var task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user_2.Id);
@@ -70,10 +71,10 @@ public class UserTaskAccessRepositoryTests
         var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user_1.Id, taskList.Id, Title1);
+        var task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user_2.Id);
@@ -106,13 +107,13 @@ public class UserTaskAccessRepositoryTests
         var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task_1 = new TaskEntity(user_1.Id, taskList.Id, Title1);
+        var task_1 = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task_1);
 
-        var task_2 = new TaskEntity(user_2.Id, taskList.Id, Title2);
+        var task_2 = new TaskEntity(user_2.Id, taskList.Id, TaskTitle2);
         await context.Tasks.AddAsync(task_2);
 
         var access_1 = new UserTaskAccessEntity(task_1.Id, user_2.Id);
@@ -147,13 +148,13 @@ public class UserTaskAccessRepositoryTests
         var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task_1 = new TaskEntity(user_1.Id, taskList.Id, Title1);
+        var task_1 = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task_1);
 
-        var task_2 = new TaskEntity(user_2.Id, taskList.Id, Title2);
+        var task_2 = new TaskEntity(user_2.Id, taskList.Id, TaskTitle2);
         await context.Tasks.AddAsync(task_2);
 
         var access_1 = new UserTaskAccessEntity(task_1.Id, user_2.Id);
@@ -186,10 +187,10 @@ public class UserTaskAccessRepositoryTests
         var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
         await context.Users.AddAsync(owner);
 
-        var taskList = new TaskListEntity(owner.Id, "List");
+        var taskList = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(owner.Id, taskList.Id, Title1) { CreatedDate = DateTime.UtcNow };
+        var task = new TaskEntity(owner.Id, taskList.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow };
         await context.Tasks.AddAsync(task);
 
         for (int i = 0; i < 15; i++)
@@ -230,7 +231,7 @@ public class UserTaskAccessRepositoryTests
         var sharedUser = new UserEntity("Shared", "shared", "shared@example.com", this._passwordHash);
         await context.Users.AddRangeAsync(owner, sharedUser);
 
-        var list = new TaskListEntity(owner.Id, "List");
+        var list = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
         for (int i = 0; i < 5; i++)
@@ -264,11 +265,11 @@ public class UserTaskAccessRepositoryTests
 
         var user = new UserEntity("User", "user", "u@e.com", this._passwordHash);
         await context.Users.AddAsync(user);
-        var list = new TaskListEntity(user.Id, "L");
+        var list = new TaskListEntity(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
-        var oldTask = new TaskEntity(user.Id, list.Id, Title1) { CreatedDate = DateTime.UtcNow.AddDays(-1) };
-        var newTask = new TaskEntity(user.Id, list.Id, Title2) { CreatedDate = DateTime.UtcNow };
+        var oldTask = new TaskEntity(user.Id, list.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow.AddDays(-1) };
+        var newTask = new TaskEntity(user.Id, list.Id, TaskTitle2) { CreatedDate = DateTime.UtcNow };
 
         await context.Tasks.AddRangeAsync(oldTask, newTask);
         await repo.AddAsync(new UserTaskAccessEntity(oldTask.Id, user.Id));
@@ -279,7 +280,7 @@ public class UserTaskAccessRepositoryTests
         var (items, _) = await repo.GetSharedTasksByUserIdAsync(user.Id, page: 1, pageSize: 10);
 
         // Assert
-        items.First().Task.Title.Should().Be(Title2);
+        items.First().Task.Title.Should().Be(TaskTitle2);
     }
 
     /// <summary>
@@ -298,11 +299,11 @@ public class UserTaskAccessRepositoryTests
         var sharedUser = new UserEntity("Shared", "shared", "shared@example.com", this._passwordHash);
         await context.Users.AddRangeAsync(owner, sharedUser);
 
-        var taskList = new TaskListEntity(owner.Id, "List");
+        var taskList = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task1 = new TaskEntity(owner.Id, taskList.Id, Title1) { CreatedDate = DateTime.UtcNow };
-        var task2 = new TaskEntity(owner.Id, taskList.Id, Title2) { CreatedDate = DateTime.UtcNow.AddMinutes(1) };
+        var task1 = new TaskEntity(owner.Id, taskList.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow };
+        var task2 = new TaskEntity(owner.Id, taskList.Id, TaskTitle2) { CreatedDate = DateTime.UtcNow.AddMinutes(1) };
         await context.Tasks.AddRangeAsync(task1, task2);
 
         var access1 = new UserTaskAccessEntity(task1.Id, sharedUser.Id);
@@ -336,13 +337,13 @@ public class UserTaskAccessRepositoryTests
         var owner = new UserEntity("Owner", "owner", "owner@e.com", this._passwordHash);
         await context.Users.AddRangeAsync(user, owner);
 
-        var list = new TaskListEntity(owner.Id, "List");
+        var list = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
         var title3 = TaskTitle.Create("Task Title 3");
 
-        var task1 = new TaskEntity(owner.Id, list.Id, Title1);
-        var task2 = new TaskEntity(owner.Id, list.Id, Title2);
+        var task1 = new TaskEntity(owner.Id, list.Id, TaskTitle1);
+        var task2 = new TaskEntity(owner.Id, list.Id, TaskTitle2);
         var task3 = new TaskEntity(owner.Id, list.Id, title3);
         await context.Tasks.AddRangeAsync(task1, task2, task3);
 
@@ -357,7 +358,7 @@ public class UserTaskAccessRepositoryTests
         var (items, _) = await repo.GetSharedTasksByUserIdAsync(user.Id, page: 1, pageSize: 10);
 
         // Assert
-        items.Select(x => x.Task.Title).Should().ContainInConsecutiveOrder(title3, Title2, Title1);
+        items.Select(x => x.Task.Title).Should().ContainInConsecutiveOrder(title3, TaskTitle2, TaskTitle1);
     }
 
     /// <summary>
@@ -377,10 +378,10 @@ public class UserTaskAccessRepositoryTests
         var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user_1.Id, taskList.Id, Title1);
+        var task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user_2.Id);
@@ -408,10 +409,10 @@ public class UserTaskAccessRepositoryTests
         var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user_1.Id, taskList.Id, Title1);
+        var task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user_2.Id);
@@ -438,10 +439,10 @@ public class UserTaskAccessRepositoryTests
         var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         await context.Users.AddAsync(user);
 
-        var taskList = new TaskListEntity(user.Id, "List");
+        var taskList = new TaskListEntity(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user.Id, taskList.Id, Title1);
+        var task = new TaskEntity(user.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user.Id);
@@ -483,10 +484,10 @@ public class UserTaskAccessRepositoryTests
         var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
         await context.Users.AddAsync(user);
 
-        var taskList = new TaskListEntity(user.Id, "List");
+        var taskList = new TaskListEntity(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user.Id, taskList.Id, Title1);
+        var task = new TaskEntity(user.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         await repo.AddAsync(new UserTaskAccessEntity(task.Id, user.Id));
@@ -510,9 +511,9 @@ public class UserTaskAccessRepositoryTests
 
         var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
         await context.Users.AddAsync(owner);
-        var taskList = new TaskListEntity(owner.Id, "List");
+        var taskList = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
-        var task = new TaskEntity(owner.Id, taskList.Id, Title1);
+        var task = new TaskEntity(owner.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var userNames = new[] { "Zebra", "Alice", "Charlie", "Bob" };

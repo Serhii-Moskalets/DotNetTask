@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Infrastructure.Persistence.Configurations;
 
@@ -16,15 +17,24 @@ public class TaskListEntityConfiguration : IEntityTypeConfiguration<TaskListEnti
     /// <param name="builder">The builder used to configure the entity.</param>
     public void Configure(EntityTypeBuilder<TaskListEntity> builder)
     {
-        // Set primary key
+        builder.ToTable("task_lists");
+
         builder.HasKey(tl => tl.Id);
+        builder.Property(tl => tl.Id)
+            .HasColumnType("uuid")
+            .ValueGeneratedNever();
 
-        // Configure properties
-        builder.Property(tl => tl.Id).HasColumnType("uuid").ValueGeneratedNever();
-        builder.Property(tl => tl.OwnerId).IsRequired().HasColumnType("uuid");
-        builder.Property(tl => tl.Title).IsRequired().HasMaxLength(50);
+        builder.Property(tl => tl.OwnerId)
+            .HasColumnName("owner_id")
+            .HasColumnType("uuid")
+            .IsRequired();
 
-        // Configure relationship with User
+        builder.Property(tl => tl.Title)
+            .HasConversion(t => t.Value, v => TaskListTitle.Create(v))
+            .HasColumnName("title")
+            .HasMaxLength(TaskListTitle.MaxLength)
+            .IsRequired();
+
         builder.HasOne(tl => tl.Owner)
             .WithMany(o => o.TaskLists)
             .HasForeignKey(tl => tl.OwnerId)

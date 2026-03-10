@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 using TodoListApp.Infrastructure.Test.Helpers;
 
@@ -11,6 +12,8 @@ namespace TodoListApp.Infrastructure.Test.DbContext;
 /// </summary>
 public class TodoListAppDbContextTests
 {
+    private static readonly TaskTitle TaskTitle = TaskTitle.Create("Task");
+    private static readonly TaskListTitle TaskListTitle = TaskListTitle.Create("My Task List");
     private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
@@ -44,13 +47,13 @@ public class TodoListAppDbContextTests
         context.Add(user);
         context.SaveChanges();
 
-        var taskList = new TaskListEntity(user.Id, "My Task List");
+        var taskList = new TaskListEntity(user.Id, TaskListTitle);
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
         var savedTaskList = context.TaskLists.FirstOrDefault(tl => tl.OwnerId == user.Id);
         Assert.NotNull(savedTaskList);
-        Assert.Equal("My Task List", savedTaskList.Title);
+        Assert.Equal(TaskListTitle, savedTaskList.Title);
     }
 
     /// <summary>
@@ -62,17 +65,17 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var taskList = new TaskListEntity(Guid.NewGuid(), "My Task List");
+        var taskList = new TaskListEntity(Guid.NewGuid(), TaskListTitle);
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
-        var task = new TaskEntity(Guid.NewGuid(), taskList.Id, "My Task");
+        var task = new TaskEntity(Guid.NewGuid(), taskList.Id, TaskTitle);
         context.Tasks.Add(task);
         context.SaveChanges();
 
         var savedTask = context.Tasks.Include(t => t.TaskList).FirstOrDefault();
         Assert.NotNull(savedTask);
-        Assert.Equal("My Task", savedTask.Title);
+        Assert.Equal(TaskTitle, savedTask.Title);
         Assert.Equal(taskList.Id, savedTask.TaskListId);
     }
 
@@ -89,13 +92,13 @@ public class TodoListAppDbContextTests
         context.Add(user);
         context.SaveChanges();
 
-        var tag = new TagEntity("Tag", user.Id);
+        var tag = new TagEntity(TagName.Create("Tag"), user.Id);
         context.Tags.Add(tag);
         context.SaveChanges();
 
         var savedTag = context.Tags.FirstOrDefault(c => c.Id == tag.Id);
         Assert.NotNull(savedTag);
-        Assert.Equal("Tag", savedTag.Name);
+        Assert.Equal("Tag", savedTag.Name.Value);
     }
 
     /// <summary>
@@ -111,21 +114,21 @@ public class TodoListAppDbContextTests
         context.Add(user);
         context.SaveChanges();
 
-        var taskList = new TaskListEntity(user.Id, "My Task List");
+        var taskList = new TaskListEntity(user.Id, TaskListTitle);
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
-        var task = new TaskEntity(user.Id, taskList.Id, "My Task");
+        var task = new TaskEntity(user.Id, taskList.Id, TaskTitle);
         context.Tasks.Add(task);
         context.SaveChanges();
 
-        var comment = new CommentEntity(task.Id, user.Id, "Text");
+        var comment = new CommentEntity(task.Id, user.Id, CommentContent.Create("Comment"));
         context.Comments.Add(comment);
         context.SaveChanges();
 
         var savedComment = context.Comments.FirstOrDefault(c => c.Id == comment.Id);
         Assert.NotNull(savedComment);
-        Assert.Equal("Text", savedComment.Text);
+        Assert.Equal("Comment", savedComment.Content.Value);
     }
 
     /// <summary>

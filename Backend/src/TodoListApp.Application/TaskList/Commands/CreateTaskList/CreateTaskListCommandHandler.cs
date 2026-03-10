@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.TaskList.Commands.CreateTaskList;
 
@@ -37,7 +38,9 @@ public class CreateTaskListCommandHandler(
             (name, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(name, command.UserId, ct),
             cancellationToken);
 
-        var taskList = new TaskListEntity(user.Id, uniqueTitle);
+        var title = TaskListTitle.Create(uniqueTitle);
+
+        var taskList = new TaskListEntity(user.Id, title);
 
         await this.UnitOfWork.TaskLists.AddAsync(taskList, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);

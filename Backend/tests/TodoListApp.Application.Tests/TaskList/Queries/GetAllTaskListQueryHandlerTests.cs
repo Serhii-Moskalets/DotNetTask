@@ -1,8 +1,10 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.TaskList.Queries.GetTaskLists;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.TaskList.Queries;
 
@@ -41,8 +43,8 @@ public class GetAllTaskListQueryHandlerTests
         var pageSize = 10;
         var entities = new List<TaskListEntity>
         {
-            new(userId, "List 1"),
-            new(userId, "List 2"),
+            new(userId, TaskListTitle.Create("List 1")),
+            new(userId, TaskListTitle.Create("List 2")),
         };
 
         this._taskListRepoMock
@@ -55,13 +57,15 @@ public class GetAllTaskListQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        var resultItems = result.Value.Items.ToList();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
 
-        Assert.Equal(2, resultItems.Count);
-        Assert.Equal(entities.Count, result.Value.TotalCount);
-        Assert.Contains(resultItems, t => t.Title == "List 1");
+        var value = result.Value!;
+        value.TotalCount.Should().Be(entities.Count);
+        value.Items.Should().HaveCount(2);
+
+        value.Items.Should().Contain(t => t.Title == "List 1");
+        value.Items.Select(x => x.Title).Should().BeEquivalentTo(entities.Select(e => e.Title.Value));
 
         this._taskListRepoMock.Verify(r => r.GetTaskListsAsync(userId, page, pageSize, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -88,8 +92,9 @@ public class GetAllTaskListQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value!.Items);
-        Assert.Equal(0, result.Value.TotalCount);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Items.Should().BeEmpty();
+        result.Value.TotalCount.Should().Be(0);
     }
 }
