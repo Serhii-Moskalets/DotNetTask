@@ -35,7 +35,7 @@ public class TaskListRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        var exists = await repo.ExistsByTitleAsync(TaskListTitleA.Value, userId);
+        var exists = await repo.ExistsByTitleAsync(TaskListTitleA, userId);
 
         // Assert
         exists.Should().BeTrue();
@@ -55,34 +55,10 @@ public class TaskListRepositoryTests
         var userId = Guid.NewGuid();
 
         // Act
-        var exists = await repo.ExistsByTitleAsync(TaskListTitleA.Value, userId);
+        var exists = await repo.ExistsByTitleAsync(TaskListTitleA, userId);
 
         // Assert
         exists.Should().BeFalse();
-    }
-
-    /// <summary>
-    /// Ensures <see cref="TaskListRepository.ExistsByTitleAsync"/> throws <see cref="ArgumentException"/>
-    /// when title is null, empty, or whitespace.
-    /// </summary>
-    /// <param name="title">The title to test for null, empty, or whitespace.</param>
-    /// <returns>A task representing the asynchronous operation.</returns>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("  ")]
-    public async Task ExistsByTitle_MustThrow_WhenTitleIsNullOrWhiteSpace(string? title)
-    {
-        // Arrange
-        await using var context = InMemoryDbContextFactory.Create();
-        var repo = new TaskListRepository(context);
-        var userId = Guid.NewGuid();
-
-        // Act
-        var act = async () => await repo.ExistsByTitleAsync(title!, userId);
-
-        // Assert
-        await act.Should().ThrowAsync<ArgumentException>();
     }
 
     /// <summary>

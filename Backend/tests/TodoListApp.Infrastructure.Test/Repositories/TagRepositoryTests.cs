@@ -12,7 +12,7 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class TagRepositoryTests
 {
-    private readonly TagName _tagName = TagName.Create("Tag");
+    private static readonly TagName TagName = TagName.Create("Tag");
 
     /// <summary>
     /// Tests that checking tag existence by name returns false when the tag does not exist.
@@ -27,7 +27,7 @@ public class TagRepositoryTests
         var userId = Guid.NewGuid();
 
         // Act
-        var result = await repo.ExistsByNameAsync("NonExistingTag", userId);
+        var result = await repo.ExistsByNameAsync(TagName, userId);
 
         // Assert
         result.Should().BeFalse();
@@ -45,13 +45,13 @@ public class TagRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new TagRepository(context);
         var userId = Guid.NewGuid();
-        var tag = new TagEntity(this._tagName, userId);
+        var tag = new TagEntity(TagName, userId);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();
 
         // Act
-        var result = await repo.ExistsByNameAsync("Tag", userId);
+        var result = await repo.ExistsByNameAsync(TagName, userId);
 
         // Assert
         result.Should().BeTrue();
@@ -152,7 +152,7 @@ public class TagRepositoryTests
         var repo = new TagRepository(context);
         var ownerId = Guid.NewGuid();
         var strangerId = Guid.NewGuid();
-        var tag = new TagEntity(this._tagName, ownerId);
+        var tag = new TagEntity(TagName, ownerId);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();
@@ -163,7 +163,7 @@ public class TagRepositoryTests
 
         // Assert
         foundTag.Should().NotBeNull();
-        foundTag.Name.Value.Should().Be(this._tagName.Value);
+        foundTag.Name.Value.Should().Be(TagName.Value);
         notFoundTag.Should().BeNull();
     }
 
@@ -180,7 +180,7 @@ public class TagRepositoryTests
         var repo = new TagRepository(context);
         var userId_1 = Guid.NewGuid();
         var userId_2 = Guid.NewGuid();
-        var tag = new TagEntity(this._tagName, userId_1);
+        var tag = new TagEntity(TagName, userId_1);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();

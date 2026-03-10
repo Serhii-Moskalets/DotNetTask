@@ -14,7 +14,7 @@ namespace TodoListApp.Application.TaskList.Commands.UpdateTaskList;
 /// </summary>
 public class UpdateTaskListCommandHandler(
     IUnitOfWork unitOfWork,
-    IUniqueNameService uniqueNameService)
+    IUniqueValueService uniqueNameService)
     : HandlerBase(unitOfWork), IRequestHandler<UpdateTaskListCommand, Result<bool>>
 {
     /// <summary>
@@ -41,12 +41,11 @@ public class UpdateTaskListCommandHandler(
             return await Result<bool>.SuccessAsync(true);
         }
 
-        string uniqueTitle = await uniqueNameService.GetUniqueNameAsync(
-            command.NewTitle!,
-            (name, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(name, command.UserId, ct),
+        var title = await uniqueNameService.GetUniqueValueAsync(
+            command.NewTitle,
+            name => TaskListTitle.Create(name),
+            (vo, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(vo, command.UserId, ct),
             cancellationToken);
-
-        var title = TaskListTitle.Create(uniqueTitle);
 
         taskList.UpdateTitle(title);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);

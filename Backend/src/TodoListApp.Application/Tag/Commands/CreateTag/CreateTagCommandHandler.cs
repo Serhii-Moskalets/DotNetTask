@@ -15,7 +15,7 @@ namespace TodoListApp.Application.Tag.Commands.CreateTag;
 /// </summary>
 public class CreateTagCommandHandler(
     IUnitOfWork unitOfWork,
-    IUniqueNameService uniqueNameService)
+    IUniqueValueService uniqueValueService)
     : HandlerBase(unitOfWork), IRequestHandler<CreateTagCommand, Result<Guid>>
 {
     /// <summary>
@@ -37,12 +37,11 @@ public class CreateTagCommandHandler(
             return await Result<Guid>.FailureAsync(ErrorCode.NotFound, "Task not found.");
         }
 
-        var uniqueName = await uniqueNameService.GetUniqueNameAsync(
+        var tagName = await uniqueValueService.GetUniqueValueAsync(
             command.Name,
-            (name, ct) => this.UnitOfWork.Tags.ExistsByNameAsync(name, command.UserId, ct),
+            name => TagName.Create(name),
+            (vo, ct) => this.UnitOfWork.Tags.ExistsByNameAsync(vo, command.UserId, ct),
             cancellationToken);
-
-        var tagName = TagName.Create(uniqueName);
 
         var tagEntity = new TagEntity(tagName, command.UserId);
         await this.UnitOfWork.Tags.AddAsync(tagEntity, cancellationToken);

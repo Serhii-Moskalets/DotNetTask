@@ -18,7 +18,7 @@ public class UpdateTaskListCommandHandlerTests
     private static readonly TaskListTitle Title = TaskListTitle.Create("Title");
 
     private readonly Mock<IUnitOfWork> _uowMock;
-    private readonly Mock<IUniqueNameService> _uniqueNameServiceMock;
+    private readonly Mock<IUniqueValueService> _uniqueNameServiceMock;
     private readonly Mock<ITaskListRepository> _taskListRepoMock;
     private readonly UpdateTaskListCommandHandler _handler;
 
@@ -28,7 +28,7 @@ public class UpdateTaskListCommandHandlerTests
     public UpdateTaskListCommandHandlerTests()
     {
         this._uowMock = new Mock<IUnitOfWork>();
-        this._uniqueNameServiceMock = new Mock<IUniqueNameService>();
+        this._uniqueNameServiceMock = new Mock<IUniqueValueService>();
         this._taskListRepoMock = new Mock<ITaskListRepository>();
 
         this._uowMock.Setup(tl => tl.TaskLists).Returns(this._taskListRepoMock.Object);
@@ -85,9 +85,10 @@ public class UpdateTaskListCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
 
         this._uniqueNameServiceMock.Verify(
-            s => s.GetUniqueNameAsync(
+            s => s.GetUniqueValueAsync<TaskListTitle>(
             It.IsAny<string>(),
-            It.IsAny<Func<string, CancellationToken, Task<bool>>>(),
+            It.IsAny<Func<string, TaskListTitle>>(),
+            It.IsAny<Func<TaskListTitle, CancellationToken, Task<bool>>>(),
             It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -102,7 +103,7 @@ public class UpdateTaskListCommandHandlerTests
         var userId = Guid.NewGuid();
         var taskList = new TaskListEntity(Guid.NewGuid(), Title);
         var newTitle = "NewTitle";
-        var uniqueTitle = "NewTitle Unique";
+        var uniqueTitle = TaskListTitle.Create("NewTitle Unique");
 
         var uowMock = new Mock<IUnitOfWork>();
         uowMock.Setup(u => u.TaskLists.GetTaskListByIdForUserAsync(taskList.Id, userId, false, It.IsAny<CancellationToken>()))
@@ -110,10 +111,11 @@ public class UpdateTaskListCommandHandlerTests
 
         uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        var serviceMock = new Mock<IUniqueNameService>();
-        serviceMock.Setup(s => s.GetUniqueNameAsync(
+        var serviceMock = new Mock<IUniqueValueService>();
+        serviceMock.Setup(s => s.GetUniqueValueAsync<TaskListTitle>(
                 It.Is<string>(t => t == newTitle),
-                It.IsAny<Func<string, CancellationToken, Task<bool>>>(),
+                It.IsAny<Func<string, TaskListTitle>>(),
+                It.IsAny<Func<TaskListTitle, CancellationToken, Task<bool>>>(),
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(uniqueTitle);
 
@@ -125,7 +127,7 @@ public class UpdateTaskListCommandHandlerTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        taskList.Title.Value.Should().Be(uniqueTitle);
+        taskList.Title.Should().Be(uniqueTitle);
 
         uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

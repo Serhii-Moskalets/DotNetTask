@@ -1,4 +1,5 @@
 ﻿using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Abstractions.Interfaces.Repositories;
 
@@ -48,7 +49,7 @@ public interface ITagRepository : IRepository<TagEntity>
     /// <param name="userId">The identifier of the user.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
     /// <returns><c>true</c> if a tag with the specified name exists; otherwise, <c>false</c>.</returns>
-    Task<bool> ExistsByNameAsync(string name, Guid userId, CancellationToken cancellationToken = default);
+    Task<bool> ExistsByNameAsync(TagName name, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks whether a specific user is the owner of a tag.

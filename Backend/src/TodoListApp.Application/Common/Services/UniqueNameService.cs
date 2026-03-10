@@ -3,28 +3,33 @@
 namespace TodoListApp.Application.Common.Services;
 
 /// <summary>
-/// Provides a generic implementation for generating unique names using a numeric suffix.
+/// Provides a generic implementation for generating unique domain values
+/// by appending a numeric suffix in the format "BaseName (N)".
 /// </summary>
-public class UniqueNameService : IUniqueNameService
+public class UniqueValueService : IUniqueValueService
 {
     /// <inheritdoc />
     /// <remarks>
-    /// This implementation appends a numeric suffix in the format "BaseName (N)"
-    /// starting from 1 until the <paramref name="existsCheck"/> returns false.
+    /// This implementation starts with the <paramref name="baseName"/> and iteratively
+    /// appends a suffix starting from 1 (e.g., "Name (1)") until the
+    /// <paramref name="existsCheck"/> returns <see langword="false"/>.
     /// </remarks>
-    public async Task<string> GetUniqueNameAsync(
+    public async Task<TValueObject> GetUniqueValueAsync<TValueObject>(
         string baseName,
-        Func<string, CancellationToken, Task<bool>> existsCheck,
+        Func<string, TValueObject> factory,
+        Func<TValueObject, CancellationToken, Task<bool>> existsCheck,
         CancellationToken cancellationToken)
+        where TValueObject : class
     {
-        string newName = baseName;
         int suffix = 1;
+        TValueObject currentValueObject = factory(baseName);
 
-        while (await existsCheck(newName, cancellationToken))
+        while (await existsCheck(currentValueObject, cancellationToken))
         {
-            newName = $"{baseName} ({suffix++})";
+            string newName = $"{baseName} ({suffix++})";
+            currentValueObject = factory(newName);
         }
 
-        return newName;
+        return currentValueObject;
     }
 }

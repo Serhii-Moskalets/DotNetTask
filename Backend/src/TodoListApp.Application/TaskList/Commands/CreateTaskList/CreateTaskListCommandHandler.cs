@@ -16,7 +16,7 @@ namespace TodoListApp.Application.TaskList.Commands.CreateTaskList;
 /// </summary>
 public class CreateTaskListCommandHandler(
     IUnitOfWork unitOfWork,
-    IUniqueNameService uniqueNameService)
+    IUniqueValueService uniqueNameService)
     : HandlerBase(unitOfWork), IRequestHandler<CreateTaskListCommand, Result<Guid>>
 {
     /// <summary>
@@ -33,12 +33,11 @@ public class CreateTaskListCommandHandler(
             return await Result<Guid>.FailureAsync(ErrorCode.NotFound, "User not found.");
         }
 
-        string uniqueTitle = await uniqueNameService.GetUniqueNameAsync(
-            command.Title!,
-            (name, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(name, command.UserId, ct),
+        var title = await uniqueNameService.GetUniqueValueAsync(
+            command.Title,
+            name => TaskListTitle.Create(name),
+            (vo, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(vo, command.UserId, ct),
             cancellationToken);
-
-        var title = TaskListTitle.Create(uniqueTitle);
 
         var taskList = new TaskListEntity(user.Id, title);
 
