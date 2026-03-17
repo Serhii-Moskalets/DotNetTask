@@ -12,6 +12,7 @@ public class SecurityTokenTests
 {
     private const string ValidTokenValue = "correct-token-123";
     private readonly TimeSpan _validDuration = TimeSpan.FromHours(1);
+    private readonly DateTime _currentTime = DateTime.UtcNow;
 
     /// <summary>
     /// Tests that <see cref="SecurityToken.Create"/> initializes properties correctly.
@@ -24,7 +25,7 @@ public class SecurityTokenTests
         const string metadata = "additional-info";
 
         // Act
-        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, type, metadata);
+        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, type, this._currentTime, metadata);
 
         // Assert
         token.Value.Should().Be(ValidTokenValue);
@@ -44,7 +45,7 @@ public class SecurityTokenTests
     public void Create_Should_ThrowException_When_ValueIsNullOrEmpty(string? invalidValue)
     {
         // Act
-        Action act = () => SecurityToken.Create(invalidValue!, this._validDuration, UserTokenType.PasswordReset);
+        Action act = () => SecurityToken.Create(invalidValue!, this._validDuration, UserTokenType.PasswordReset, this._currentTime);
 
         // Assert
         act.Should().Throw<DomainException>();
@@ -64,10 +65,10 @@ public class SecurityTokenTests
         var invalidDuration = TimeSpan.FromSeconds(seconds);
 
         // Act
-        Action act = () => SecurityToken.Create(ValidTokenValue, invalidDuration, UserTokenType.EmailChange);
+        Action act = () => SecurityToken.Create(ValidTokenValue, invalidDuration, UserTokenType.EmailChange, this._currentTime);
 
         // Assert
-        act.Should().Throw<ArgumentException>();
+        act.Should().Throw<DomainException>();
     }
 
     /// <summary>
@@ -77,11 +78,10 @@ public class SecurityTokenTests
     public void IsValid_Should_ReturnTrue_When_TokenMatchesAndNotExpired()
     {
         // Arrange
-        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, UserTokenType.PasswordReset);
-        var currentTime = DateTime.UtcNow;
+        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, UserTokenType.PasswordReset, this._currentTime);
 
         // Act
-        bool result = token.IsValid(ValidTokenValue, UserTokenType.PasswordReset, currentTime);
+        bool result = token.IsValid(ValidTokenValue, UserTokenType.PasswordReset, this._currentTime);
 
         // Assert
         result.Should().BeTrue();
@@ -100,14 +100,35 @@ public class SecurityTokenTests
     public void IsValid_Should_ReturnFalse_When_ConditionsNotMet(string providedValue, UserTokenType expectedType, int minutesToAdd)
     {
         // Arrange
-        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, UserTokenType.PasswordReset);
-        var testTime = DateTime.UtcNow.AddMinutes(minutesToAdd);
+        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, UserTokenType.PasswordReset, this._currentTime);
+        var testTime = this._currentTime.AddMinutes(minutesToAdd);
 
         // Act
         bool result = token.IsValid(providedValue, expectedType, testTime);
 
         // Assert
         result.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that the metadata field is optional and can be null during creation.
+    /// </summary>
+    [Fact]
+    public void Create_Should_AllowNullMetadata()
+    {
+        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, UserTokenType.EmailVerification, this._currentTime);
+        token.Metadata.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Ensures that a token is considered invalid the exact moment it reaches its expiration time.
+    /// </summary>
+    [Fact]
+    public void IsValid_Should_ReturnFalse_When_TokenExactlyExpired()
+    {
+        var token = SecurityToken.Create(ValidTokenValue, TimeSpan.FromSeconds(1), UserTokenType.PasswordReset, this._currentTime);
+        var testTime = this._currentTime.AddSeconds(1);
+        token.IsValid(ValidTokenValue, UserTokenType.PasswordReset, testTime).Should().BeFalse();
     }
 
     /// <summary>
@@ -120,10 +141,10 @@ public class SecurityTokenTests
     public void IsValid_Should_ReturnFalse_When_ProvidedValueIsNullOrEmpty(string? emptyValue)
     {
         // Arrange
-        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, UserTokenType.PasswordReset);
+        var token = SecurityToken.Create(ValidTokenValue, this._validDuration, UserTokenType.PasswordReset, this._currentTime);
 
         // Act
-        bool result = token.IsValid(emptyValue!, UserTokenType.PasswordReset, DateTime.UtcNow);
+        bool result = token.IsValid(emptyValue!, UserTokenType.PasswordReset, this._currentTime);
 
         // Assert
         result.Should().BeFalse();

@@ -13,7 +13,7 @@ public class CommentContentTests
     /// Verifies that Create returns a valid instance when input is correct.
     /// </summary>
     [Fact]
-    public void Create_ShouldReturnInstance_WhenValid()
+    public void Create_Should_ReturnInstance_WhenValid()
     {
         // Arrange
         const string input = "Valid comment";
@@ -37,10 +37,12 @@ public class CommentContentTests
     [Theory]
     [InlineData("   Comment   ", "Comment")]
     [InlineData("\nComment\t", "Comment")]
-    public void Create_ShouldTrimValue(string input, string expected)
+    public void Create_Should_TrimValue(string input, string expected)
     {
+        // Act
         var result = CommentContent.Create(input);
 
+        // Assert
         result.Value.Should().Be(expected);
     }
 
@@ -55,10 +57,12 @@ public class CommentContentTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData("\n\t")]
-    public void Create_ShouldThrow_WhenValueIsNullOrWhiteSpace(string? invalidValue)
+    public void Create_Should_Throw_WhenValueIsNullOrWhiteSpace(string? invalidValue)
     {
+        // Act
         Action act = () => CommentContent.Create(invalidValue!);
 
+        // Assert
         act.Should()
             .Throw<DomainException>()
             .WithMessage("Comment content cannot be empty.");
@@ -83,15 +87,34 @@ public class CommentContentTests
     }
 
     /// <summary>
+    /// Verifies that a comment content instance can be created successfully when the input string is at the maximum allowed.
+    /// </summary>
+    [Fact]
+    public void Create_Should_Work_When_LengthIsExactlyMaxLength()
+    {
+        // Arrange
+        var value = new string('a', CommentContent.MaxLength);
+
+        // Act
+        var result = CommentContent.Create(value);
+
+        // Assert
+        result.Value.Length.Should().Be(CommentContent.MaxLength);
+    }
+
+    /// <summary>
     /// Verifies that ToString returns underlying value.
     /// </summary>
     [Fact]
     public void ToString_ShouldReturnValue()
     {
+        // Arrange
         const string text = "Sample";
 
+        // Act
         var result = CommentContent.Create(text);
 
+        // Assert
         result.ToString().Should().Be(text);
     }
 
@@ -99,11 +122,13 @@ public class CommentContentTests
     /// Verifies that two instances with same value are equal.
     /// </summary>
     [Fact]
-    public void ShouldBeEqual_WhenValuesAreSame()
+    public void CommentContent_Should_BeEqual_WhenValuesAreSame()
     {
+        // Act
         var first = CommentContent.Create("Same");
         var second = CommentContent.Create("Same");
 
+        // Assert
         first.Should().Be(second);
     }
 
@@ -111,11 +136,13 @@ public class CommentContentTests
     /// Verifies that two instances with different values are not equal.
     /// </summary>
     [Fact]
-    public void ShouldNotBeEqual_WhenValuesAreDifferent()
+    public void CommentContent_Should_NotBeEqual_WhenValuesAreDifferent()
     {
+        // Act
         var first = CommentContent.Create("First");
         var second = CommentContent.Create("Second");
 
+        // Assert
         first.Should().NotBe(second);
     }
 }

@@ -50,18 +50,63 @@ public class UserNameTests
     /// Tests that <see cref="UserName.Create"/> throws <see cref="DomainException"/>
     /// when the username length is out of range (3-20 characters).
     /// </summary>
-    /// <param name="invalidLengthInput">The string with invalid length.</param>
-    [Theory]
-    [InlineData("ab")]
-    [InlineData("this_name_is_way_too_long_for_system")]
-    public void Create_Should_ThrowDomainException_When_LengthIsInvalid(string invalidLengthInput)
+    [Fact]
+    public void Create_Should_ThrowDomainException_When_LengthIsLessThanMinLength()
     {
         // Act
-        Action act = () => UserName.Create(invalidLengthInput);
+        Action act = () => UserName.Create(new string('A', UserName.MinLength - 1));
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("User name must be between 3 and 20 characters.");
+            .WithMessage($"User name must be between {UserName.MinLength} and {UserName.MaxLength} characters.");
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserName.Create"/> throws <see cref="DomainException"/>
+    /// when the username length is out of range (3-20 characters).
+    /// </summary>
+    [Fact]
+    public void Create_Should_ThrowDomainException_When_LengthIsLongerThanMaxLength()
+    {
+        // Act
+        Action act = () => UserName.Create(new string('A', UserName.MaxLength + 1));
+
+        // Assert
+        act.Should().Throw<DomainException>()
+            .WithMessage($"User name must be between {UserName.MinLength} and {UserName.MaxLength} characters.");
+    }
+
+    /// <summary>
+    /// Verifies that a UserName instance can be created when the input string meets the minimum length requirement.
+    /// </summary>
+    /// <remarks>This test ensures that the UserName.Create method accepts a string of exactly
+    /// UserName.MinLength characters and returns a value equal to the input. It validates the boundary condition for
+    /// minimum length enforcement.</remarks>
+    [Fact]
+    public void Create_Should_Work_When_LengthIsMin()
+    {
+        var value = new string('A', UserName.MinLength);
+
+        var result = UserName.Create(value);
+
+        result.Value.Should().Be(value);
+    }
+
+    /// <summary>
+    /// Verifies that a UserName instance can be created successfully when the input string is at the maximum allowed
+    /// length.
+    /// </summary>
+    /// <remarks>This test ensures that the UserName.Create method accepts a string whose length equals
+    /// UserName.MaxLength without throwing exceptions, and that the resulting value matches the input. Use this test to
+    /// confirm boundary handling for maximum length constraints.</remarks>
+    [Fact]
+    public void Create_Should_Work_When_LengthIsMax()
+    {
+        var value = new string('A', UserName.MaxLength);
+
+        var result = UserName.Create(value);
+
+        result.Value.Should().Be(value);
     }
 
     /// <summary>

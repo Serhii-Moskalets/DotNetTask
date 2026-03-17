@@ -118,4 +118,20 @@ public class TagNameTests
 
         first.Should().NotBe(second);
     }
+
+    /// <summary>
+    /// Verifies that a tag name instance can be created successfully when the input string is at the maximum allowed.
+    /// </summary>
+    [Fact]
+    public void Create_Should_Work_When_LengthIsExactlyMaxLength()
+    {
+        // Arrange
+        var value = new string('a', TagName.MaxLength);
+
+        // Act
+        var result = TagName.Create(value);
+
+        // Assert
+        result.Value.Length.Should().Be(TagName.MaxLength);
+    }
 }

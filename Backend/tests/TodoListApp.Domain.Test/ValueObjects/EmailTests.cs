@@ -27,6 +27,24 @@ public class EmailTests
     }
 
     /// <summary>
+    /// Verifies that the Email class can successfully create an instance using a minimal valid email address.
+    /// </summary>
+    /// <remarks>This test ensures that the Email class accepts and processes minimal valid email formats,
+    /// confirming correct behavior for basic valid inputs.</remarks>
+    /// <param name="email">The email address to be validated and used for creating the Email instance. Must be a well-formed email address.</param>
+    [Theory]
+    [InlineData("a@b.c")]
+    [InlineData("x@y.z")]
+    public void Create_Should_Work_With_Minimal_Valid_Emails(string email)
+    {
+        // Act
+        var restult = Email.Create(email);
+
+        // Assert
+        restult.Value.Should().Be(email);
+    }
+
+    /// <summary>
     /// Tests that <see cref="Email.Create"/> throws <see cref="DomainException"/>
     /// when the input is null, empty or whitespace.
     /// </summary>
@@ -53,14 +71,14 @@ public class EmailTests
     public void Create_Should_ThrowDomainException_When_EmailTooLong()
     {
         // Arrange
-        var longEmail = new string('a', 92) + "@test.com";
+        var longEmail = new string('a', Email.MaxLength + 1) + "@test.com";
 
         // Act
         Action act = () => Email.Create(longEmail);
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("An email cannot contain more than 100 characters.");
+            .WithMessage($"An email cannot contain more than {Email.MaxLength} characters.");
     }
 
     /// <summary>
@@ -84,6 +102,20 @@ public class EmailTests
         // Assert
         act.Should().Throw<DomainException>()
             .WithMessage("Invalid email format.");
+    }
+
+    /// <summary>
+    /// Verifies that a email instance can be created successfully when the input string is at the maximum allowed.
+    /// </summary>
+    [Fact]
+    public void Create_Should_Work_When_LengthIsExactlyMaxLength()
+    {
+        var localPartLength = Email.MaxLength - "@a.com".Length;
+        var value = new string('a', localPartLength) + "@a.com";
+
+        var result = Email.Create(value);
+
+        result.Value.Length.Should().Be(Email.MaxLength);
     }
 
     /// <summary>

@@ -7,7 +7,7 @@ namespace TodoListApp.Domain.ValueObjects;
 /// Ensures that the task title is non-empty and does not exceed
 /// the maximum allowed length defined by the domain.
 /// </summary>
-public record TaskTitle
+public sealed record TaskTitle
 {
     /// <summary>
     /// The maximum allowed length for a task title.
@@ -58,7 +58,7 @@ public record TaskTitle
     /// <summary>
     /// Creates a <see cref="TaskTitle"/> from the given string if it is not null or whitespace.
     /// Returns <c>null</c> if the input is null, empty, or consists only of whitespace.
-    /// This is useful for optional title, e.g., when updating a task where the description might be don't changed.
+    /// This is useful for optional title, e.g., when updating a task where the description might remain unchanged.
     /// </summary>
     /// <param name="value">
     /// The raw task title string. Can be null, empty, or whitespace.

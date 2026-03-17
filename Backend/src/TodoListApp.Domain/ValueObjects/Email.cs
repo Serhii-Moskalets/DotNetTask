@@ -12,6 +12,11 @@ public sealed partial record Email
     private static partial Regex EmailRegex();
 
     /// <summary>
+    /// The maximum allowed length for a email.
+    /// </summary>
+    public const int MaxLength = 254;
+
+    /// <summary>
     /// Gets the string representation of the email address.
     /// </summary>
     public string Value { get; } = string.Empty;
@@ -37,9 +42,9 @@ public sealed partial record Email
 
         var trimmedEmail = value.Trim();
 
-        if (trimmedEmail.Length > 100)
+        if (trimmedEmail.Length > MaxLength)
         {
-            throw new DomainException("An email cannot contain more than 100 characters.");
+            throw new DomainException($"An email cannot contain more than {MaxLength} characters.");
         }
 
         if (!EmailRegex().IsMatch(trimmedEmail))

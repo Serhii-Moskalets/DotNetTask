@@ -9,6 +9,11 @@ namespace TodoListApp.Domain.ValueObjects;
 public sealed record FirstName
 {
     /// <summary>
+    /// The maximum allowed length for a first name.
+    /// </summary>
+    public const int MaxLength = 50;
+
+    /// <summary>
     /// Gets the string value of the person's first name.
     /// </summary>
     public string Value { get; } = string.Empty;
@@ -23,7 +28,7 @@ public sealed record FirstName
     /// <param name="value">The name string to be validated and trimmed.</param>
     /// <returns>A validated <see cref="FirstName"/> instance.</returns>
     /// <exception cref="DomainException">
-    /// Thrown when the first name is null, empty or contain more than 20 characters.
+    /// Thrown when the first name is null, empty or contain more than <see cref="MaxLength"/> characters.
     /// </exception>
     public static FirstName Create(string value)
     {
@@ -34,9 +39,9 @@ public sealed record FirstName
 
         var trimmedValue = value.Trim();
 
-        if (trimmedValue.Length > 20)
+        if (trimmedValue.Length > MaxLength)
         {
-            throw new DomainException("First name cannot contain more than 20 characters.");
+            throw new DomainException($"First name cannot contain more than {MaxLength} characters.");
         }
 
         return new FirstName(trimmedValue);

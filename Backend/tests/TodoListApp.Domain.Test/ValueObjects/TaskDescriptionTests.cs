@@ -51,7 +51,7 @@ public class TaskDescriptionTests
     [InlineData("\n\t")]
     public void Create_ShouldThrow_WhenValueIsNullOrWhiteSpace(string? invalidValue)
     {
-        Action act = () => TaskDescription.Create(invalidValue);
+        Action act = () => TaskDescription.Create(invalidValue!);
 
         act.Should()
             .Throw<DomainException>()
@@ -141,5 +141,21 @@ public class TaskDescriptionTests
         var second = TaskDescription.Create("Description B");
 
         first.Should().NotBe(second);
+    }
+
+    /// <summary>
+    /// Verifies that a task description instance can be created successfully when the input string is at the maximum allowed.
+    /// </summary>
+    [Fact]
+    public void Create_Should_Work_When_LengthIsExactlyMaxLength()
+    {
+        // Arrange
+        var value = new string('a', TaskDescription.MaxLength);
+
+        // Act
+        var result = TaskDescription.Create(value);
+
+        // Assert
+        result.Value.Length.Should().Be(TaskDescription.MaxLength);
     }
 }

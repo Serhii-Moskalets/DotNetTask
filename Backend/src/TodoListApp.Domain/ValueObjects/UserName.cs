@@ -9,6 +9,16 @@ namespace TodoListApp.Domain.ValueObjects;
 /// </summary>
 public sealed partial record UserName
 {
+    /// <summary>
+    /// The minimum allowed length for a username.
+    /// </summary>
+    public const int MinLength = 3;
+
+    /// <summary>
+    /// The maximum allowed length for a username.
+    /// </summary>
+    public const int MaxLength = 32;
+
     [GeneratedRegex(@"^[a-zA-Z0-9_]+$")]
     private static partial Regex UserNameRegex();
 
@@ -36,9 +46,9 @@ public sealed partial record UserName
 
         var trimmedValue = value.Trim();
 
-        if (trimmedValue.Length is < 3 or > 20)
+        if (trimmedValue.Length is < MinLength or > MaxLength)
         {
-            throw new DomainException("User name must be between 3 and 20 characters.");
+            throw new DomainException($"User name must be between {MinLength} and {MaxLength} characters.");
         }
 
         if (!UserNameRegex().IsMatch(trimmedValue))

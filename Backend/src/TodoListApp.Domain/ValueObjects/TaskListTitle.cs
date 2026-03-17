@@ -7,7 +7,7 @@ namespace TodoListApp.Domain.ValueObjects;
 /// Ensures that the task title is non-empty and does not exceed
 /// the maximum allowed length defined by the domain.
 /// </summary>
-public record TaskListTitle
+public sealed record TaskListTitle
 {
     /// <summary>
     /// The maximum allowed length for a task list title.

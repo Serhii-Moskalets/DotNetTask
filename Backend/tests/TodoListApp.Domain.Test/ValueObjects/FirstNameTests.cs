@@ -48,20 +48,36 @@ public class FirstNameTests
 
     /// <summary>
     /// Tests that <see cref="FirstName.Create"/> throws <see cref="DomainException"/>
-    /// when the first name exceeds 20 characters.
+    /// when the first name exceeds <see cref="FirstName.MaxLength"/> characters.
     /// </summary>
     [Fact]
     public void Create_Should_ThrowDomainException_When_NameTooLong()
     {
         // Arrange
-        var longName = new string('A', 21);
+        var longName = new string('A', FirstName.MaxLength + 1);
 
         // Act
         Action act = () => FirstName.Create(longName);
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("First name cannot contain more than 20 characters.");
+            .WithMessage($"First name cannot contain more than {FirstName.MaxLength} characters.");
+    }
+
+    /// <summary>
+    /// Verifies that a first name instance can be created successfully when the input string is at the maximum allowed.
+    /// </summary>
+    [Fact]
+    public void Create_Should_Work_When_LengthIsExactlyMaxLength()
+    {
+        // Arrange
+        var value = new string('a', FirstName.MaxLength);
+
+        // Act
+        var result = FirstName.Create(value);
+
+        // Assert
+        result.Value.Length.Should().Be(FirstName.MaxLength);
     }
 
     /// <summary>

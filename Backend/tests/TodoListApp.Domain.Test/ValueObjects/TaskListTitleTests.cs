@@ -124,4 +124,20 @@ public class TaskListTitleTests
         // Assert
         first.Should().NotBe(second);
     }
+
+    /// <summary>
+    /// Verifies that a task list title instance can be created successfully when the input string is at the maximum allowed.
+    /// </summary>
+    [Fact]
+    public void Create_Should_Work_When_LengthIsExactlyMaxLength()
+    {
+        // Arrange
+        var value = new string('a', TaskListTitle.MaxLength);
+
+        // Act
+        var result = TaskListTitle.Create(value);
+
+        // Assert
+        result.Value.Length.Should().Be(TaskListTitle.MaxLength);
+    }
 }

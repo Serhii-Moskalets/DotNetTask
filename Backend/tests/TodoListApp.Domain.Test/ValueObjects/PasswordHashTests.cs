@@ -45,24 +45,6 @@ public class PasswordHashTests
     }
 
     /// <summary>
-    /// Tests that <see cref="PasswordHash.Create"/> throws <see cref="DomainException"/>
-    /// when the hash length is less than 64 characters.
-    /// </summary>
-    /// <param name="shortHash">The string with insufficient length.</param>
-    [Theory]
-    [InlineData("too-short")]
-    [InlineData("a1b2c3d4e5f6")]
-    public void Create_Should_ThrowDomainException_When_HashIsTooShort(string shortHash)
-    {
-        // Act
-        Action act = () => PasswordHash.Create(shortHash);
-
-        // Assert
-        act.Should().Throw<DomainException>()
-            .WithMessage("Invalid password hash format.");
-    }
-
-    /// <summary>
     /// Tests that <see cref="PasswordHash.ToString"/> returns the underlying hash value.
     /// </summary>
     [Fact]

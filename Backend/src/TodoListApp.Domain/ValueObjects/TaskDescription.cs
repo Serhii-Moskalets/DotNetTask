@@ -32,8 +32,8 @@ public record TaskDescription
     /// Leading and trailing whitespace will be trimmed before validation.
     /// </param>
     /// <returns>A valid <see cref="TaskDescription"/> instance containing the trimmed value.</returns>
-    /// <exception cref="DomainException">Thrown when the value longer than <see cref="MaxLength"/>.</exception>
-    public static TaskDescription Create(string? value)
+    /// <exception cref="DomainException">Thrown when the value exceeds <see cref="MaxLength"/>.</exception>
+    public static TaskDescription Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
