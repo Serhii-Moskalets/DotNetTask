@@ -1,5 +1,7 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.RegisterUser;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.RegisterUser;
 
@@ -16,6 +18,22 @@ public class RegisterUserCommandValidatorTests
     public RegisterUserCommandValidatorTests()
     {
         this._validator = new RegisterUserCommandValidator();
+    }
+
+    /// <summary>
+    /// Provides invalid password samples and their corresponding expected error messages from <see cref="PasswordPolicy"/>.
+    /// </summary>
+    /// <returns>An enumeration of test data arrays.</returns>
+    public static TheoryData<string, string> GetInvalidPasswords()
+    {
+        return new TheoryData<string, string>
+        {
+            { "short", PasswordPolicy.TooShortMessage },
+            { "nocapital1!", PasswordPolicy.UppercaseMessage },
+            { "NOLOWERCASE1!", PasswordPolicy.LowercaseMessage },
+            { "NoDigit!!", PasswordPolicy.NumberMessage },
+            { "NoSpecialChar1", PasswordPolicy.SpecialCharMessage },
+        };
     }
 
     /// <summary>
@@ -48,41 +66,29 @@ public class RegisterUserCommandValidatorTests
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(x => x.FirstName).WithErrorMessage("First name is required.");
-        result.ShouldHaveValidationErrorFor(x => x.UserName).WithErrorMessage("Username is required.");
-        result.ShouldHaveValidationErrorFor(x => x.Email).WithErrorMessage("Email is required.");
-        result.ShouldHaveValidationErrorFor(x => x.Password).WithErrorMessage("Password is required.");
+        result.ShouldHaveValidationErrorFor(x => x.FirstName).WithErrorMessage(FirstNamePolicy.EmptyMessage);
+        result.ShouldHaveValidationErrorFor(x => x.UserName).WithErrorMessage(UserNamePolicy.EmptyMessage);
+        result.ShouldHaveValidationErrorFor(x => x.Email).WithErrorMessage(EmailPolicy.EmptyMessage);
+        result.ShouldHaveValidationErrorFor(x => x.Password).WithErrorMessage(PasswordPolicy.EmptyMessage);
     }
 
     /// <summary>
     /// Verifies that validation errors are triggered when mandatory fields exceed their maximum allowed length.
     /// </summary>
-    /// <param name="firstName">The first name to validate (Max: 20).</param>
-    /// <param name="lastName">The last name to validate (Max: 30).</param>
-    [Theory]
-    [InlineData("thisfirstnameiswaytoolong", "ValidLastName")]
-    [InlineData("ValidFirstName", "thislastnameiswaytoolongforoursystem")]
-    [InlineData("thisfirstnameiswaytoolong", "thislastnameiswaytoolongforoursystem")]
-    public void Should_Have_Errors_When_First_And_Last_Name_Are_Too_Long(string firstName, string lastName)
+    [Fact]
+    public void Should_Have_Errors_When_Names_Exceed_Maximum_Length()
     {
         // Arrange
-        var command = new RegisterUserCommand(firstName, lastName, "UserName", "email@example.com", "paSsword!2");
+        var longFirstName = new string('a', FirstName.MaxLength + 1);
+        var longLastName = new string('a', LastName.MaxLength + 1);
+        var command = new RegisterUserCommand(longFirstName, longLastName, "UserName", "email@example.com", "paSsword!2");
 
         // Act
         var result = this._validator.TestValidate(command);
 
         // Assert
-        if (firstName.Length > 20)
-        {
-            result.ShouldHaveValidationErrorFor(x => x.FirstName)
-                .WithErrorMessage("First name cannot be longer than 20 characters.");
-        }
-
-        if (lastName.Length > 30)
-        {
-            result.ShouldHaveValidationErrorFor(x => x.LastName)
-                .WithErrorMessage("Last name cannot be longer than 30 characters.");
-        }
+        result.ShouldHaveValidationErrorFor(x => x.FirstName).WithErrorMessage(FirstNamePolicy.TooLongMessage);
+        result.ShouldHaveValidationErrorFor(x => x.LastName).WithErrorMessage(LastNamePolicy.TooLongMessage);
     }
 
     /// <summary>
@@ -100,20 +106,31 @@ public class RegisterUserCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserName)
-            .WithErrorMessage("Username must be between 3 and 20 characters.");
+            .WithErrorMessage(UserNamePolicy.LengthMessage);
     }
 
     /// <summary>
-    /// Verifies that various password complexity requirements are enforced.
+    /// Verifies that <see cref="UserName"/> triggers a format error message when it contains invalid characters.
+    /// </summary>
+    [Fact]
+    public void Should_Have_Error_When_UserName_Format_Is_Invalid()
+    {
+        // Arrange
+        var command = new RegisterUserCommand("John", "Doe", "user@name!", "john@test.com", "Password123!");
+
+        // Act & Assert
+        var result = this._validator.TestValidate(command);
+        result.ShouldHaveValidationErrorFor(x => x.UserName)
+            .WithErrorMessage(UserNamePolicy.InvalidCharactersMessage);
+    }
+
+    /// <summary>
+    /// Verifies that each password complexity rule (length, casing, digits, special characters) is correctly enforced.
     /// </summary>
     /// <param name="password">The password that fails complexity rules.</param>
-    /// <param name="expectedErrorMessage">The expected error message for the specific failure.</param>
+    /// <param name="expectedErrorMessage">The policy-defined error message expected for the failure.</param>
     [Theory]
-    [InlineData("short", "Password must be at least 8 characters long.")]
-    [InlineData("nocapital1!", "Password must contain at least one uppercase letter.")]
-    [InlineData("NOLOWERCASE1!", "Password must contain at least one lowercase letter.")]
-    [InlineData("NoDigit!!", "Password must contain at least one number.")]
-    [InlineData("NoSpecialChar1", "Password must contain at least one special character (!?*.).")]
+    [MemberData(nameof(GetInvalidPasswords))]
     public void Should_Have_Error_When_Password_Complexity_Is_Not_Met(string password, string expectedErrorMessage)
     {
         // Arrange

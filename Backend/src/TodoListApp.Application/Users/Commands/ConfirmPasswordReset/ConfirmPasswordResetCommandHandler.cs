@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.ConfirmPasswordReset;
@@ -39,7 +40,7 @@ public class ConfirmPasswordResetCommandHandler(
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired password reset token.");
+            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidPasswordResetTokenMessage);
         }
 
         var hash = this._passwordHasher.HashPassword(command.NewPassword);

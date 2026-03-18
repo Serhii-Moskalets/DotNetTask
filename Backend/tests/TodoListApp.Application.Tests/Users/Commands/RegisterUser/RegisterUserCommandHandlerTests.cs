@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.RegisterUser;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -90,9 +91,9 @@ public class RegisterUserCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
 
-        result.Error.Message.Should().Be("Email is already exists.");
+        result.Error.Message.Should().Be(EmailPolicy.AlreadyInUseMessage);
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -118,8 +119,8 @@ public class RegisterUserCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
 
-        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("User name is already exists.");
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(UserNamePolicy.AlreadyInUseMessage);
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -180,8 +181,8 @@ public class RegisterUserCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("User name is already exists.");
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(UserNamePolicy.AlreadyInUseMessage);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 

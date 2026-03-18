@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.UpdateUsername;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.UpdateUsername;
 
@@ -40,7 +41,7 @@ public class UpdateUsernameCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserName)
-            .WithErrorMessage("Username is required.");
+            .WithErrorMessage(UserNamePolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -59,7 +60,7 @@ public class UpdateUsernameCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserName)
-              .WithErrorMessage("Username must be between 3 and 20 characters.");
+              .WithErrorMessage(UserNamePolicy.LengthMessage);
     }
 
     /// <summary>
@@ -74,6 +75,6 @@ public class UpdateUsernameCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
     }
 }

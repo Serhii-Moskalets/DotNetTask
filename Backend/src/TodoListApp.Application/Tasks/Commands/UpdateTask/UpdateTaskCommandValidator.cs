@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tasks.Commands.UpdateTask;

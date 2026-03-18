@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -19,7 +20,7 @@ public record SecurityStamp
     {
         if (string.IsNullOrEmpty(value))
         {
-            throw new DomainException("Invalid security identifier.");
+            throw new DomainException(SecurityPolicy.InvalidSecurityStampMessage);
         }
 
         this.Value = value;

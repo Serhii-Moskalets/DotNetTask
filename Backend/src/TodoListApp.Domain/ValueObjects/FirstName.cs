@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -34,14 +35,14 @@ public sealed record FirstName
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("First name cannot be empty.");
+            throw new DomainException(FirstNamePolicy.EmptyMessage);
         }
 
         var trimmedValue = value.Trim();
 
         if (trimmedValue.Length > MaxLength)
         {
-            throw new DomainException($"First name cannot contain more than {MaxLength} characters.");
+            throw new DomainException(FirstNamePolicy.TooLongMessage);
         }
 
         return new FirstName(trimmedValue);

@@ -1,6 +1,7 @@
 ﻿using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Domain.Common;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Events;
 using TodoListApp.Domain.Exceptions;
@@ -32,8 +33,8 @@ public class UserEntity : BaseEntity
     /// <paramref name="firstName"/>, <paramref name="userName"/>,
     /// <paramref name="email"/>, <paramref name="passwordHash"/>
     /// is null, empty, or consists only of white-space characters.
-    /// Thrown when <paramref name="firstName"/> contain more than 20 characters.
-    /// Thrown when <paramref name="lastName"/> contain more than 30 characters.
+    /// Thrown when <paramref name="firstName"/> contain more than <see cref="FirstName.MaxLength"/> characters.
+    /// Thrown when <paramref name="lastName"/> contain more than <see cref="LastName.MaxLength"/> characters.
     /// </exception>
     public UserEntity(
         FirstName firstName,
@@ -151,7 +152,7 @@ public class UserEntity : BaseEntity
     {
         if (this.CurrentToken?.IsValid(token, UserTokenType.EmailVerification, currentTime) is not true)
         {
-            return Result<bool>.Failure(ErrorCode.Timeout, "Invalid or expired email verification token.");
+            return Result<bool>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailVerificationTokenMessage);
         }
 
         this.EmailConfirmed = true;
@@ -166,7 +167,7 @@ public class UserEntity : BaseEntity
     /// <remarks>This method should only be called for users who have not yet confirmed their email address.
     /// Calling this method will reset the user's registration details and invalidate any previous email verification
     /// tokens.</remarks>
-    /// <param name="firsName">The first name to assign to the user during the registration update.</param>
+    /// <param name="firstName">The first name to assign to the user during the registration update.</param>
     /// <param name="userName">The username to assign to the user during the registration update.</param>
     /// <param name="passwordHash">The hashed password to associate with the user during the registration update.</param>
     /// <param name="token">The token string to use for creating a new email verification token.</param>
@@ -175,7 +176,7 @@ public class UserEntity : BaseEntity
     /// <param name="lastName">The last name to assign to the user during the registration update. This parameter is optional.</param>
     /// <exception cref="DomainException">Thrown if the user's email address has already been confirmed.</exception>
     public void UpdateUnconfirmedRegistration(
-        FirstName firsName,
+        FirstName firstName,
         UserName userName,
         PasswordHash passwordHash,
         string token,
@@ -185,10 +186,10 @@ public class UserEntity : BaseEntity
     {
         if (this.EmailConfirmed)
         {
-            throw new DomainException("Cannot update registration details after email is confirmed.");
+            throw new DomainException(UserPolicy.EmailAlreadyConfirmed);
         }
 
-        this.FirstName = firsName;
+        this.FirstName = firstName;
         this.LastName = lastName;
         this.PasswordHash = passwordHash;
         this.UserName = userName;
@@ -211,7 +212,7 @@ public class UserEntity : BaseEntity
     {
         if (newEmail == this.Email)
         {
-            return Result<bool>.Failure(ErrorCode.InvalidOperation, "New email is same as current.");
+            return Result<bool>.Failure(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
         }
 
         string oldEmail = this.Email.Value;
@@ -234,10 +235,10 @@ public class UserEntity : BaseEntity
     {
         if (this.CurrentToken?.IsValid(token, UserTokenType.EmailChange, currentTime) is not true)
         {
-            return Result<bool>.Failure(ErrorCode.Timeout, "Invalid or expired email change token.");
+            return Result<bool>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailChangeTokenMessage);
         }
 
-        var pendingEmail = this.CurrentToken.Metadata ?? throw new DomainException("Pending email data is missing.");
+        var pendingEmail = this.CurrentToken.Metadata ?? throw new DomainException(TokenPolicy.MissingPendingEmailMessage);
 
         this.Email = Email.Create(pendingEmail);
         this.EmailConfirmed = true;
@@ -261,10 +262,10 @@ public class UserEntity : BaseEntity
     {
         if (this.RevertToken?.IsValid(revertToken, UserTokenType.EmailChangeRevert, currentTime) is not true)
         {
-            return Result<bool>.Failure(ErrorCode.Timeout, "Invalid or expired email change revert token.");
+            return Result<bool>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailRevertTokenMessage);
         }
 
-        var oldEmail = this.RevertToken.Metadata ?? throw new DomainException("Original email data is missing.");
+        var oldEmail = this.RevertToken.Metadata ?? throw new DomainException(TokenPolicy.MissingOriginalEmailMessage);
 
         this.Email = Email.Create(oldEmail);
         this.EmailConfirmed = true;
@@ -302,7 +303,7 @@ public class UserEntity : BaseEntity
     {
         if (this.CurrentToken?.IsValid(token, UserTokenType.PasswordReset, currentTime) is not true)
         {
-            return Result<bool>.Failure(ErrorCode.Timeout, "Invalid or expired password reset token.");
+            return Result<bool>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
         }
 
         this.UpdateSecurityStamp();
@@ -371,7 +372,7 @@ public class UserEntity : BaseEntity
     {
         if (this.UserName.Value.Equals(userName.Value, StringComparison.OrdinalIgnoreCase))
         {
-            return Result<bool>.Failure(ErrorCode.InvalidOperation, "New username is same as current.");
+            return Result<bool>.Failure(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
         }
 
         this.UserName = userName;
@@ -386,7 +387,7 @@ public class UserEntity : BaseEntity
     {
         if (this.PasswordHash == newPasswordHash)
         {
-            throw new DomainException("New password cannot be the same as the old one");
+            throw new DomainException(PasswordPolicy.SameAsOldMessage);
         }
 
         this.PasswordHash = newPasswordHash;

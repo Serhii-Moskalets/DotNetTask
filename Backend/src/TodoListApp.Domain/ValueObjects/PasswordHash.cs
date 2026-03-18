@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -27,7 +28,7 @@ public sealed record PasswordHash
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("The password hash cannot be empty.");
+            throw new DomainException(SecurityPolicy.HashEmptyMessage);
         }
 
         var trimmedValue = value.Trim();

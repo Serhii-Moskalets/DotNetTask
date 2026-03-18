@@ -2,9 +2,9 @@
 using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Queries.GetUserProfile;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
-using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Queries.GetUserProfile;
 
@@ -45,7 +45,7 @@ public class GetUserProfileQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
-        result.Error.Message.Should().Be("User not found.");
+        result.Error.Message.Should().Be(UserPolicy.AccountNotFoundMessage);
     }
 
     /// <summary>

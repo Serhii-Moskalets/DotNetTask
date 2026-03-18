@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -41,7 +42,7 @@ public class PasswordHashTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("The password hash cannot be empty.");
+            .WithMessage(SecurityPolicy.HashEmptyMessage);
     }
 
     /// <summary>

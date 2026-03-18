@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.ResetPassword;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ResetPassword;
 
@@ -44,7 +45,7 @@ public class ResetPasswordCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
-            .WithErrorMessage("Email is required.");
+            .WithErrorMessage(EmailPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -66,6 +67,6 @@ public class ResetPasswordCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
-            .WithErrorMessage("Invalid email format.");
+            .WithErrorMessage(EmailPolicy.InvalidFormatMessage);
     }
 }

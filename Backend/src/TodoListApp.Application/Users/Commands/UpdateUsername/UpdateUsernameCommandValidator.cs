@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.UpdateUsername;
 
@@ -14,10 +16,16 @@ public class UpdateUsernameCommandValidator : AbstractValidator<UpdateUsernameCo
     public UpdateUsernameCommandValidator()
     {
         this.RuleFor(x => x.UserName)
-            .NotEmpty().WithMessage("Username is required.")
-            .Length(3, 20).WithMessage("Username must be between 3 and 20 characters.");
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+                .WithMessage(UserNamePolicy.EmptyMessage)
+            .Length(UserName.MinLength, UserName.MaxLength)
+                .WithMessage(UserNamePolicy.LengthMessage)
+            .Matches(UserNamePolicy.FormatRegex)
+                .WithMessage(UserNamePolicy.InvalidCharactersMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty()
+                .WithMessage(UserPolicy.UserIdRequiredMessage);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
@@ -19,7 +20,7 @@ public sealed partial record UserName
     /// </summary>
     public const int MaxLength = 32;
 
-    [GeneratedRegex(@"^[a-zA-Z0-9_]+$")]
+    [GeneratedRegex(UserNamePolicy.FormatRegex)]
     private static partial Regex UserNameRegex();
 
     /// <summary>
@@ -41,19 +42,19 @@ public sealed partial record UserName
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("User name cannot be empty.");
+            throw new DomainException(UserNamePolicy.EmptyMessage);
         }
 
         var trimmedValue = value.Trim();
 
         if (trimmedValue.Length is < MinLength or > MaxLength)
         {
-            throw new DomainException($"User name must be between {MinLength} and {MaxLength} characters.");
+            throw new DomainException(UserNamePolicy.LengthMessage);
         }
 
         if (!UserNameRegex().IsMatch(trimmedValue))
         {
-            throw new DomainException("User name can only contain letters, numbers, and underscores.");
+            throw new DomainException(UserNamePolicy.InvalidCharactersMessage);
         }
 
         return new UserName(trimmedValue);

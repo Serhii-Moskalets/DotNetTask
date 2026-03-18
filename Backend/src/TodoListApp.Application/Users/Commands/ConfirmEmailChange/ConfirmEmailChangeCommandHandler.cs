@@ -3,6 +3,7 @@ using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Commands.ConfirmEmailChange;
 
@@ -34,7 +35,7 @@ public class ConfirmEmailChangeCommandHandler(
         var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChange, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email change token.");
+            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailChangeTokenMessage);
         }
 
         var result = user.ConfirmEmailChange(command.Token, this._clock.UtcNow);

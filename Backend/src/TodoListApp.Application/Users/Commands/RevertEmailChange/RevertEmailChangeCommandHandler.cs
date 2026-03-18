@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Commands.RevertEmailChange;
 
@@ -34,7 +35,7 @@ public class RevertEmailChangeCommandHandler(
         var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChangeRevert, cancellationToken);
         if (user is null)
         {
-            return await Result<string>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email revert token.");
+            return await Result<string>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailRevertTokenMessage);
         }
 
         var resetToken = this._tokenGenerator.GenerateSecureToken();

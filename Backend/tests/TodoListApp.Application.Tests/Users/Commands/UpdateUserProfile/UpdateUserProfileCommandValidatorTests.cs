@@ -1,8 +1,7 @@
 ﻿using FluentValidation.TestHelper;
 using TinyResult.Enums;
-using TodoListApp.Application.Users.Commands.RegisterUser;
-using TodoListApp.Application.Users.Commands.UpdateUsername;
 using TodoListApp.Application.Users.Commands.UpdateUserProfile;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.UpdateUserProfile;
@@ -47,39 +46,27 @@ public class UpdateUserProfileCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x)
-            .WithErrorMessage("At least one field (FirstName or LastName) must be provided.")
+            .WithErrorMessage(UserPolicy.AtLeastOneFieldRequiredMessage)
             .WithErrorCode(nameof(ErrorCode.ValidationError));
     }
 
     /// <summary>
     /// Verifies that validation errors are triggered when mandatory fields exceed their maximum allowed length.
     /// </summary>
-    /// <param name="firstName">The first name to validate (Max: 20).</param>
-    /// <param name="lastName">The last name to validate (Max: 30).</param>
-    [Theory]
-    [InlineData("thisfirstnameiswaytoolong", "ValidLastName")]
-    [InlineData("ValidFirstName", "thislastnameiswaytoolongforoursystem")]
-    [InlineData("thisfirstnameiswaytoolong", "thislastnameiswaytoolongforoursystem")]
-    public void Should_Have_Errors_When_First_And_Last_Name_Are_Too_Long(string firstName, string lastName)
+    [Fact]
+    public void Should_Have_Errors_When_Names_Exceed_Maximum_Length()
     {
         // Arrange
-        var command = new UpdateUserProfileCommand(firstName, lastName, Guid.NewGuid());
+        var longFirstName = new string('a', FirstName.MaxLength + 1);
+        var longLastName = new string('a', LastName.MaxLength + 1);
+        var command = new UpdateUserProfileCommand(longFirstName, longLastName, Guid.NewGuid());
 
         // Act
         var result = this._validator.TestValidate(command);
 
         // Assert
-        if (firstName.Length > 20)
-        {
-            result.ShouldHaveValidationErrorFor(x => x.FirstName)
-                .WithErrorMessage("First name cannot be longer than 20 characters.");
-        }
-
-        if (lastName.Length > 30)
-        {
-            result.ShouldHaveValidationErrorFor(x => x.LastName)
-                .WithErrorMessage("Last name cannot be longer than 30 characters.");
-        }
+        result.ShouldHaveValidationErrorFor(x => x.FirstName).WithErrorMessage(FirstNamePolicy.TooLongMessage);
+        result.ShouldHaveValidationErrorFor(x => x.LastName).WithErrorMessage(LastNamePolicy.TooLongMessage);
     }
 
     /// <summary>
@@ -94,6 +81,6 @@ public class UpdateUserProfileCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
     }
 }

@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.UpdatePassword;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 
@@ -112,7 +113,7 @@ public class UpdatePasswordCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("Incorrect password.");
+        result.Error.Message.Should().Be(PasswordPolicy.IncorrectPasswordMessage);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

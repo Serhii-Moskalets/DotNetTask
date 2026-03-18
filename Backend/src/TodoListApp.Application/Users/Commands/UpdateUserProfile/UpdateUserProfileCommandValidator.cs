@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using TinyResult.Enums;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.UpdateUserProfile;
 
@@ -14,19 +16,22 @@ public class UpdateUserProfileCommandValidator : AbstractValidator<UpdateUserPro
     public UpdateUserProfileCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty()
+                .WithMessage(UserPolicy.UserIdRequiredMessage);
 
         this.RuleFor(x => x.FirstName)
-            .MaximumLength(20).WithMessage("First name cannot be longer than 20 characters.")
+            .MaximumLength(FirstName.MaxLength)
+                .WithMessage(FirstNamePolicy.TooLongMessage)
             .When(x => x.FirstName != null);
 
         this.RuleFor(x => x.LastName)
-            .MaximumLength(30).WithMessage("Last name cannot be longer than 30 characters.")
+            .MaximumLength(LastName.MaxLength)
+                .WithMessage(LastNamePolicy.TooLongMessage)
             .When(x => x.LastName != null);
 
         this.RuleFor(x => x)
             .Must(command => !string.IsNullOrEmpty(command.FirstName) || !string.IsNullOrEmpty(command.LastName))
-            .WithMessage("At least one field (FirstName or LastName) must be provided.")
+                .WithMessage(UserPolicy.AtLeastOneFieldRequiredMessage)
             .WithErrorCode(nameof(ErrorCode.ValidationError));
     }
 }

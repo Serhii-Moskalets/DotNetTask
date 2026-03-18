@@ -3,6 +3,7 @@ using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Commands.ConfirmEmail;
 
@@ -27,7 +28,7 @@ public class ConfirmEmailCommandHandler(
         var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailVerification, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email verification token.");
+            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailVerificationTokenMessage);
         }
 
         var result = user.ConfirmEmailVerification(command.Token, this._clock.UtcNow);

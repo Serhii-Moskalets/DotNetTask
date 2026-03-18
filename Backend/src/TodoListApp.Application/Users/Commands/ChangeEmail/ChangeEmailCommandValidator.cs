@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.ChangeEmail;
 
@@ -13,10 +15,15 @@ public class ChangeEmailCommandValidator : AbstractValidator<ChangeEmailCommand>
     public ChangeEmailCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty().WithMessage(UserPolicy.UserIdRequiredMessage);
 
         this.RuleFor(x => x.NewEmail)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress().WithMessage("Invalid email format.");
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+                .WithMessage(EmailPolicy.EmptyMessage)
+            .MaximumLength(Email.MaxLength)
+                .WithMessage(EmailPolicy.TooLongMessage)
+            .Matches(EmailPolicy.FormatRegex)
+                .WithMessage(EmailPolicy.InvalidFormatMessage);
     }
 }

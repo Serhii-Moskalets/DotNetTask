@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ChangeEmail;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -90,7 +91,7 @@ public class ChangeEmailCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
-        result.Error.Message.Should().Be("User not found.");
+        result.Error.Message.Should().Be(UserPolicy.AccountNotFoundMessage);
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never());
     }
@@ -118,7 +119,7 @@ public class ChangeEmailCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.InvalidOperation);
-        result.Error.Message.Should().Be("This email is already in use.");
+        result.Error.Message.Should().Be(EmailPolicy.AlreadyInUseMessage);
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never());
         this._tokenGeneratorMock.Verify(x => x.GenerateSecureToken(), Times.Never());
@@ -144,7 +145,7 @@ public class ChangeEmailCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("New email is same as current.");
+        result.Error.Message.Should().Be(EmailPolicy.SameAsCurrentMessage);
 
         this._unitOfWorkMock.Verify(x => x.Users.ExistsByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()), Times.Never());
 

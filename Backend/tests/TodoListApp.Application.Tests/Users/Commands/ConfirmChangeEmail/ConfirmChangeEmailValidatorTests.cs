@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.ConfirmEmailChange;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmChangeEmail;
 
@@ -24,7 +25,7 @@ public class ConfirmChangeEmailValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Token)
-              .WithErrorMessage("Token is required.");
+              .WithErrorMessage(TokenPolicy.RequiredMessage);
     }
 
     /// <summary>
@@ -44,6 +45,6 @@ public class ConfirmChangeEmailValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Token)
-              .WithErrorMessage("Token is required.");
+              .WithErrorMessage(TokenPolicy.RequiredMessage);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -60,7 +61,7 @@ public class EmailTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("Email cannot be empty.");
+            .WithMessage(EmailPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -78,7 +79,7 @@ public class EmailTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage($"An email cannot contain more than {Email.MaxLength} characters.");
+            .WithMessage(EmailPolicy.TooLongMessage);
     }
 
     /// <summary>
@@ -101,7 +102,7 @@ public class EmailTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("Invalid email format.");
+            .WithMessage(EmailPolicy.InvalidFormatMessage);
     }
 
     /// <summary>

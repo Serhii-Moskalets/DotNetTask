@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -28,20 +29,20 @@ public sealed record LastName
     /// <param name="value">The name string to be validated and trimmed.</param>
     /// <returns>A validated <see cref="LastName"/> instance.</returns>
     /// <exception cref="DomainException">
-    /// Thrown when the last name is null or empty or contain more than <see cref="MaxLength"/> characters.
+    /// Thrown when the last name is null, empty, or exceeds <see cref="MaxLength"/> characters.
     /// </exception>
     public static LastName Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("Last name cannot be empty.");
+            throw new DomainException(LastNamePolicy.EmptyMessage);
         }
 
         var trimmedValue = value.Trim();
 
         if (trimmedValue.Length > MaxLength)
         {
-            throw new DomainException($"Last name cannot contain more than {MaxLength} characters.");
+            throw new DomainException(LastNamePolicy.TooLongMessage);
         }
 
         return new LastName(trimmedValue);

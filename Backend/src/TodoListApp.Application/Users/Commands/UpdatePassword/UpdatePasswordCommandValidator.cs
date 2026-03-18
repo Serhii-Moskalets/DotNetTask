@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Commands.UpdatePassword;
 
@@ -13,18 +14,28 @@ public class UpdatePasswordCommandValidator : AbstractValidator<UpdatePasswordCo
     public UpdatePasswordCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty()
+                .WithMessage(UserPolicy.UserIdRequiredMessage);
 
         this.RuleFor(x => x.CurrentPassword)
-            .NotEmpty().WithMessage("Current password is required.");
+            .NotEmpty()
+                .WithMessage(PasswordPolicy.EmptyMessage);
 
         this.RuleFor(x => x.NewPassword)
-            .NotEmpty().WithMessage("Password is required.")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters long.")
-            .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-            .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter.")
-            .Matches("[0-9]").WithMessage("Password must contain at least one number.")
-            .Matches(@"[\!\?\*\.]").WithMessage("Password must contain at least one special character (!?*.).")
-            .NotEqual(x => x.CurrentPassword).WithMessage("New password and current password cannot be the same.");
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+                .WithMessage(PasswordPolicy.EmptyMessage)
+            .MinimumLength(PasswordPolicy.MinLength)
+                .WithMessage(PasswordPolicy.TooShortMessage)
+            .Matches(PasswordPolicy.UppercaseRegex)
+                .WithMessage(PasswordPolicy.UppercaseMessage)
+            .Matches(PasswordPolicy.LowercaseRegex)
+                .WithMessage(PasswordPolicy.LowercaseMessage)
+            .Matches(PasswordPolicy.NumberRegex)
+                .WithMessage(PasswordPolicy.NumberMessage)
+            .Matches(PasswordPolicy.SpecialCharRegex)
+                .WithMessage(PasswordPolicy.SpecialCharMessage)
+            .NotEqual(x => x.CurrentPassword)
+                .WithMessage(PasswordPolicy.SameAsOldMessage);
     }
 }

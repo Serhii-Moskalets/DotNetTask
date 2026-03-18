@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.ChangeEmail;
@@ -42,18 +43,18 @@ public class ChangeEmailCommandHandler(
         var user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "User not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         if (user.Email == newEmail)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "New email is same as current.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
         }
 
         var emailExist = await this.UnitOfWork.Users.ExistsByEmailAsync(newEmail, cancellationToken);
         if (emailExist)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "This email is already in use.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
         }
 
         var confirmationToken = this._tokenGenerator.GenerateSecureToken();

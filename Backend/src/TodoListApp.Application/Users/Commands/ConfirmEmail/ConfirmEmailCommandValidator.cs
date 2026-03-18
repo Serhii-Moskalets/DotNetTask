@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Commands.ConfirmEmail;
 
@@ -13,6 +14,6 @@ public class ConfirmEmailCommandValidator : AbstractValidator<ConfirmEmailComman
     public ConfirmEmailCommandValidator()
     {
         this.RuleFor(x => x.Token)
-            .NotEmpty().WithMessage("Token is required.");
+            .NotEmpty().WithMessage(TokenPolicy.RequiredMessage);
     }
 }

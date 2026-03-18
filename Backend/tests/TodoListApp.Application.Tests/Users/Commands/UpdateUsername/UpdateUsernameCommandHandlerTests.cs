@@ -3,6 +3,7 @@ using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.UpdateUsername;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -72,7 +73,7 @@ public class UpdateUsernameCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(ErrorCode.NotFound);
-        result.Error.Message.Should().Be("User not found.");
+        result.Error.Message.Should().Be(UserPolicy.AccountNotFoundMessage);
     }
 
     /// <summary>
@@ -98,7 +99,7 @@ public class UpdateUsernameCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("New Username is same as current.");
+        result.Error.Message.Should().Be(UserNamePolicy.SameAsCurrentMessage);
 
         this._unitOfWorkMock.Verify(x => x.Users.ExistsByUserNameAsync(It.IsAny<UserName>(), It.IsAny<CancellationToken>()), Times.Never);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
@@ -128,8 +129,8 @@ public class UpdateUsernameCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("Username is already taken.");
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(UserNamePolicy.AlreadyInUseMessage);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

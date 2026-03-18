@@ -3,6 +3,7 @@ using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.UpdateUserProfile;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 
@@ -70,7 +71,7 @@ public class UpdateUserProfileCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
-        result.Error.Message.Should().Contain("No changes detected");
+        result.Error.Message.Should().Be(UserPolicy.NoChangesDetectedMessage);
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }

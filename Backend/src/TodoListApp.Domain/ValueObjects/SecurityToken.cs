@@ -1,4 +1,4 @@
-﻿using TodoListApp.Domain.Common;
+﻿using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 
@@ -57,12 +57,12 @@ public sealed record SecurityToken
     {
         if (string.IsNullOrEmpty(value))
         {
-            throw new DomainException("Invalid or missing security token.");
+            throw new DomainException(TokenPolicy.InvalidOrMissingMessage);
         }
 
         if (duration <= TimeSpan.Zero)
         {
-            throw new DomainException("Token duration must be positive.");
+            throw new DomainException(TokenPolicy.PositiveDurationMessage);
         }
 
         return new SecurityToken(value, currentTime.Add(duration), type, metadata);

@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -43,7 +44,7 @@ public class FirstNameTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("First name cannot be empty.");
+            .WithMessage(FirstNamePolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -61,7 +62,7 @@ public class FirstNameTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage($"First name cannot contain more than {FirstName.MaxLength} characters.");
+            .WithMessage(FirstNamePolicy.TooLongMessage);
     }
 
     /// <summary>

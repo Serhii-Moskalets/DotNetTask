@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.LoginUser;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -91,7 +92,7 @@ public class LoginUserCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("Invalid email or password.");
+        result.Error.Message.Should().Be(UserPolicy.InvalidCredentialsMessage);
 
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
     }
@@ -119,7 +120,7 @@ public class LoginUserCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("Invalid email or password.");
+        result.Error.Message.Should().Be(UserPolicy.InvalidCredentialsMessage);
 
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
     }
@@ -181,7 +182,7 @@ public class LoginUserCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error!.Message.Should().Be("Please confirm your email before logging in.");
+        result.Error!.Message.Should().Be(EmailPolicy.NotConfirmedMessage);
     }
 
     private static void ConfirmEmail(UserEntity user)

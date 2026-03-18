@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
@@ -41,7 +42,7 @@ public class RegisterUserCommandHandler(
         var user = await this._unitOfWork.Users.GetByEmailAsync(Email.Create(command.Email), asNoTracking: false, cancellationToken);
         if (user?.EmailConfirmed is true)
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.ValidationError, "Email is already exists.");
+            return await Result<Guid>.FailureAsync(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
         }
 
         var userNameExists = await this._unitOfWork.Users.ExistsByUserNameAsync(
@@ -50,7 +51,7 @@ public class RegisterUserCommandHandler(
 
         if (userNameExists && (user == null || user.UserName.Value != command.UserName))
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.ValidationError, "User name is already exists.");
+            return await Result<Guid>.FailureAsync(ErrorCode.InvalidOperation, UserNamePolicy.AlreadyInUseMessage);
         }
 
         var passwordHash = this._passwordHasher.HashPassword(command.Password);

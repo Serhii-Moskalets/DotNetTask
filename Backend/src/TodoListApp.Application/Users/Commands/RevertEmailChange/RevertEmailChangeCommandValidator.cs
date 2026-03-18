@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Commands.RevertEmailChange;
 
@@ -13,6 +14,6 @@ public class RevertEmailChangeCommandValidator : AbstractValidator<RevertEmailCh
     public RevertEmailChangeCommandValidator()
     {
         this.RuleFor(x => x.Token)
-            .NotEmpty().WithMessage("Token is required.");
+            .NotEmpty().WithMessage(TokenPolicy.RequiredMessage);
     }
 }

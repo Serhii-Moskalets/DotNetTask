@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -43,12 +44,12 @@ public class UserNameTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("User name cannot be empty.");
+            .WithMessage(UserNamePolicy.EmptyMessage);
     }
 
     /// <summary>
     /// Tests that <see cref="UserName.Create"/> throws <see cref="DomainException"/>
-    /// when the username length is out of range (3-20 characters).
+    /// when the username length is out of range (<see cref="UserName.MinLength"/> - <see cref="UserName.MaxLength"/> characters).
     /// </summary>
     [Fact]
     public void Create_Should_ThrowDomainException_When_LengthIsLessThanMinLength()
@@ -58,12 +59,12 @@ public class UserNameTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage($"User name must be between {UserName.MinLength} and {UserName.MaxLength} characters.");
+            .WithMessage(UserNamePolicy.LengthMessage);
     }
 
     /// <summary>
     /// Tests that <see cref="UserName.Create"/> throws <see cref="DomainException"/>
-    /// when the username length is out of range (3-20 characters).
+    /// when the username length is out of range (<see cref="UserName.MinLength"/> - <see cref="UserName.MaxLength"/>  characters).
     /// </summary>
     [Fact]
     public void Create_Should_ThrowDomainException_When_LengthIsLongerThanMaxLength()
@@ -73,7 +74,7 @@ public class UserNameTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage($"User name must be between {UserName.MinLength} and {UserName.MaxLength} characters.");
+            .WithMessage(UserNamePolicy.LengthMessage);
     }
 
     /// <summary>
@@ -126,7 +127,7 @@ public class UserNameTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("User name can only contain letters, numbers, and underscores.");
+            .WithMessage(UserNamePolicy.InvalidCharactersMessage);
     }
 
     /// <summary>

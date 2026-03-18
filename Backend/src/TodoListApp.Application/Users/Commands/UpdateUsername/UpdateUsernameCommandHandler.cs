@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.UpdateUsername;
@@ -28,17 +29,17 @@ public class UpdateUsernameCommandHandler(
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "User not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         if (newUserName == user.UserName)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "New Username is same as current.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
         }
 
         if (await this.UnitOfWork.Users.ExistsByUserNameAsync(newUserName, cancellationToken))
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Username is already taken.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserNamePolicy.AlreadyInUseMessage);
         }
 
         user.ChangeUserName(newUserName);
