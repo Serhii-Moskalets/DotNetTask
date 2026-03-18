@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using TinyResult.Enums;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
@@ -41,24 +43,6 @@ public class CommentEntityTests
     }
 
     /// <summary>
-    /// Verifies that the <see cref="CommentEntity.Update"/> method correctly updates
-    /// the comment's content when a valid <see cref="CommentContent"/> object is provided.
-    /// </summary>
-    [Fact]
-    public void Update_ShouldChangeContent_WhenValid()
-    {
-        // Arrange
-        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
-        var newContent = CommentContent.Create("New content");
-
-        // Act
-        comment.Update(newContent);
-
-        // Assert
-        comment.Content.Should().Be(newContent);
-    }
-
-    /// <summary>
     /// Verifies that the constructor throws a <see cref="DomainException"/>
     /// when the provided user entity ID does not match the specified user ID.
     /// </summary>
@@ -74,5 +58,44 @@ public class CommentEntityTests
 
         // Assert
         act.Should().Throw<DomainException>();
+    }
+
+    /// <summary>
+    /// Verifies that the <see cref="CommentEntity.Update"/> method correctly updates
+    /// the comment's content and returns success when a different <see cref="CommentContent"/> is provided.
+    /// </summary>
+    [Fact]
+    public void Update_ShouldChangeContent_WhenNewContentIsDifferent()
+    {
+        // Arrange
+        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
+        var newContent = CommentContent.Create("Updated text");
+
+        // Act
+        var result = comment.Update(newContent);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        comment.Content.Should().Be(newContent);
+    }
+
+    /// <summary>
+    /// Verifies that the <see cref="CommentEntity.Update"/> method returns a failure result
+    /// with the correct error code and message when the new content is identical to the current one.
+    /// </summary>
+    [Fact]
+    public void Update_ShouldReturnFailure_WhenContentIsSame()
+    {
+        // Arrange
+        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
+
+        // Act
+        var result = comment.Update(this._validContent);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(CommentPolicy.NoChangesDetectedMessage);
+        comment.Content.Should().Be(this._validContent);
     }
 }

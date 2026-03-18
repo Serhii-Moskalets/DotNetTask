@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Comment.Commands.DeleteComment;
 
@@ -23,7 +24,7 @@ public class DeleteCommentCommandHandler(IUnitOfWork unitOfWork)
         var comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, asNoTracking: true, cancellationToken);
         if (comment is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Comment not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
         }
 
         var isCommentOwner = command.UserId == comment.UserId;
@@ -31,7 +32,7 @@ public class DeleteCommentCommandHandler(IUnitOfWork unitOfWork)
 
         if (!isCommentOwner && !isTaskOwner)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "You don't have permission to delete this comment.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, CommentPolicy.DeleteAccessDeniedMessage);
         }
 
         await this.UnitOfWork.Comments.DeleteAsync(comment, cancellationToken);

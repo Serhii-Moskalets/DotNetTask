@@ -1,4 +1,6 @@
-﻿using TodoListApp.Domain.Common;
+﻿using TinyResult;
+using TodoListApp.Domain.Common;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -35,7 +37,7 @@ public class CommentEntity : BaseEntity
     {
         if (user.Id != userId)
         {
-            throw new DomainException("User ID mismatch.");
+            throw new DomainException(UserPolicy.UserIdMismatchMessage);
         }
 
         this.User = user;
@@ -72,8 +74,20 @@ public class CommentEntity : BaseEntity
     /// Updates the text content of the comment.
     /// </summary>
     /// <param name="content">The new text content of the comment.</param>
-    public void Update(CommentContent content)
+    /// <returns>
+    /// A <see cref="Result{Boolean}"/> indicating success (true) if the content was updated,
+    /// or a failure if the new content is the same as the current one.
+    /// </returns>
+    public Result<bool> Update(CommentContent content)
     {
+        if (this.Content == content)
+        {
+            return Result<bool>.Failure(
+                TinyResult.Enums.ErrorCode.InvalidOperation,
+                CommentPolicy.NoChangesDetectedMessage);
+        }
+
         this.Content = content;
+        return Result<bool>.Success(true);
     }
 }

@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Commands.DeleteComment;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
@@ -58,7 +59,7 @@ public class DeleteCommentCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.NotFound);
-        result.Error.Message.Should().Be("Comment not found.");
+        result.Error.Message.Should().Be(CommentPolicy.CommentNotFoundMessage);
     }
 
     /// <summary>
@@ -85,7 +86,7 @@ public class DeleteCommentCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
-        result.Error.Message.Should().Be("You don't have permission to delete this comment.");
+        result.Error.Message.Should().Be(CommentPolicy.DeleteAccessDeniedMessage);
     }
 
     /// <summary>

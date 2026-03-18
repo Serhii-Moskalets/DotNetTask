@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -65,7 +66,7 @@ public class CommentContentTests
         // Assert
         act.Should()
             .Throw<DomainException>()
-            .WithMessage("Comment content cannot be empty.");
+            .WithMessage(CommentPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -83,7 +84,7 @@ public class CommentContentTests
         // Assert
         act.Should()
             .Throw<DomainException>()
-            .WithMessage($"Comment content cannot be longer than {CommentContent.MaxLength} characters.");
+            .WithMessage(CommentPolicy.TooLongMessage);
     }
 
     /// <summary>

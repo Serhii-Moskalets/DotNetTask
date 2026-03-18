@@ -7,6 +7,7 @@ using TodoListApp.Application.Abstractions.Messaging;
 using TodoListApp.Application.Comment.Mappers;
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Common.Extensions;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Comment.Queries.GetComments;
 
@@ -37,7 +38,7 @@ public class GetCommentsQueryHandler(
         if (!await this._taskAccessService.HasAccessAsync(query.TaskId, query.UserId, cancellationToken))
         {
             return await Result<PagedResultDto<CommentDto>>
-                .FailureAsync(ErrorCode.InvalidOperation, "You don't have access to this task.");
+                .FailureAsync(ErrorCode.InvalidOperation, TaskPolicy.AccessDeniedMessage);
         }
 
         var (items, totalCount) = await this.UnitOfWork.Comments

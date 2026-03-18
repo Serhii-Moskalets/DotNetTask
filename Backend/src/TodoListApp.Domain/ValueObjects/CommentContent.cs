@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -43,13 +44,13 @@ public record CommentContent
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("Comment content cannot be empty.");
+            throw new DomainException(CommentPolicy.EmptyMessage);
         }
 
         var trimmedValue = value.Trim();
         if (trimmedValue.Length > MaxLength)
         {
-            throw new DomainException($"Comment content cannot be longer than {MaxLength} characters.");
+            throw new DomainException(CommentPolicy.TooLongMessage);
         }
 
         return new CommentContent(trimmedValue);

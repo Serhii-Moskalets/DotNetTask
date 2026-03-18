@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Queries.GetComments;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -60,7 +61,7 @@ public class GetCommentsQueryHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
-        result.Error.Message.Should().Be("You don't have access to this task.");
+        result.Error.Message.Should().Be(TaskPolicy.AccessDeniedMessage);
     }
 
     /// <summary>

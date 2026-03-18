@@ -39,7 +39,7 @@ public class UpdateUsernameCommandHandler(
 
         if (await this.UnitOfWork.Users.ExistsByUserNameAsync(newUserName, cancellationToken))
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserNamePolicy.AlreadyInUseMessage);
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserNamePolicy.AlreadyInUseMessage);
         }
 
         user.ChangeUserName(newUserName);

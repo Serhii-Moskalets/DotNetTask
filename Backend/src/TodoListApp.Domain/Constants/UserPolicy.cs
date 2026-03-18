@@ -6,6 +6,11 @@
 public static class UserPolicy
 {
     /// <summary>
+    /// The error message used when the provided user entity does not match the specified user identifier.
+    /// </summary>
+    public const string UserIdMismatchMessage = "User ID mismatch.";
+
+    /// <summary>
     /// The error message used when a unique user identifier is missing from a request.
     /// </summary>
     public const string UserIdRequiredMessage = "User ID is required.";

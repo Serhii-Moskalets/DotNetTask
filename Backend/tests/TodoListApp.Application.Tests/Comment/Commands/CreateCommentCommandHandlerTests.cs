@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Commands.CreateComment;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 
 namespace TodoListApp.Application.Tests.Comment.Commands;
@@ -54,7 +55,7 @@ public class CreateCommentCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
-        result.Error!.Message.Should().Be("You don't have access to this task.");
+        result.Error!.Message.Should().Be(TaskPolicy.AccessDeniedMessage);
         result.Error.Code.Should().Be(ErrorCode.InvalidOperation);
     }
 

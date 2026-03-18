@@ -1,6 +1,7 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Comment.Queries.GetComments;
 using TodoListApp.Application.Tag.Queries.GetTags;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Comment.Queries;
 
@@ -23,7 +24,7 @@ public class GetCommentsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(q => q.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
     }
 
     /// <summary>
@@ -37,7 +38,7 @@ public class GetCommentsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(q => q.TaskId)
-              .WithErrorMessage("Task ID is required.");
+              .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -54,7 +55,7 @@ public class GetCommentsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.Page)
-              .WithErrorMessage("Page must be at least 1.");
+              .WithErrorMessage(PaginationPolicy.PageMinMessage);
     }
 
     /// <summary>
@@ -71,7 +72,7 @@ public class GetCommentsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.PageSize)
-            .WithErrorMessage("PageSize must be between 1 and 100.");
+            .WithErrorMessage(PaginationPolicy.PageSizeRangeMessage);
     }
 
     /// <summary>

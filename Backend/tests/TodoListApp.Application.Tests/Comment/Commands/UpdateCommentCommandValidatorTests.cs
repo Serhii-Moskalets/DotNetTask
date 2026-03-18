@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Comment.Commands.UpdateComment;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
@@ -24,7 +25,7 @@ public class UpdateCommentCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
     }
 
     /// <summary>
@@ -38,7 +39,7 @@ public class UpdateCommentCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.CommentId)
-              .WithErrorMessage("Comment ID is required.");
+              .WithErrorMessage(CommentPolicy.CommentIdRequiredMessage);
     }
 
     /// <summary>
@@ -52,7 +53,7 @@ public class UpdateCommentCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.NewContent)
-              .WithErrorMessage("New content cannot be null or empty.");
+              .WithErrorMessage(CommentPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ public class UpdateCommentCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.NewContent)
-              .WithErrorMessage($"Comment content cannot exceed {CommentContent.MaxLength} characters.");
+              .WithErrorMessage(CommentPolicy.TooLongMessage);
     }
 
     /// <summary>

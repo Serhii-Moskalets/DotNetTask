@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Commands.UpdateComment;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
@@ -54,7 +55,7 @@ public class UpdateCommentCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.NotFound);
-        result.Error.Message.Should().Be("Comment not found.");
+        result.Error.Message.Should().Be(CommentPolicy.CommentNotFoundMessage);
     }
 
     /// <summary>
@@ -79,7 +80,32 @@ public class UpdateCommentCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
-        result.Error.Message.Should().Be("You don't have permission to update this comment.");
+        result.Error.Message.Should().Be(CommentPolicy.UpdateAccessDeniedMessage);
+    }
+
+    /// <summary>
+    /// Verifies that a failure is returned when trying to update with the same content.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task HandleAsync_ShouldReturnFailure_WhenContentIsSame()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var comment = new CommentEntity(Guid.NewGuid(), userId, this._oldContent);
+
+        this._commentsRepoMock.Setup(r => r.GetByIdAsync(comment.Id, false, It.IsAny<CancellationToken>()))
+               .ReturnsAsync(comment);
+
+        var command = new UpdateCommentCommand(comment.Id, userId, this._oldContent.Value);
+
+        // Act
+        var result = await this._handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(CommentPolicy.NoChangesDetectedMessage);
     }
 
     /// <summary>
