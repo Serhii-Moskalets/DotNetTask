@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -61,7 +62,7 @@ public class TagNameTests
 
         act.Should()
             .Throw<DomainException>()
-            .WithMessage("Tag name cannot be empty.");
+            .WithMessage(TagPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -79,7 +80,7 @@ public class TagNameTests
         // Assert
         act.Should()
             .Throw<DomainException>()
-            .WithMessage($"Tag name cannot be longer than {TagName.MaxLength} characters.");
+            .WithMessage(TagPolicy.TooLongMessage);
     }
 
     /// <summary>

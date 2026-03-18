@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tag.Commands.DeleteTag;
 
@@ -13,9 +14,11 @@ public class DeleteTagCommandValidator : AbstractValidator<DeleteTagCommand>
     public DeleteTagCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty()
+                .WithMessage(UserPolicy.UserIdRequiredMessage);
 
         this.RuleFor(x => x.TagId)
-            .NotEmpty().WithMessage("Tag ID is required.");
+            .NotEmpty()
+                .WithMessage(TagPolicy.IdRequiredMessage);
     }
 }

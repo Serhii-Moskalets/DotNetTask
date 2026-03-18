@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tag.Commands.DeleteTag;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Tag.Commands;
 
@@ -25,7 +26,7 @@ public class DeleteTagCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
     }
 
     /// <summary>
@@ -42,7 +43,7 @@ public class DeleteTagCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(c => c.TagId)
-              .WithErrorMessage("Tag ID is required.");
+              .WithErrorMessage(TagPolicy.IdRequiredMessage);
     }
 
     /// <summary>

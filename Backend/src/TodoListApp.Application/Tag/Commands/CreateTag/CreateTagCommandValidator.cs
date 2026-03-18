@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tag.Commands.CreateTag;
@@ -14,13 +15,17 @@ public class CreateTagCommandValidator : AbstractValidator<CreateTagCommand>
     public CreateTagCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty()
+                .WithMessage(UserPolicy.UserIdRequiredMessage);
 
         this.RuleFor(x => x.TaskId)
-            .NotEmpty().WithMessage("Task ID is required.");
+            .NotEmpty()
+                .WithMessage(TaskPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Tag name cannot be null or empty.")
-            .MaximumLength(TagName.MaxLength).WithMessage($"Tag name cannot exceed {TagName.MaxLength} characters.");
+            .NotEmpty()
+                .WithMessage(TagPolicy.EmptyMessage)
+            .MaximumLength(TagName.MaxLength)
+                .WithMessage(TagPolicy.TooLongMessage);
     }
 }

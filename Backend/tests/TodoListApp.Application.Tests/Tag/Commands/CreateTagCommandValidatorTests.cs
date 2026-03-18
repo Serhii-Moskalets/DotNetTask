@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tag.Commands.CreateTag;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tag.Commands;
@@ -26,7 +27,7 @@ public class CreateTagCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(c => c.Name)
-            .WithErrorMessage("Tag name cannot be null or empty.");
+            .WithErrorMessage(TagPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -44,7 +45,7 @@ public class CreateTagCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(c => c.Name)
-            .WithErrorMessage($"Tag name cannot exceed {TagName.MaxLength} characters.");
+            .WithErrorMessage(TagPolicy.TooLongMessage);
     }
 
     /// <summary>

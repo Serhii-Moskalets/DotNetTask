@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -43,13 +44,13 @@ public record TagName
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("Tag name cannot be empty.");
+            throw new DomainException(TagPolicy.EmptyMessage);
         }
 
         var trimmedValue = value.Trim();
         if (trimmedValue.Length > MaxLength)
         {
-            throw new DomainException($"Tag name cannot be longer than {MaxLength} characters.");
+            throw new DomainException(TagPolicy.TooLongMessage);
         }
 
         return new TagName(trimmedValue);

@@ -11,6 +11,11 @@ public static class TaskPolicy
     public const string IdRequiredMessage = "Task ID is required.";
 
     /// <summary>
+    /// The error message when the task not found or deleted during a general search in a task.
+    /// </summary>
+    public const string TaskNotFoundMessage = "Task not found. It may have been deleted.";
+
+    /// <summary>
     /// The error message when a user attempts to access or modify a task they do not own or have permission for.
     /// </summary>
     public const string AccessDeniedMessage = "You don't have access to this task.";

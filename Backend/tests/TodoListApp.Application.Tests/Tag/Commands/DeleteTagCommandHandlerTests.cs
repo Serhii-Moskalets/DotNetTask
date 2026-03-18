@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tag.Commands.DeleteTag;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
@@ -52,7 +53,7 @@ public class DeleteTagCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.NotFound);
-        result.Error.Message.Should().Be("Tag not found.");
+        result.Error.Message.Should().Be(TagPolicy.NotFoundMessage);
     }
 
     /// <summary>
