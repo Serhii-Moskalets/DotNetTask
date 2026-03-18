@@ -1,4 +1,5 @@
 ﻿using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
@@ -10,8 +11,6 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class CommentRepositoryTests
 {
-    private readonly string _passwordHash = new('a', 64);
-
     /// <summary>
     /// Verifies that <see cref="CommentRepository.GetCommentsByTaskIdAsync"/> returns an empty collection
     /// and a zero total count when no comments exist for the specified task.
@@ -45,7 +44,7 @@ public class CommentRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new CommentRepository(context);
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
@@ -60,7 +59,7 @@ public class CommentRepositoryTests
         // Assert
         var result = items.First();
         Assert.NotNull(result.User);
-        Assert.Equal("john", result.User.UserName.Value);
+        Assert.Equal(UserEntityFactory.UserName, result.User.UserName.Value);
     }
 
     /// <summary>
@@ -74,7 +73,7 @@ public class CommentRepositoryTests
         // Arrange
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new CommentRepository(context);
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
         var taskId = Guid.NewGuid();

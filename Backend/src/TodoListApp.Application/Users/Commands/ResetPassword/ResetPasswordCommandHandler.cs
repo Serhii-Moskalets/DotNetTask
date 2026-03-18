@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using TinyResult;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
@@ -17,10 +18,12 @@ namespace TodoListApp.Application.Users.Commands.ResetPassword;
 /// </remarks>
 public class ResetPasswordCommandHandler(
     IUnitOfWork unitOfWork,
-    ITokenGenerator tokenGenerator)
+    ITokenGenerator tokenGenerator,
+    IClock clock)
     : HandlerBase(unitOfWork), IRequestHandler<ResetPasswordCommand, Result<bool>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
+    private readonly IClock _clock = clock;
 
     /// <summary>
     /// Processes the request to initiate a password reset.
@@ -44,8 +47,9 @@ public class ResetPasswordCommandHandler(
         }
 
         var token = this._tokenGenerator.GenerateSecureToken();
+        var now = this._clock.UtcNow;
 
-        user.RequestPasswordReset(token, TimeSpan.FromHours(1));
+        user.RequestPasswordReset(token, TimeSpan.FromHours(1), now);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 

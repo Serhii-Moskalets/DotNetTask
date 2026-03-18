@@ -2,6 +2,7 @@
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Tasks.Mappers;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Mappers;
@@ -93,7 +94,7 @@ public class TaskMapperTests
         // Arrange
         var taskId = Guid.NewGuid();
 
-        var user = new UserEntity("Joe", "joes", "joe@gmail.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
 
         var entity = new CommentEntity(taskId, user.Id, CommentContent.Create("Content"), user);
 

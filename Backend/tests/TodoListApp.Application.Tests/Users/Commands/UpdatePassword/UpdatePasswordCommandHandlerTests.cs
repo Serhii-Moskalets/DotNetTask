@@ -5,7 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.UpdatePassword;
 using TodoListApp.Domain.Entities;
-using TodoListApp.Infrastructure.Persistence.UnitOfWork;
+using TodoListApp.Domain.Test.Common;
 
 namespace TodoListApp.Application.Tests.Users.Commands.UpdatePassword;
 
@@ -14,12 +14,11 @@ namespace TodoListApp.Application.Tests.Users.Commands.UpdatePassword;
 /// </summary>
 public class UpdatePasswordCommandHandlerTests
 {
+    private static readonly string NewPaswordHashString = new('b', 64);
+
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly UpdatePasswordCommandHandler _sut;
-
-    private readonly string _newPaswordHashString = new('b', 64);
-    private readonly string _paswordHashString = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdatePasswordCommandHandlerTests"/> class.
@@ -44,7 +43,7 @@ public class UpdatePasswordCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var command = new UpdatePasswordCommand("OldPass123!", "NewPass123!", userId);
-        var user = new UserEntity("John", "johnny", "john@test.com", this._paswordHashString);
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -53,14 +52,14 @@ public class UpdatePasswordCommandHandlerTests
             .Returns(true);
 
         this._passwordHasherMock.Setup(x => x.HashPassword(command.NewPassword))
-            .Returns(this._newPaswordHashString);
+            .Returns(NewPaswordHashString);
 
         // Act
         var result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        user.PasswordHash.Value.Should().Be(this._newPaswordHashString);
+        user.PasswordHash.Value.Should().Be(NewPaswordHashString);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -99,7 +98,7 @@ public class UpdatePasswordCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var command = new UpdatePasswordCommand("WrongPass!", "NewPass!", userId);
-        var user = new UserEntity("John", "johnny", "john@test.com", this._paswordHashString);
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

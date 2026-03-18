@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
@@ -16,7 +17,6 @@ public class UserTaskAccessRepositoryTests
     private static readonly TaskTitle TaskTitle1 = TaskTitle.Create("Task title 1");
     private static readonly TaskTitle TaskTitle2 = TaskTitle.Create("Task title 2");
     private static readonly TaskListTitle TaskListTitle = TaskListTitle.Create("Task list title");
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Verifies that a user-task access entry can be added
@@ -30,9 +30,9 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
         var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
@@ -66,9 +66,9 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
         var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
@@ -102,9 +102,9 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
         var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
@@ -143,9 +143,9 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
         var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
@@ -184,7 +184,7 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
+        var owner = UserEntityFactory.Create();
         await context.Users.AddAsync(owner);
 
         var taskList = new TaskListEntity(owner.Id, TaskListTitle);
@@ -195,7 +195,7 @@ public class UserTaskAccessRepositoryTests
 
         for (int i = 0; i < 15; i++)
         {
-            var user = new UserEntity($"User{i}", $"user{i}", $"u{i}@ex.com", this._passwordHash);
+            var user = UserEntityFactory.Create($"User{i}", $"user{i}", $"u{i}@ex.com");
             await context.Users.AddAsync(user);
             await repo.AddAsync(new UserTaskAccessEntity(task.Id, user.Id));
         }
@@ -227,8 +227,8 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
-        var sharedUser = new UserEntity("Shared", "shared", "shared@example.com", this._passwordHash);
+        var owner = UserEntityFactory.Create("Owner", "owner", "owner@example.com");
+        var sharedUser = UserEntityFactory.Create("Shared", "shared", "shared@example.com");
         await context.Users.AddRangeAsync(owner, sharedUser);
 
         var list = new TaskListEntity(owner.Id, TaskListTitle);
@@ -263,7 +263,7 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user = new UserEntity("User", "user", "u@e.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
         var list = new TaskListEntity(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
@@ -295,8 +295,8 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
-        var sharedUser = new UserEntity("Shared", "shared", "shared@example.com", this._passwordHash);
+        var owner = UserEntityFactory.Create("Owner", "owner", "owner@example.com");
+        var sharedUser = UserEntityFactory.Create("Shared", "shared", "shared@example.com");
         await context.Users.AddRangeAsync(owner, sharedUser);
 
         var taskList = new TaskListEntity(owner.Id, TaskListTitle);
@@ -333,8 +333,8 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user = new UserEntity("SharedUser", "user", "user@e.com", this._passwordHash);
-        var owner = new UserEntity("Owner", "owner", "owner@e.com", this._passwordHash);
+        var user = UserEntityFactory.Create("SharedUser", "user", "user@e.com");
+        var owner = UserEntityFactory.Create("Owner", "owner", "owner@e.com");
         await context.Users.AddRangeAsync(user, owner);
 
         var list = new TaskListEntity(owner.Id, TaskListTitle);
@@ -373,9 +373,9 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create("John", "john", "john@example.com");
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("John2", "john2", "john2@example.com");
         await context.Users.AddAsync(user_2);
 
         var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
@@ -404,9 +404,9 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create("John", "john", "john@example.com");
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("John2", "john2", "john2@example.com");
         await context.Users.AddAsync(user_2);
 
         var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
@@ -436,7 +436,7 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
         var taskList = new TaskListEntity(user.Id, TaskListTitle);
@@ -481,7 +481,7 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
         var taskList = new TaskListEntity(user.Id, TaskListTitle);
@@ -509,7 +509,7 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
+        var owner = UserEntityFactory.Create();
         await context.Users.AddAsync(owner);
         var taskList = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
@@ -519,7 +519,7 @@ public class UserTaskAccessRepositoryTests
         var userNames = new[] { "Zebra", "Alice", "Charlie", "Bob" };
         foreach (var name in userNames)
         {
-            var user = new UserEntity(name, name.ToLower(), $"{name}@ex.com", this._passwordHash);
+            var user = UserEntityFactory.Create(name, name.ToLower(), $"{name}@ex.com");
             await context.Users.AddAsync(user);
             await repo.AddAsync(new UserTaskAccessEntity(task.Id, user.Id));
         }

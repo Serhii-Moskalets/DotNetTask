@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Notifications;
 using TodoListApp.Application.Users.Events;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Events;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Events;
@@ -14,6 +15,8 @@ namespace TodoListApp.Application.Tests.Users.Events;
 /// </summary>
 public class PasswordResetRequestedDomainEventHandlerTests
 {
+    private static readonly DateTime CurrentTime = DateTime.UtcNow;
+
     private readonly Mock<IEmailService> _emailServiceMock;
     private readonly Mock<IUrlProvider> _urlProviderMock;
     private readonly PasswordResetRequestedDomainEventHandler _sut;
@@ -38,13 +41,9 @@ public class PasswordResetRequestedDomainEventHandlerTests
     public async Task Handle_Should_SendEmail_When_EventIsRaised()
     {
         // Arrange
-        var user = new UserEntity(
-            "JohnDoe",
-            "john_doe",
-            "john@example.com",
-            new string('a', 64));
+        var user = UserEntityFactory.Create();
 
-        var token = SecurityToken.Create("reset-token", TimeSpan.FromHours(1), Domain.Enums.UserTokenType.PasswordReset);
+        var token = SecurityToken.Create("reset-token", TimeSpan.FromHours(1), Domain.Enums.UserTokenType.PasswordReset, CurrentTime);
         var notification = new PasswordResetRequestedDomainEvent(user, token);
         const string expectedLink = "https://todolist.com/reset-password?userId=...&token=...";
 

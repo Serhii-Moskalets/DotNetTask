@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using TinyResult;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
@@ -16,9 +17,11 @@ namespace TodoListApp.Application.Users.Commands.RevertEmailChange;
 /// </remarks>
 public class RevertEmailChangeCommandHandler(
     IUnitOfWork unitOfWork,
-    ITokenGenerator tokenGenerator) : HandlerBase(unitOfWork), IRequestHandler<RevertEmailChangeCommand, Result<string>>
+    ITokenGenerator tokenGenerator,
+    IClock clock) : HandlerBase(unitOfWork), IRequestHandler<RevertEmailChangeCommand, Result<string>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
+    private readonly IClock _clock = clock;
 
     /// <summary>
     /// Processes the revert request.
@@ -36,7 +39,11 @@ public class RevertEmailChangeCommandHandler(
 
         var resetToken = this._tokenGenerator.GenerateSecureToken();
 
-        user.RevertEmailChange(command.Token, DateTime.UtcNow, resetToken, TimeSpan.FromMinutes(15));
+        var result = user.RevertEmailChange(command.Token, this._clock.UtcNow, resetToken, TimeSpan.FromMinutes(15));
+        if (!result.IsSuccess)
+        {
+            return Result<string>.Failure(result.Error!.Code, result.Error.Message);
+        }
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 

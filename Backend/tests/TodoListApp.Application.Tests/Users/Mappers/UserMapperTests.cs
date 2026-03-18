@@ -2,6 +2,8 @@
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Users.Mappers;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Mappers;
 
@@ -11,8 +13,6 @@ namespace TodoListApp.Application.Tests.Users.Mappers;
 /// </summary>
 public class UserMapperTests
 {
-    private readonly string _passwordHash = new('a', 64);
-
     /// <summary>
     /// Verifies that <see cref="UserMapper.Map(UserEntity)"/> correctly maps all fields
     /// when the <see cref="UserEntity.LastName"/> is not null.
@@ -21,7 +21,7 @@ public class UserMapperTests
     public void Map_ToUserBriefDto_ShouldMapAllFields()
     {
         // Arrange
-        var entity = new UserEntity("John", "username", "test@email.com", this._passwordHash, "Johnson");
+        var entity = UserEntityFactory.Create();
 
         // Act
         var userDto = UserMapper.Map(entity);
@@ -42,7 +42,11 @@ public class UserMapperTests
     public void Map_ShouldMap_ToUserBriefDto_WhenLastNameIsNull()
     {
         // Arrange
-        var entity = new UserEntity("John", "username", "test@email.com", this._passwordHash);
+        var entity = new UserEntity(
+            FirstName.Create("John"),
+            UserName.Create("test"),
+            Email.Create("john@example.com"),
+            PasswordHash.Create(new string('a', 64)));
 
         // Act
         var userDto = UserMapper.Map(entity);

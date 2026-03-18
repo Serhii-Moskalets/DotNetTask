@@ -1,9 +1,10 @@
 ﻿using FluentAssertions;
 using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
-using TodoListApp.Application.Users.Mappers;
 using TodoListApp.Application.Users.Queries.GetUserProfile;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Queries.GetUserProfile;
 
@@ -55,7 +56,7 @@ public class GetUserProfileQueryHandlerTests
     public async Task Handle_ShouldReturnSuccess_WhenUserExists()
     {
         // Arrange
-        var userEntity = new UserEntity("John", "username", "test@email.com", new string('a', 64), "Doe");
+        var userEntity = UserEntityFactory.Create();
 
         var query = new GetUserProfileQuery(userEntity.Id);
 

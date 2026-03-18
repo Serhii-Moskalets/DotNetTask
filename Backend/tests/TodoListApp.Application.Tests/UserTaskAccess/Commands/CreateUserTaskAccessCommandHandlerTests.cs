@@ -6,6 +6,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
@@ -22,7 +23,6 @@ public class CreateUserTaskAccessCommandHandlerTests
     private readonly Mock<IUserRepository> _userRepoMock;
     private readonly Mock<IUserTaskAccessRepository> _accessRepoMock;
     private readonly CreateUserTaskAccessCommandHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateUserTaskAccessCommandHandlerTests"/> class.
@@ -53,7 +53,7 @@ public class CreateUserTaskAccessCommandHandlerTests
     {
         // Arrange
         var email = "test@test.com";
-        var user = new UserEntity("Name", "Nick", email, this._passwordHash);
+        var user = UserEntityFactory.Create(email: email);
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
         this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
@@ -86,7 +86,7 @@ public class CreateUserTaskAccessCommandHandlerTests
     {
         // Arrange
         var email = "share@test.com";
-        var user = new UserEntity("Name", "Nick", email, this._passwordHash);
+        var user = UserEntityFactory.Create();
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
 
         this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))

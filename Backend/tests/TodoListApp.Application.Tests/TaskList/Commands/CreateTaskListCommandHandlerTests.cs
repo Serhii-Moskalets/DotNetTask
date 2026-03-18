@@ -6,6 +6,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.TaskList.Commands.CreateTaskList;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.TaskList.Commands;
@@ -20,7 +21,6 @@ public class CreateTaskListCommandHandlerTests
     private readonly Mock<IUniqueValueService> _uniqueNameServiceMock;
     private readonly Mock<ITaskListRepository> _taskListRepoMock;
     private readonly CreateTaskListCommandHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateTaskListCommandHandlerTests"/> class.
@@ -68,7 +68,7 @@ public class CreateTaskListCommandHandlerTests
     public async Task Handle_ShouldCreateTaskList_WhenNameIsUnique()
     {
         // Arrange
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         var uniqueTaskListTitle = TaskListTitle.Create("My Task List");
 
         this._uowMock.Setup(u => u.Users.GetByIdAsync(user.Id, It.IsAny<bool>(), It.IsAny<CancellationToken>()))

@@ -1,10 +1,12 @@
 ﻿using FluentAssertions;
 using Moq;
 using TinyResult.Enums;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.RegisterUser;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.RegisterUser;
@@ -17,6 +19,7 @@ public class RegisterUserCommandHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<ITokenGenerator> _tokenGeneratorMock;
+    private readonly Mock<IClock> _clock;
     private readonly RegisterUserCommandHandler _sut;
 
     private readonly string _passwordHash = new('a', 64);
@@ -29,11 +32,13 @@ public class RegisterUserCommandHandlerTests
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
         this._passwordHasherMock = new Mock<IPasswordHasher>();
         this._tokenGeneratorMock = new Mock<ITokenGenerator>();
+        this._clock = new Mock<IClock>();
 
         this._sut = new RegisterUserCommandHandler(
             this._unitOfWorkMock.Object,
             this._passwordHasherMock.Object,
-            this._tokenGeneratorMock.Object);
+            this._tokenGeneratorMock.Object,
+            this._clock.Object);
     }
 
     /// <summary>
@@ -73,7 +78,7 @@ public class RegisterUserCommandHandlerTests
     {
         // Arrange
         var command = new RegisterUserCommand("John", "Doe", "johndoe", "existing@test.com", "Password123!");
-        var user = CreateUser(this._passwordHash);
+        var user = UserEntityFactory.Create();
 
         typeof(UserEntity).GetProperty(nameof(UserEntity.EmailConfirmed)) !.SetValue(user, true);
 
@@ -128,7 +133,7 @@ public class RegisterUserCommandHandlerTests
     {
         // Arrange
         var command = new RegisterUserCommand("NewName", LastName: null, "NewUsername", "newemail@exam0ple.com", this._passwordHash);
-        var existingUser = CreateUser(this._passwordHash);
+        var existingUser = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
@@ -162,7 +167,7 @@ public class RegisterUserCommandHandlerTests
     {
         // Arrange
         var command = new RegisterUserCommand("John", null, "taken_by_other", "existing@test.com", "Password123!");
-        var existingUser = CreateUser(this._passwordHash, "OldName", "olduser", "existing@test.com");
+        var existingUser = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
@@ -189,7 +194,7 @@ public class RegisterUserCommandHandlerTests
     {
         // Arrange
         var command = new RegisterUserCommand("NewName", null, "olduser", "existing@test.com", "Password123!");
-        var existingUser = CreateUser(this._passwordHash, "OldName", "olduser", "existing@test.com");
+        var existingUser = UserEntityFactory.Create("OldName", "olduser", "existing@test.com");
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
@@ -218,7 +223,4 @@ public class RegisterUserCommandHandlerTests
         this._passwordHasherMock.Verify(x => x.HashPassword(command.Password), Times.Once);
         this._tokenGeneratorMock.Verify(x => x.GenerateSecureToken(), Times.Once);
     }
-
-    private static UserEntity CreateUser(string passwordHash, string firstName = "john", string userName = "johnny", string email = "john@example.com")
-        => new(firstName, userName, email, passwordHash);
 }

@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using TinyResult;
 using TinyResult.Enums;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
@@ -18,10 +19,12 @@ namespace TodoListApp.Application.Users.Commands.ChangeEmail;
 /// </remarks>
 public class ChangeEmailCommandHandler(
     IUnitOfWork unitOfWork,
-    ITokenGenerator tokenGenerator)
+    ITokenGenerator tokenGenerator,
+    IClock clock)
     : HandlerBase(unitOfWork), IRequestHandler<ChangeEmailCommand, Result<bool>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
+    private readonly IClock _clock = clock;
 
     /// <summary>
     /// Processes the request to change a user's email address.
@@ -55,8 +58,9 @@ public class ChangeEmailCommandHandler(
 
         var confirmationToken = this._tokenGenerator.GenerateSecureToken();
         var revertToken = this._tokenGenerator.GenerateSecureToken();
+        var now = this._clock.UtcNow;
 
-        user.RequestEmailChange(newEmail, confirmationToken, revertToken, TimeSpan.FromHours(1));
+        user.RequestEmailChange(newEmail, confirmationToken, revertToken, TimeSpan.FromHours(1), now);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
         return await Result<bool>.SuccessAsync(true);

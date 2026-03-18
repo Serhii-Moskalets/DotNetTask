@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using TinyResult;
 using TinyResult.Enums;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Domain.Entities;
@@ -18,11 +19,13 @@ namespace TodoListApp.Application.Users.Commands.RegisterUser;
 public class RegisterUserCommandHandler(
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
-    ITokenGenerator tokenGenerator) : IRequestHandler<RegisterUserCommand, Result<Guid>>
+    ITokenGenerator tokenGenerator,
+    IClock clock) : IRequestHandler<RegisterUserCommand, Result<Guid>>
 {
     private readonly IUnitOfWork _unitOfWork = unitOfWork;
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
+    private readonly IClock _clock = clock;
 
     /// <summary>
     /// Processes the user registration request.
@@ -52,27 +55,35 @@ public class RegisterUserCommandHandler(
 
         var passwordHash = this._passwordHasher.HashPassword(command.Password);
         var token = this._tokenGenerator.GenerateSecureToken();
+        var now = this._clock.UtcNow;
+
+        var firstName = FirstName.Create(command.FirstName);
+        var userName = UserName.Create(command.UserName);
+        var email = Email.Create(command.Email);
+        var passwordHashVO = PasswordHash.Create(passwordHash);
+        var lastName = LastName.CreateOptional(command.LastName);
 
         if (user is not null)
         {
             user.UpdateUnconfirmedRegistration(
-                FirstName.Create(command.FirstName),
-                UserName.Create(command.UserName),
-                PasswordHash.Create(passwordHash),
+                firstName,
+                userName,
+                passwordHashVO,
                 token,
                 TimeSpan.FromMinutes(15),
-                LastName.Create(command.LastName));
+                now,
+                lastName);
         }
         else
         {
             user = new UserEntity(
-                command.FirstName,
-                command.UserName,
-                command.Email,
-                passwordHash,
-                command.LastName);
+                firstName,
+                userName,
+                email,
+                passwordHashVO,
+                lastName);
 
-            user.RequestEmailVerification(token, TimeSpan.FromMinutes(15));
+            user.RequestEmailVerification(token, TimeSpan.FromMinutes(15), now);
 
             await this._unitOfWork.Users.AddAsync(user, cancellationToken);
         }

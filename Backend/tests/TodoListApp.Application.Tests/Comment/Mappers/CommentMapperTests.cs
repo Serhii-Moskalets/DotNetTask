@@ -2,6 +2,7 @@
 using TodoListApp.Application.Comment.Mappers;
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Comment.Mappers;
@@ -11,7 +12,6 @@ namespace TodoListApp.Application.Tests.Comment.Mappers;
 /// </summary>
 public class CommentMapperTests
 {
-    private readonly string _passwordHash = new('a', 64);
     private readonly CommentContent _content = CommentContent.Create("Content");
 
     /// <summary>
@@ -22,7 +22,7 @@ public class CommentMapperTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var user = new UserEntity("John", "johnd", "john@example.com", this._passwordHash, "Joe");
+        var user = UserEntityFactory.Create();
         var comment = new CommentEntity(taskId, user.Id, this._content, user);
 
         // Act
@@ -48,7 +48,7 @@ public class CommentMapperTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var user = new UserEntity("Alice", "alice", "alice@test.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         var entities = new List<CommentEntity>
         {
             new(taskId, user.Id, this._content, user),
@@ -73,7 +73,7 @@ public class CommentMapperTests
     public void Map_UserEntityToUserBriefDto_ReturnsCorrectDto()
     {
         // Arrange
-        var user = new UserEntity("John", "johnd", "john@example.com", this._passwordHash, "Joe");
+        var user = UserEntityFactory.Create();
 
         // Act
         var result = CommentMapper.Map(user);

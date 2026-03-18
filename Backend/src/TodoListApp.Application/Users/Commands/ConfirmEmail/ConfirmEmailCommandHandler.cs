@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using TinyResult;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 
@@ -8,9 +9,13 @@ namespace TodoListApp.Application.Users.Commands.ConfirmEmail;
 /// <summary>
 /// Handles the <see cref="ConfirmEmailCommand"/> to verify a user's email address during registration.
 /// </summary>
-public class ConfirmEmailCommandHandler(IUnitOfWork unitOfWork)
+public class ConfirmEmailCommandHandler(
+    IUnitOfWork unitOfWork,
+    IClock clock)
     : HandlerBase(unitOfWork), IRequestHandler<ConfirmEmailCommand, Result<bool>>
 {
+    private readonly IClock _clock = clock;
+
     /// <summary>
     /// Processes the email confirmation.
     /// </summary>
@@ -25,10 +30,14 @@ public class ConfirmEmailCommandHandler(IUnitOfWork unitOfWork)
             return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email verification token.");
         }
 
-        user.ConfirmEmailVerification(command.Token, DateTime.UtcNow);
+        var result = user.ConfirmEmailVerification(command.Token, this._clock.UtcNow);
+        if (!result.IsSuccess)
+        {
+            return result;
+        }
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

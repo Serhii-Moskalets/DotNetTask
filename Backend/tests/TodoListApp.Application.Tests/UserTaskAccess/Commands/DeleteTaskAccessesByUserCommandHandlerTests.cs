@@ -1,6 +1,4 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-using Moq;
+﻿using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
@@ -28,7 +26,6 @@ public class DeleteTaskAccessesByUserCommandHandlerTests
 
         this._unitOfWorkMock.Setup(u => u.UserTaskAccesses).Returns(this._userTaskAccessRepoMock.Object);
 
-        // Хендлер тепер чистий від валідаторів
         this._handler = new DeleteTaskAccessesByUserCommandHandler(this._unitOfWorkMock.Object);
     }
 

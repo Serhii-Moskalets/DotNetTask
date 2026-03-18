@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Common.Services;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Services;
@@ -18,7 +19,6 @@ public class UserTaskAccessServiceTests
     private static readonly TaskTitle Title = TaskTitle.Create("Title");
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly UserTaskAccessService _service;
-    private readonly string _passwordHash = new('a', 60);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserTaskAccessServiceTests"/> class.
@@ -63,7 +63,7 @@ public class UserTaskAccessServiceTests
     {
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var sharedUser = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
@@ -86,7 +86,7 @@ public class UserTaskAccessServiceTests
         // Arrange
         var taskId = Guid.NewGuid();
         var ownerId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var sharedUser = UserEntityFactory.Create();
         var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
@@ -109,7 +109,7 @@ public class UserTaskAccessServiceTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var sharedUser = UserEntityFactory.Create();
         var ownerId = sharedUser.Id;
         var task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
 
@@ -135,7 +135,7 @@ public class UserTaskAccessServiceTests
         // Arrange
         var ownerId = Guid.NewGuid();
         var taskId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var sharedUser = UserEntityFactory.Create();
         var task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
@@ -163,7 +163,7 @@ public class UserTaskAccessServiceTests
         // Arrange
         var ownerId = Guid.NewGuid();
         var taskId = Guid.NewGuid();
-        var sharedUser = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var sharedUser = UserEntityFactory.Create();
         var task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))

@@ -6,6 +6,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Queries.GetComments;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Comment.Queries;
@@ -20,7 +21,6 @@ public class GetCommentsQueryHandlerTests
     private readonly Mock<ITaskAccessService> _taskAccessMock;
     private readonly Mock<ICommentRepository> _commentsRepoMock;
     private readonly GetCommentsQueryHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetCommentsQueryHandlerTests"/> class.
@@ -76,14 +76,13 @@ public class GetCommentsQueryHandlerTests
         var page = 1;
         var pageSize = 10;
 
-        var author = new UserEntity("Alice", "alice", "alice@example.com", this._passwordHash);
+        var author = UserEntityFactory.Create();
         var comments = new List<CommentEntity>
         {
             new(taskId, author.Id, CommentContent.Create("Comment_1"), author),
             new(taskId, author.Id, CommentContent.Create("Comment_2"), author),
         };
 
-        // Налаштовуємо доступ
         this._taskAccessMock
             .Setup(s => s.HasAccessAsync(taskId, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);

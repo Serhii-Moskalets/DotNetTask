@@ -1,9 +1,11 @@
 ﻿using FluentAssertions;
 using Moq;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ResetPassword;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ResetPassword;
@@ -16,8 +18,7 @@ public class ResetPasswordCommandHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ITokenGenerator> _tokenGeneratorMock;
     private readonly ResetPasswordCommandHandler _sut;
-
-    private readonly string _passwordHashString = new('a', 64);
+    private readonly Mock<IClock> _clock;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ResetPasswordCommandHandlerTests"/> class.
@@ -26,10 +27,12 @@ public class ResetPasswordCommandHandlerTests
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
         this._tokenGeneratorMock = new Mock<ITokenGenerator>();
+        this._clock = new Mock<IClock>();
 
         this._sut = new ResetPasswordCommandHandler(
             this._unitOfWorkMock.Object,
-            this._tokenGeneratorMock.Object);
+            this._tokenGeneratorMock.Object,
+            this._clock.Object);
     }
 
     /// <summary>
@@ -42,7 +45,7 @@ public class ResetPasswordCommandHandlerTests
     {
         // Arrange
         var command = new ResetPasswordCommand("existing@test.com");
-        var user = new UserEntity("John", "johndoe", command.Email, this._passwordHashString);
+        var user = UserEntityFactory.Create();
         const string secureToken = "secure-token-123";
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 using TodoListApp.Infrastructure.Test.Helpers;
@@ -14,7 +15,6 @@ public class TodoListAppDbContextTests
 {
     private static readonly TaskTitle TaskTitle = TaskTitle.Create("Task");
     private static readonly TaskListTitle TaskListTitle = TaskListTitle.Create("My Task List");
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Tests that a <see cref="UserEntity"/> can be added and retrieved from the database.
@@ -24,11 +24,11 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         context.Add(user);
         context.SaveChanges();
 
-        var savedUser = context.Users.FirstOrDefault(u => u.UserName.Value == "john");
+        var savedUser = context.Users.FirstOrDefault(u => u.UserName.Value == UserEntityFactory.UserName);
         Assert.NotNull(savedUser);
         Assert.Equal("john@example.com", savedUser.Email.Value);
         Assert.Equal("John", savedUser.FirstName.Value);
@@ -43,7 +43,7 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         context.Add(user);
         context.SaveChanges();
 
@@ -88,7 +88,7 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         context.Add(user);
         context.SaveChanges();
 
@@ -110,7 +110,7 @@ public class TodoListAppDbContextTests
     {
         using var context = InMemoryDbContextFactory.Create();
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         context.Add(user);
         context.SaveChanges();
 

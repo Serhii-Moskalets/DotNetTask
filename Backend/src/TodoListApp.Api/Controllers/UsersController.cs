@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using TodoListApp.Api.Requests.User;
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Users.Commands.ChangeEmail;
-using TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
+using TodoListApp.Application.Users.Commands.ConfirmEmailChange;
 using TodoListApp.Application.Users.Commands.RevertEmailChange;
 using TodoListApp.Application.Users.Commands.UpdatePassword;
 using TodoListApp.Application.Users.Commands.UpdateUsername;
@@ -73,7 +73,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ConfirmEmailChange([FromQuery] string token)
     {
-        var command = new ConfirmChangeEmailCommand(token);
+        var command = new ConfirmEmailChangeCommand(token);
         var result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

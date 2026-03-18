@@ -2,6 +2,7 @@
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.UserTaskAccess.Mappers;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Mappers;
 
@@ -22,12 +23,7 @@ public class TaskAccessForOwnerMapperTests
         // Arrange
         var taskId = Guid.NewGuid();
 
-        var user = new UserEntity(
-            firstName: "John",
-            userName: "johndoe",
-            email: "john.doe@example.com",
-            passwordHash: this._passwordHash,
-            lastName: "Doe");
+        var user = UserEntityFactory.Create();
 
         var entity = new UserTaskAccessEntity(taskId, user.Id)
         {
@@ -59,11 +55,11 @@ public class TaskAccessForOwnerMapperTests
         {
             new(taskId, Guid.NewGuid())
             {
-                User = new UserEntity("User1", "un1", "user1@gmail.com", this._passwordHash),
+                User = UserEntityFactory.Create(),
             },
             new(taskId, Guid.NewGuid())
             {
-                User = new UserEntity("User2", "un2", "user2@gmail.com", this._passwordHash),
+                User = UserEntityFactory.Create("Rick", "ricky", "rick@test.com"),
             },
         };
 

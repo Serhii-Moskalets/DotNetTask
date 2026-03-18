@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.UpdateUserProfile;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 
 namespace TodoListApp.Application.Tests.Users.Commands.UpdateUserProfile;
 
@@ -33,11 +34,10 @@ public class UpdateUserProfileCommandHandlerTests
     public async Task Handle_ShouldReturnSuccess_WhenFirstNameIsChanged()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var command = new UpdateUserProfileCommand("NewName", null, userId);
-        var user = new UserEntity("OldName", "username", "email@test.com", new string('a', 64));
+        var user = UserEntityFactory.Create();
+        var command = new UpdateUserProfileCommand("NewName", null, user.Id);
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -58,14 +58,10 @@ public class UpdateUserProfileCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenNoChangesDetected()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var currentFirstName = "John";
-        var currentLastName = "Doe";
+        var user = UserEntityFactory.Create();
+        var command = new UpdateUserProfileCommand(UserEntityFactory.FirstName, UserEntityFactory.LastName, user.Id);
 
-        var command = new UpdateUserProfileCommand(currentFirstName, currentLastName, userId);
-        var user = new UserEntity(currentFirstName, "username", "email@test.com", new string('a', 64), currentLastName);
-
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
@@ -113,7 +109,7 @@ public class UpdateUserProfileCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var command = new UpdateUserProfileCommand(null, "NewLastName", userId);
-        var user = new UserEntity("ConstantName", "username", "email@test.com", new string('a', 64), "OldLastName");
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -122,7 +118,7 @@ public class UpdateUserProfileCommandHandlerTests
         await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
-        user.FirstName.Value.Should().Be("ConstantName");
+        user.FirstName.Value.Should().Be(UserEntityFactory.FirstName);
         user.LastName!.Value.Should().Be("NewLastName");
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

@@ -11,6 +11,12 @@ namespace TodoListApp.Domain.Test.Entities;
 public class CommentEntityTests
 {
     private const string ValidText = "Hello";
+
+    private static readonly FirstName FirstName = FirstName.Create("Test");
+    private static readonly UserName UserName = UserName.Create("Test");
+    private static readonly Email Email = Email.Create("test@test.com");
+    private static readonly PasswordHash PasswordHash = PasswordHash.Create(new('a', 64));
+
     private readonly CommentContent _validContent = CommentContent.Create(ValidText);
 
     /// <summary>
@@ -61,7 +67,7 @@ public class CommentEntityTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var differentUser = new UserEntity("test", "test", "test@test.com", new('a', 64));
+        var differentUser = new UserEntity(FirstName, UserName, Email, PasswordHash);
 
         // Act
         var act = () => new CommentEntity(Guid.NewGuid(), userId, this._validContent, differentUser);

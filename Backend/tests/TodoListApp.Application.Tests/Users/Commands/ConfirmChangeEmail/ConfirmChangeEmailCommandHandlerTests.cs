@@ -1,33 +1,37 @@
 ﻿using FluentAssertions;
 using Moq;
+using TinyResult;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
-using TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
+using TodoListApp.Application.Users.Commands.ConfirmEmailChange;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmChangeEmail;
 
 /// <summary>
-/// Contains unit tests for the <see cref="ConfirmChangeEmailCommandHandler"/> class.
+/// Contains unit tests for the <see cref="ConfirmEmailChangeCommandHandler"/> class.
 /// </summary>
-public class ConfirmChangeEmailCommandHandlerTests
+public class ConfirmEmailChangeCommandHandlerTests
 {
     private const string PendingEmail = "new@example.com";
     private const string ConfirmToken = "confirm-token";
     private const string RevertToken = "revert-token";
-    private readonly string _passwordHash = new('a', 64);
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly ConfirmChangeEmailCommandHandler _sut;
+    private readonly Mock<IClock> _clock;
+    private readonly ConfirmEmailChangeCommandHandler _sut;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="ConfirmChangeEmailCommandHandlerTests"/> class.
+    /// Initializes a new instance of the <see cref="ConfirmEmailChangeCommandHandlerTests"/> class.
     /// </summary>
-    public ConfirmChangeEmailCommandHandlerTests()
+    public ConfirmEmailChangeCommandHandlerTests()
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._sut = new ConfirmChangeEmailCommandHandler(this._unitOfWorkMock.Object);
+        this._clock = new Mock<IClock>();
+        this._sut = new ConfirmEmailChangeCommandHandler(this._unitOfWorkMock.Object, this._clock.Object);
     }
 
     /// <summary>
@@ -38,7 +42,7 @@ public class ConfirmChangeEmailCommandHandlerTests
     public async Task Handle_Should_ReturnFail_When_UserNotFound()
     {
         // Arrange
-        var command = new ConfirmChangeEmailCommand("non-existent-token");
+        var command = new ConfirmEmailChangeCommand("non-existent-token");
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(
             It.IsAny<string>(),
@@ -62,13 +66,13 @@ public class ConfirmChangeEmailCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_Should_ThrowDomainException_When_TokenIsInvalidForFoundUser()
+    public async Task Handle_Should_ReturnFailure_When_TokenIsInvalidForFoundUser()
     {
         // Arrange
-        var command = new ConfirmChangeEmailCommand("wrong-token");
-        var user = new UserEntity("John", "john", "old@example.com", this._passwordHash);
+        var command = new ConfirmEmailChangeCommand("wrong-token");
+        var user = UserEntityFactory.Create();
 
-        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1));
+        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), DateTime.UtcNow);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(
                 It.IsAny<string>(),
@@ -77,11 +81,10 @@ public class ConfirmChangeEmailCommandHandlerTests
             .ReturnsAsync(user);
 
         // Act
-        var act = async () => await this._sut.Handle(command, CancellationToken.None);
+        var result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<Domain.Exceptions.DomainException>()
-            .WithMessage("Invalid or expired email change token.");
+        result.IsSuccess.Should().BeFalse();
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }

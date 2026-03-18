@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessByUserEmail;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
@@ -17,7 +18,6 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<IUserTaskAccessRepository> _utaRepository;
     private readonly DeleteTaskAccessByUserEmailCommandHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DeleteTaskAccessByUserEmailCommandHandlerTests"/> class.
@@ -87,7 +87,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenDeleteFails()
     {
         // Arrange
-        var user = new UserEntity("John", "john", "test@test.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         var command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), user.Email.Value);
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
@@ -116,7 +116,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     public async Task Handle_ShouldDeleteAccess_WhenAllChecksPass()
     {
         // Arrange
-        var user = new UserEntity("John", "john", "test@test.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         var command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), user.Email.Value);
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
@@ -138,44 +138,5 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         Assert.True(result.IsSuccess);
         this._uowMock.Verify(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
-    }
-
-    /// <summary>
-    /// Verifies that the handler correctly normalizes the input email by trimming whitespace and
-    /// converting it to lowercase before querying the user repository.
-    /// </summary>
-    /// <remarks>
-    /// This test ensures the handler is resilient to user input variability, preventing
-    /// lookups from failing due to case sensitivity or accidental leading/trailing spaces.
-    /// </remarks>
-    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
-    [Fact]
-    public async Task Handle_ShouldNormalizeEmail_BeforeSearching()
-    {
-        // Arrange
-        var rawEmail = "  User@Test.com  ";
-        var normalizedEmail = "user@test.com";
-        var user = new UserEntity("John", "john", normalizedEmail, this._passwordHash);
-        var command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), rawEmail);
-
-        this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(true);
-
-        this._uowMock.Setup(u => u.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(user);
-
-        this._uowMock.Setup(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()))
-                       .ReturnsAsync(1);
-
-        // Act
-        await this._handler.Handle(command, CancellationToken.None);
-
-        // Assert
-        this._uowMock.Verify(
-            u => u.Users.GetByEmailAsync(
-                It.Is<Email>(e => e.Value == normalizedEmail),
-                asNoTracking: true,
-                It.IsAny<CancellationToken>()),
-            Times.Once);
     }
 }

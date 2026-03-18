@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using TinyResult;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
@@ -16,10 +17,12 @@ namespace TodoListApp.Application.Users.Commands.ConfirmPasswordReset;
 /// </remarks>
 public class ConfirmPasswordResetCommandHandler(
     IUnitOfWork unitOfWork,
-    IPasswordHasher passwordHasher)
+    IPasswordHasher passwordHasher,
+    IClock clock)
     : HandlerBase(unitOfWork), IRequestHandler<ConfirmPasswordResetCommand, Result<bool>>
 {
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
+    private readonly IClock _clock = clock;
 
     /// <summary>
     /// Processes the password reset confirmation request.
@@ -42,9 +45,13 @@ public class ConfirmPasswordResetCommandHandler(
         var hash = this._passwordHasher.HashPassword(command.NewPassword);
         var newPasswordHash = PasswordHash.Create(hash);
 
-        user.ConfirmPasswordReset(newPasswordHash, command.Token, DateTime.UtcNow);
+        var result = user.ConfirmPasswordReset(newPasswordHash, command.Token, this._clock.UtcNow);
+        if (!result.IsSuccess)
+        {
+            return result;
+        }
 
         await this.UnitOfWork.SaveChangesAsync();
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

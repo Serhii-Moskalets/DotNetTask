@@ -1,4 +1,5 @@
 ﻿using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
 
@@ -10,6 +11,8 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class BaseRepositoryTests
 {
+    private static readonly TagName TagName = TagName.Create("Tag");
+
     /// <summary>
     /// Tests that <see cref="TagRepository"/> adds an entity and returns it by identifier.
     /// </summary>
@@ -20,13 +23,13 @@ public class BaseRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new TagRepository(context);
 
-        var entity = new TagEntity("Test", Guid.NewGuid());
+        var entity = new TagEntity(TagName, Guid.NewGuid());
         await repo.AddAsync(entity);
         await context.SaveChangesAsync();
 
         var saved = await repo.GetByIdAsync(entity.Id);
         Assert.NotNull(saved);
-        Assert.Equal("Test", saved.Name);
+        Assert.Equal(TagName.Value, saved.Name.Value);
     }
 
     /// <summary>
@@ -39,7 +42,10 @@ public class BaseRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new TagRepository(context);
 
-        var entity = new TagEntity("Test", Guid.NewGuid());
+        var entity = new TagEntity(
+            TagName,
+            Guid.NewGuid());
+
         await repo.AddAsync(entity);
         await context.SaveChangesAsync();
 
@@ -60,7 +66,10 @@ public class BaseRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new TagRepository(context);
 
-        var entity = new TagEntity("Test", Guid.NewGuid());
+        var entity = new TagEntity(
+            TagName,
+            Guid.NewGuid());
+
         await repo.AddAsync(entity);
         await context.SaveChangesAsync();
 
@@ -123,13 +132,13 @@ public class BaseRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new TagRepository(context);
 
-        var entity = new TagEntity("TrackedTest", Guid.NewGuid());
+        var entity = new TagEntity(TagName, Guid.NewGuid());
         await repo.AddAsync(entity);
         await context.SaveChangesAsync();
 
         var saved = await repo.GetByIdAsync(entity.Id, asNoTracking);
         Assert.NotNull(saved);
-        Assert.Equal("TrackedTest", saved.Name);
+        Assert.Equal(TagName.Value, saved.Name.Value);
     }
 
     /// <summary>
@@ -142,8 +151,8 @@ public class BaseRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new TagRepository(context);
 
-        var entity1 = new TagEntity("Entity1", Guid.NewGuid());
-        var entity2 = new TagEntity("Entity2", Guid.NewGuid());
+        var entity1 = new TagEntity(TagName.Create("Tag_1"), Guid.NewGuid());
+        var entity2 = new TagEntity(TagName.Create("Tag_2"), Guid.NewGuid());
 
         await repo.AddAsync(entity1);
         await repo.AddAsync(entity2);
@@ -154,8 +163,8 @@ public class BaseRepositoryTests
 
         Assert.NotNull(saved1);
         Assert.NotNull(saved2);
-        Assert.Equal("Entity1", saved1.Name);
-        Assert.Equal("Entity2", saved2.Name);
+        Assert.Equal("Tag_1", saved1.Name.Value);
+        Assert.Equal("Tag_2", saved2.Name.Value);
     }
 
     /// <summary>
@@ -168,7 +177,7 @@ public class BaseRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new TagRepository(context);
 
-        var entity = new TagEntity("NoSave", Guid.NewGuid());
+        var entity = new TagEntity(TagName, Guid.NewGuid());
         await repo.AddAsync(entity);
 
         var saved = await repo.GetByIdAsync(entity.Id);

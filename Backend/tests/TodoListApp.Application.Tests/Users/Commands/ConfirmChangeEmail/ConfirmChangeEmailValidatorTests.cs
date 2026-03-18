@@ -1,14 +1,14 @@
 ﻿using FluentValidation.TestHelper;
-using TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
+using TodoListApp.Application.Users.Commands.ConfirmEmailChange;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmChangeEmail;
 
 /// <summary>
-/// Unit tests for the <see cref="ConfirmChangeEmailCommandValidator"/> class.
+/// Unit tests for the <see cref="ConfirmEmailChangeCommandValidator"/> class.
 /// </summary>
 public class ConfirmChangeEmailValidatorTests
 {
-    private readonly ConfirmChangeEmailCommandValidator _validator = new();
+    private readonly ConfirmEmailChangeCommandValidator _validator = new();
 
     /// <summary>
     /// Verifies that an empty user id triggers a validation error.
@@ -17,7 +17,7 @@ public class ConfirmChangeEmailValidatorTests
     public void Should_HaveError_When_TokenIsEmpty()
     {
         // Arrange
-        var command = new ConfirmChangeEmailCommand(string.Empty);
+        var command = new ConfirmEmailChangeCommand(string.Empty);
 
         // Act
         var result = this._validator.TestValidate(command);
@@ -37,7 +37,7 @@ public class ConfirmChangeEmailValidatorTests
     public void Should_Have_Error_When_Token_Is_Empty(string? token)
     {
         // Arrange
-        var command = new ConfirmChangeEmailCommand(token!);
+        var command = new ConfirmEmailChangeCommand(token!);
 
         // Act
         var result = this._validator.TestValidate(command);

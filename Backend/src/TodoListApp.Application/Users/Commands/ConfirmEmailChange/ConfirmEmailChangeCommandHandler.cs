@@ -1,20 +1,25 @@
 ﻿using MediatR;
 using TinyResult;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 
-namespace TodoListApp.Application.Users.Commands.ConfirmChangeEmail;
+namespace TodoListApp.Application.Users.Commands.ConfirmEmailChange;
 
 /// <summary>
-/// Handles the <see cref="ConfirmChangeEmailCommand"/> to finalize a pending email change request.
+/// Handles the <see cref="ConfirmEmailChangeCommand"/> to finalize a pending email change request.
 /// </summary>
 /// <remarks>
 /// This handler validates the provided token against the user's stored security token.
 /// If valid, it updates the user's email address and clears the temporary token.
 /// </remarks>
-public class ConfirmChangeEmailCommandHandler(IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<ConfirmChangeEmailCommand, Result<bool>>
+public class ConfirmEmailChangeCommandHandler(
+    IUnitOfWork unitOfWork,
+    IClock clock)
+    : HandlerBase(unitOfWork), IRequestHandler<ConfirmEmailChangeCommand, Result<bool>>
 {
+    private readonly IClock _clock = clock;
+
     /// <summary>
     /// Processes the confirmation of a user's email change.
     /// </summary>
@@ -24,7 +29,7 @@ public class ConfirmChangeEmailCommandHandler(IUnitOfWork unitOfWork)
     /// A <see cref="Result{Boolean}"/> indicating success (true) if the email was successfully changed.
     /// Returns a failure result if the user is not found.
     /// </returns>
-    public async Task<Result<bool>> Handle(ConfirmChangeEmailCommand command, CancellationToken cancellationToken)
+    public async Task<Result<bool>> Handle(ConfirmEmailChangeCommand command, CancellationToken cancellationToken)
     {
         var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChange, cancellationToken);
         if (user is null)
@@ -32,10 +37,14 @@ public class ConfirmChangeEmailCommandHandler(IUnitOfWork unitOfWork)
             return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email change token.");
         }
 
-        user.ConfirmEmailChange(command.Token, DateTime.UtcNow);
+        var result = user.ConfirmEmailChange(command.Token, this._clock.UtcNow);
+        if (!result.IsSuccess)
+        {
+            return result;
+        }
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

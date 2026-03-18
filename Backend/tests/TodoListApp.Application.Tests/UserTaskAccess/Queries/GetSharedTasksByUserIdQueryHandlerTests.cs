@@ -3,6 +3,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Queries.GetSharedTasksByUserId;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Queries;
@@ -16,7 +17,6 @@ public class GetSharedTasksByUserIdQueryHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IUserTaskAccessRepository> _userTaskAccessRepoMock;
     private readonly GetSharedTasksByUserIdQueryHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetSharedTasksByUserIdQueryHandlerTests"/> class.
@@ -70,7 +70,7 @@ public class GetSharedTasksByUserIdQueryHandlerTests
         var task1 = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Task"));
         var entities = new List<UserTaskAccessEntity>
         {
-            new(task1.Id, userId) { Task = task1, User = new UserEntity("Owner", "owner", "o@t.com", this._passwordHash) },
+            new(task1.Id, userId) { Task = task1, User = UserEntityFactory.Create() },
         };
 
         this._userTaskAccessRepoMock

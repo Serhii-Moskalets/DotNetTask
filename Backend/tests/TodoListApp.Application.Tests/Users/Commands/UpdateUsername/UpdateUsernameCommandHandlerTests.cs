@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.UpdateUsername;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.UpdateUsername;
@@ -34,7 +35,7 @@ public class UpdateUsernameCommandHandlerTests
     public async Task Handle_ShouldREturnSuccess_WhenUseranmeIsUpdatedSuccessfully()
     {
         // Arrange
-        var user = new UserEntity("John", "john", "john@example.com", new('a', 64));
+        var user = UserEntityFactory.Create();
         var command = new UpdateUsernameCommand("NewUserName", user.Id);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
@@ -85,9 +86,8 @@ public class UpdateUsernameCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var currentName = "SameName";
-        var command = new UpdateUsernameCommand(currentName, userId);
-        var user = new UserEntity("John", currentName, "john@test.com", new('a', 64), "Doe");
+        var command = new UpdateUsernameCommand(UserEntityFactory.UserName, userId);
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -115,7 +115,7 @@ public class UpdateUsernameCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var command = new UpdateUsernameCommand("TakenName", userId);
-        var user = new UserEntity("John", "CurrentName", "john@test.com", new('a', 64), "Doe");
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
