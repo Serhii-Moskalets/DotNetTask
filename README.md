@@ -46,8 +46,8 @@ The project is organized as a monorepo, maintaining a clear separation between t
    ```
 3. Detailed Setup Guides:
    For specific configuration and local deployment, refer to:
-   * **[Backend API Documentation](./Backend/README.MD)** - *DB migrations & .NET setup.*
-   * **[Frontend Client Documentation](./Frontend/todo-frontend/README.md)** - *Vite & React deployment.*
+   * **[Backend API Documentation](./Backend/README.md/)** - *DB migrations & .NET setup.*
+   * **[Frontend Client Documentation](./Frontend/todo-frontend/README.md/)** - *Vite & React deployment.*
 
 ## Development Workflow
  **The project follows a strict branching model to ensure code quality:**
