@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Infrastructure.Persistence.DatabaseContext;
 
@@ -27,7 +28,8 @@ public class TodoListAppDbContextFactory : IDesignTimeDbContextFactory<TodoListA
             .AddJsonFile("appsettings.Development.json", optional: true)
             .Build();
 
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString(CommonPolicy.DataBaseConnectionString)
+                ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
 
         var optionsBuilder = new DbContextOptionsBuilder<TodoListAppDbContext>();
         optionsBuilder.UseNpgsql(connectionString);

@@ -1,4 +1,6 @@
-﻿namespace TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+
+namespace TodoListApp.Domain.Exceptions;
 
 /// <summary>
 /// Exception thrown when a user attempts to access protected resources
@@ -10,7 +12,7 @@ public class PasswordChangeRequiredException : Exception
     /// Initializes a new instance of the <see cref="PasswordChangeRequiredException"/> class.
     /// </summary>
     public PasswordChangeRequiredException()
-        : base("You must change your password before accessing other resources.")
+        : base(UserPolicy.MustChangePasswordMessage)
     { }
 
     /// <summary>

@@ -6,6 +6,11 @@
 public static class CommonPolicy
 {
     /// <summary>
+    /// The name of the default database connection string in the configuration.
+    /// </summary>
+    public const string DataBaseConnectionString = "DefaultConnection";
+
+    /// <summary>
     /// The error message when the requested page number is less than one.
     /// </summary>
     public const string PageMinMessage = "Page must be at least 1.";
@@ -21,7 +26,17 @@ public static class CommonPolicy
     public const int MaxSearchTextLength = 100;
 
     /// <summary>
-    /// Error message when search text is too long.
+    /// The error message when user id is invalid.
+    /// </summary>
+    public const string InvalidUserIdentityMessage = "Invalid user identity."; 
+
+    /// <summary>
+    /// The error message when search text is too long.
     /// </summary>
     public static readonly string SearchTextTooLongMessage = $"Search text cannot exceed {MaxSearchTextLength} characters.";
+
+    /// <summary>
+    /// The error message when the default database connection string is missing in the configuration.
+    /// </summary>
+    public static readonly string MissingConnectionStringMessage = $"Connection string '{DataBaseConnectionString}' not found.";
 }

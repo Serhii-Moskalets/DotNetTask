@@ -3,6 +3,7 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using TodoListApp.Application.Abstractions.Interfaces.Notifications;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Infrastructure.Notifications.Exceptions;
 using TodoListApp.Infrastructure.Notifications.Settings;
 
@@ -33,12 +34,12 @@ public class EmailSender(IOptions<EmailSettings> settings) : IEmailSender
     {
         if (string.IsNullOrWhiteSpace(toEmail))
         {
-            throw new ArgumentException("Email cannot be empty", nameof(toEmail));
+            throw new ArgumentException(EmailPolicy.EmptyMessage, nameof(toEmail));
         }
 
         if (!MailboxAddress.TryParse(toEmail, out _))
         {
-            throw new ArgumentException("Invalid email address format", nameof(toEmail));
+            throw new ArgumentException(EmailPolicy.InvalidFormatMessage, nameof(toEmail));
         }
 
         try
@@ -60,7 +61,7 @@ public class EmailSender(IOptions<EmailSettings> settings) : IEmailSender
         }
         catch (Exception ex)
         {
-            throw new EmailSendException(toEmail, $"Failed to send email to {toEmail}", ex);
+            throw new EmailSendException(toEmail, string.Format(EmailPolicy.SendEmailFailedMessage, toEmail), ex);
         }
     }
 }

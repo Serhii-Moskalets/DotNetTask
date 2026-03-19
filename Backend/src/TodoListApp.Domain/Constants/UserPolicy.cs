@@ -44,4 +44,14 @@ public static class UserPolicy
     /// The error message when a user tries to update their profile but the provided names are the same as the current ones.
     /// </summary>
     public const string NoChangesDetectedMessage = "No changes detected. The provided names are the same as your current ones.";
+
+    /// <summary>
+    /// The error message when session has expired.
+    /// </summary>
+    public const string SessionExpiredMessage = "Session has expired. Please login again.";
+
+    /// <summary>
+    /// The error message when a user must change their password before accessing other resources.
+    /// </summary>
+    public const string MustChangePasswordMessage = "You must change your password before accessing other resources.";
 }

@@ -49,4 +49,9 @@ public static class TokenPolicy
     /// Error message when the token duration is zero or negative.
     /// </summary>
     public const string PositiveDurationMessage = "Token duration must be positive.";
+
+    /// <summary>
+    /// The error message when user id is invalid.
+    /// </summary>
+    public const string InvalidUserIdentityMessage = "Invalid user identity.";
 }

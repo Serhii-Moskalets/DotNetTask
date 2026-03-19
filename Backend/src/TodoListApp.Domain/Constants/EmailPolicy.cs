@@ -43,6 +43,11 @@ public static class EmailPolicy
     public const string NotConfirmedMessage = "Please confirm your email before logging in.";
 
     /// <summary>
+    /// Error message when sending an email fails due to SMTP or network issues.
+    /// </summary>
+    public const string SendEmailFailedMessage = "Failed to send email to {0}.";
+
+    /// <summary>
     /// Error message when the email exceeds the maximum allowed length.
     /// </summary>
     public static readonly string TooLongMessage = $"Email cannot be longer than {Email.MaxLength} characters.";
