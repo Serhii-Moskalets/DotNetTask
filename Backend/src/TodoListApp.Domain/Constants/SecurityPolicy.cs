@@ -10,6 +10,8 @@ public static class SecurityPolicy
     /// </summary>
     public const string InvalidSecurityStampMessage = "Invalid security identifier.";
 
-    /// <summary>Error message when the generated password hash is empty.</summary>
+    /// <summary>
+    /// Error message when the generated password hash is empty.
+    /// </summary>
     public const string HashEmptyMessage = "Password hash cannot be empty.";
 }

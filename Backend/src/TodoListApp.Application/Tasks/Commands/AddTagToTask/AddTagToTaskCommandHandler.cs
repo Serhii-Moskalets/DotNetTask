@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tasks.Commands.AddTagToTask;
 
@@ -29,7 +30,7 @@ public class AddTagToTaskCommandHandler(
 
         if (task is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Task not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         if (task.TagId == command.TagId)
@@ -40,12 +41,12 @@ public class AddTagToTaskCommandHandler(
         var tag = await this.UnitOfWork.Tags.GetByIdAsync(command.TagId, true, cancellationToken);
         if (tag is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Tag not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
         }
 
         if (tag.UserId != command.UserId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "You do not own this tag.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, TagPolicy.DoNotHavePermission);
         }
 
         task.SetTag(command.TagId);

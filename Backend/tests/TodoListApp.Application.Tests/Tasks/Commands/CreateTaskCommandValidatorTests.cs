@@ -1,6 +1,7 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Commands.CreateTask;
 using TodoListApp.Application.Tasks.Dtos;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
@@ -31,7 +32,7 @@ public class CreateTaskCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.Dto.TaskListId)
-            .WithErrorMessage("Task list ID is required.");
+            .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -51,7 +52,7 @@ public class CreateTaskCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-            .WithErrorMessage("User ID is required.");
+            .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -71,7 +72,7 @@ public class CreateTaskCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.Dto.Title)
-            .WithErrorMessage("Task title cannot be empty.");
+            .WithErrorMessage(TaskPolicy.EmptyTitleMessage);
     }
 
     /// <summary>
@@ -92,7 +93,7 @@ public class CreateTaskCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.Dto.Title)
-            .WithErrorMessage($"Title cannot exceed {TaskTitle.MaxLength} characters.");
+            .WithErrorMessage(TaskPolicy.TooLongTitleMessage);
     }
 
     /// <summary>
@@ -113,7 +114,7 @@ public class CreateTaskCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.Dto.DueDate)
-            .WithErrorMessage("Due date cannot be in the past.");
+            .WithErrorMessage(TaskPolicy.InvalidDueDateMessage);
     }
 
     /// <summary>

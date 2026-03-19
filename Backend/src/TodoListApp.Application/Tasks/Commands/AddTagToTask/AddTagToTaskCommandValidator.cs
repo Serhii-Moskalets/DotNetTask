@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tasks.Commands.AddTagToTask;
 
@@ -13,12 +14,12 @@ public class AddTagToTaskCommandValidator : AbstractValidator<AddTagToTaskComman
     public AddTagToTaskCommandValidator()
     {
         this.RuleFor(x => x.TaskId)
-            .NotEmpty().WithMessage("Task ID is required.");
+            .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.TagId)
-            .NotEmpty().WithMessage("Tag ID is required.");
+            .NotEmpty().WithMessage(TagPolicy.IdRequiredMessage);
     }
 }

@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.AddTagToTask;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
@@ -159,7 +160,7 @@ public class AddTagToTaskCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.NotFound);
-        result.Error.Message.Should().Be("Tag not found.");
+        result.Error.Message.Should().Be(TagPolicy.NotFoundMessage);
     }
 
     /// <summary>
@@ -193,6 +194,6 @@ public class AddTagToTaskCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
-        result.Error.Message.Should().Be("You do not own this tag.");
+        result.Error.Message.Should().Be(TagPolicy.DoNotHavePermission);
     }
 }

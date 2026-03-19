@@ -22,6 +22,6 @@ public class CreateTaskListCommandValidator : AbstractValidator<CreateTaskListCo
                 .WithMessage(TaskListPolicy.TooLongMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage(UserPolicy.UserIdRequiredMessage);
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
     }
 }

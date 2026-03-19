@@ -13,7 +13,7 @@ public static class TaskListPolicy
     public const string IdRequiredMessage = "Task list ID is required.";
 
     /// <summary>
-    /// Error message for null or empty tsk list title.
+    /// Error message for null or empty task list title.
     /// </summary>
     public const string EmptyMessage = "Title is required.";
 

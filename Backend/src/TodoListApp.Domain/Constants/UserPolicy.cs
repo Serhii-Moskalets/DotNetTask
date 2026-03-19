@@ -8,12 +8,12 @@ public static class UserPolicy
     /// <summary>
     /// The error message used when the provided user entity does not match the specified user identifier.
     /// </summary>
-    public const string UserIdMismatchMessage = "User ID mismatch.";
+    public const string IdMismatchMessage = "User ID mismatch.";
 
     /// <summary>
     /// The error message used when a unique user identifier is missing from a request.
     /// </summary>
-    public const string UserIdRequiredMessage = "User ID is required.";
+    public const string IdRequiredMessage = "User ID is required.";
 
     /// <summary>
     /// The error message when no profile data is provided for an update.
@@ -35,9 +35,13 @@ public static class UserPolicy
     /// </summary>
     public const string UnexpectedErrorMessage = "An unexpected error occurred while accessing your account information.";
 
-    /// <summary>The error message when user authentication fails due to invalid credentials.</summary>
+    /// <summary>
+    /// The error message when user authentication fails due to invalid credentials.
+    /// </summary>
     public const string InvalidCredentialsMessage = "Invalid email or password.";
 
-    /// <summary>The error message when a user tries to update their profile but the provided names are the same as the current ones.</summary>
+    /// <summary>
+    /// The error message when a user tries to update their profile but the provided names are the same as the current ones.
+    /// </summary>
     public const string NoChangesDetectedMessage = "No changes detected. The provided names are the same as your current ones.";
 }

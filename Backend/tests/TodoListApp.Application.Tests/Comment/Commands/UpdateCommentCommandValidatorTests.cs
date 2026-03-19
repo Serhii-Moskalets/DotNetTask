@@ -25,7 +25,7 @@ public class UpdateCommentCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -39,7 +39,7 @@ public class UpdateCommentCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.CommentId)
-              .WithErrorMessage(CommentPolicy.CommentIdRequiredMessage);
+              .WithErrorMessage(CommentPolicy.IdRequiredMessage);
     }
 
     /// <summary>

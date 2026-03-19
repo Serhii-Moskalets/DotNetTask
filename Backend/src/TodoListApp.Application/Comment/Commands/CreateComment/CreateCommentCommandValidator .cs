@@ -16,7 +16,7 @@ public class CreateCommentCommandValidator : AbstractValidator<CreateCommentComm
     {
         this.RuleFor(x => x.UserId)
             .NotEmpty()
-            .WithMessage(UserPolicy.UserIdRequiredMessage);
+            .WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.TaskId)
             .NotEmpty()

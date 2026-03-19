@@ -37,7 +37,7 @@ public class CommentEntity : BaseEntity
     {
         if (user.Id != userId)
         {
-            throw new DomainException(UserPolicy.UserIdMismatchMessage);
+            throw new DomainException(UserPolicy.IdMismatchMessage);
         }
 
         this.User = user;

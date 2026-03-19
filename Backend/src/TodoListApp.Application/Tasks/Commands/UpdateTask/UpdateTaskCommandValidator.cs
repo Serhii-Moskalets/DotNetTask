@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tasks.Commands.UpdateTask;
@@ -16,19 +17,21 @@ public class UpdateTaskCommandValidator : AbstractValidator<UpdateTaskCommand>
     public UpdateTaskCommandValidator()
     {
         this.RuleFor(x => x.Dto.TaskId)
-            .NotEmpty().WithMessage("Task ID is required.");
+            .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.Dto.Title)
-            .MaximumLength(TaskTitle.MaxLength).WithMessage($"Title cannot exceed {TaskTitle.MaxLength} characters.");
+            .MaximumLength(TaskTitle.MaxLength)
+                .WithMessage(TaskPolicy.TooLongTitleMessage);
 
         this.RuleFor(x => x.Dto.Description)
-            .MaximumLength(TaskDescription.MaxLength).WithMessage($"Description cannot exceed {TaskDescription.MaxLength} characters.");
+            .MaximumLength(TaskDescription.MaxLength)
+                .WithMessage(TaskPolicy.TooLongDescriptionMessage);
 
         this.RuleFor(x => x.Dto.DueDate)
             .Must((dueDate) => dueDate == null || dueDate.Value >= DateTime.UtcNow)
-            .WithMessage("Due date cannot be in the past.");
+                .WithMessage(TaskPolicy.InvalidDueDateMessage);
     }
 }

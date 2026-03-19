@@ -7,9 +7,13 @@ namespace TodoListApp.Domain.Constants;
 /// </summary>
 public static class FirstNamePolicy
 {
-    /// <summary>Error message for null or empty first name.</summary>
+    /// <summary>
+    /// Error message for null or empty first name.
+    /// </summary>
     public const string EmptyMessage = "First name is required.";
 
-    /// <summary>Error message when the first name exceeds the maximum allowed length.</summary>
+    /// <summary>
+    /// Error message when the first name exceeds the maximum allowed length.
+    /// </summary>
     public static readonly string TooLongMessage = $"First name cannot be longer than {FirstName.MaxLength} characters.";
 }

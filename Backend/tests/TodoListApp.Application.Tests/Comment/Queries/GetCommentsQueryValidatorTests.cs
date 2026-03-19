@@ -24,7 +24,7 @@ public class GetCommentsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(q => q.UserId)
-              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -55,7 +55,7 @@ public class GetCommentsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.Page)
-              .WithErrorMessage(PaginationPolicy.PageMinMessage);
+              .WithErrorMessage(CommonPolicy.PageMinMessage);
     }
 
     /// <summary>
@@ -72,7 +72,7 @@ public class GetCommentsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.PageSize)
-            .WithErrorMessage(PaginationPolicy.PageSizeRangeMessage);
+            .WithErrorMessage(CommonPolicy.PageSizeRangeMessage);
     }
 
     /// <summary>

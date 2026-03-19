@@ -40,9 +40,13 @@ public static class TokenPolicy
     /// </summary>
     public const string MissingOriginalEmailMessage = "Original email data is missing.";
 
-    /// <summary>Error message when the security token is null or empty.</summary>
+    /// <summary>
+    /// Error message when the security token is null or empty.
+    /// </summary>
     public const string InvalidOrMissingMessage = "Invalid or missing security token.";
 
-    /// <summary>Error message when the token duration is zero or negative.</summary>
+    /// <summary>
+    /// Error message when the token duration is zero or negative.
+    /// </summary>
     public const string PositiveDurationMessage = "Token duration must be positive.";
 }

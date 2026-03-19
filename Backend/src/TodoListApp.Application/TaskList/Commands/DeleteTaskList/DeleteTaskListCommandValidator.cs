@@ -14,7 +14,7 @@ public class DeleteTaskListCommandValidator : AbstractValidator<DeleteTaskListCo
     public DeleteTaskListCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage(UserPolicy.UserIdRequiredMessage);
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.TaskListId)
             .NotEmpty().WithMessage(TaskListPolicy.IdRequiredMessage);

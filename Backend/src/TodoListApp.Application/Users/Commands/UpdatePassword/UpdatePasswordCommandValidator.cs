@@ -15,7 +15,7 @@ public class UpdatePasswordCommandValidator : AbstractValidator<UpdatePasswordCo
     {
         this.RuleFor(x => x.UserId)
             .NotEmpty()
-                .WithMessage(UserPolicy.UserIdRequiredMessage);
+                .WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.CurrentPassword)
             .NotEmpty()

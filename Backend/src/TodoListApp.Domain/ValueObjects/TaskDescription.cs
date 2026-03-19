@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -37,13 +38,13 @@ public record TaskDescription
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("Task description cannot be empty.");
+            throw new DomainException(TaskPolicy.EmptyDescriptionMessage);
         }
 
         var trimmedValue = value.Trim();
         if (trimmedValue.Length > MaxLength)
         {
-            throw new DomainException($"Task description cannot exceed {MaxLength} characters.");
+            throw new DomainException(TaskPolicy.TooLongDescriptionMessage);
         }
 
         return new TaskDescription(trimmedValue);

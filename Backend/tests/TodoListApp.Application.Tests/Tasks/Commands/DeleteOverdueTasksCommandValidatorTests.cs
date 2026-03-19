@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Commands.DeleteOverdueTasks;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -25,7 +26,7 @@ public class DeleteOverdueTasksCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(c => c.TaskListId)
-              .WithErrorMessage("Task list ID is required.");
+              .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -42,7 +43,7 @@ public class DeleteOverdueTasksCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-              .WithErrorMessage("Task list ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>

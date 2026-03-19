@@ -15,7 +15,7 @@ public class ChangeEmailCommandValidator : AbstractValidator<ChangeEmailCommand>
     public ChangeEmailCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage(UserPolicy.UserIdRequiredMessage);
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.NewEmail)
             .Cascade(CascadeMode.Stop)

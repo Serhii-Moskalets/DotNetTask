@@ -23,6 +23,11 @@ public static class TagPolicy
     public const string NotFoundMessage = "Tag not found. It may have been deleted.";
 
     /// <summary>
+    /// The error message when the user doesn't have permission to this tag.
+    /// </summary>
+    public const string DoNotHavePermission = "You don't have permission to this tag.";
+
+    /// <summary>
     /// Error message when the tag name exceeds the maximum allowed length.
     /// </summary>
     public static readonly string TooLongMessage = $"Tag name cannot exceed {TagName.MaxLength} characters.";

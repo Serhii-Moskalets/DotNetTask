@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -43,13 +44,13 @@ public sealed record TaskTitle
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("Task title cannot be empty.");
+            throw new DomainException(TaskPolicy.EmptyTitleMessage);
         }
 
         var trimmedValue = value.Trim();
         if (trimmedValue.Length > MaxLength)
         {
-            throw new DomainException($"Task title cannot exceed {MaxLength} characters.");
+            throw new DomainException(TaskPolicy.TooLongTitleMessage);
         }
 
         return new TaskTitle(trimmedValue);

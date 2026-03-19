@@ -17,7 +17,7 @@ public class UpdateUserProfileCommandValidator : AbstractValidator<UpdateUserPro
     {
         this.RuleFor(x => x.UserId)
             .NotEmpty()
-                .WithMessage(UserPolicy.UserIdRequiredMessage);
+                .WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.FirstName)
             .MaximumLength(FirstName.MaxLength)

@@ -14,6 +14,6 @@ public class GetUserProfileQueryValidator : AbstractValidator<GetUserProfileQuer
     public GetUserProfileQueryValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage(UserPolicy.UserIdRequiredMessage);
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
     }
 }

@@ -10,7 +10,7 @@ public static class CommentPolicy
     /// <summary>
     /// The error message used when a unique comment identifier is missing from a request.
     /// </summary>
-    public const string CommentIdRequiredMessage = "Comment ID is required.";
+    public const string IdRequiredMessage = "Comment ID is required.";
 
     /// <summary>
     /// The error message when a comment update is attempted but the content is identical to the current one.

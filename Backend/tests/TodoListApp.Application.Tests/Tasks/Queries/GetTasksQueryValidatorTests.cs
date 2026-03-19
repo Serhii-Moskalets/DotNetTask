@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Queries.GetTasks;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Tasks.Queries;
 
@@ -24,7 +25,7 @@ public class GetTasksQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -55,7 +56,7 @@ public class GetTasksQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.TaskListId)
-              .WithErrorMessage("Task list ID is required.");
+              .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -158,7 +159,7 @@ public class GetTasksQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.DueAfter)
-              .WithErrorMessage("DueAfter must be before or equal to DueBefore.");
+              .WithErrorMessage(TaskPolicy.InvalidDateRangeMessage);
     }
 
     /// <summary>
@@ -175,7 +176,7 @@ public class GetTasksQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.Page)
-              .WithErrorMessage("Page must be at least 1.");
+              .WithErrorMessage(CommonPolicy.PageMinMessage);
     }
 
     /// <summary>
@@ -192,6 +193,6 @@ public class GetTasksQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.PageSize)
-            .WithErrorMessage("PageSize must be between 1 and 100.");
+            .WithErrorMessage(CommonPolicy.PageSizeRangeMessage);
     }
 }

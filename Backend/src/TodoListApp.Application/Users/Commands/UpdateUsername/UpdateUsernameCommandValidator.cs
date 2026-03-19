@@ -26,6 +26,6 @@ public class UpdateUsernameCommandValidator : AbstractValidator<UpdateUsernameCo
 
         this.RuleFor(x => x.UserId)
             .NotEmpty()
-                .WithMessage(UserPolicy.UserIdRequiredMessage);
+                .WithMessage(UserPolicy.IdRequiredMessage);
     }
 }

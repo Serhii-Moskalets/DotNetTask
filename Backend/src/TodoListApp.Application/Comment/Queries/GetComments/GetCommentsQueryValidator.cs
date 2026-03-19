@@ -15,7 +15,7 @@ public class GetCommentsQueryValidator : AbstractValidator<GetCommentsQuery>
     {
         this.RuleFor(x => x.UserId)
             .NotEmpty()
-                .WithMessage(UserPolicy.UserIdRequiredMessage);
+                .WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.TaskId)
             .NotEmpty()
@@ -23,10 +23,10 @@ public class GetCommentsQueryValidator : AbstractValidator<GetCommentsQuery>
 
         this.RuleFor(x => x.Page)
             .GreaterThanOrEqualTo(1)
-                .WithMessage(PaginationPolicy.PageMinMessage);
+                .WithMessage(CommonPolicy.PageMinMessage);
 
         this.RuleFor(x => x.PageSize)
                 .InclusiveBetween(1, 100)
-                    .WithMessage(PaginationPolicy.PageSizeRangeMessage);
+                    .WithMessage(CommonPolicy.PageSizeRangeMessage);
     }
 }

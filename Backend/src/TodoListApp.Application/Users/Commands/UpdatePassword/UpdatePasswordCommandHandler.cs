@@ -47,7 +47,7 @@ public class UpdatePasswordCommandHandler(
 
         if (!isPasswordValid)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, PasswordPolicy.IncorrectPasswordMessage);
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, PasswordPolicy.IncorrectMessage);
         }
 
         var newHashString = this._passwordHasher.HashPassword(command.NewPassword);

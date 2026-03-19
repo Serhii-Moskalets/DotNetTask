@@ -23,7 +23,7 @@ public class DeleteTaskListCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>

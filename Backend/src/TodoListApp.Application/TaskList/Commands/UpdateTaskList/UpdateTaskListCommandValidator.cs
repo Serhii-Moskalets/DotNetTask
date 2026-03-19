@@ -22,7 +22,7 @@ public class UpdateTaskListCommandValidator : AbstractValidator<UpdateTaskListCo
 
         this.RuleFor(x => x.UserId)
             .NotEmpty()
-                .WithMessage(UserPolicy.UserIdRequiredMessage);
+                .WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.TaskListId)
             .NotEmpty()

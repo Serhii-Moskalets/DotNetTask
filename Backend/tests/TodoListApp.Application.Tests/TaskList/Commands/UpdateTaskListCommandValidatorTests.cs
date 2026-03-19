@@ -50,7 +50,7 @@ public class UpdateTaskListCommandValidatorTests
 
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-            .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
+            .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>

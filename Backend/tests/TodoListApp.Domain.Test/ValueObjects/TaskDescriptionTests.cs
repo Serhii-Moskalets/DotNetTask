@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -55,7 +56,7 @@ public class TaskDescriptionTests
 
         act.Should()
             .Throw<DomainException>()
-            .WithMessage("Task description cannot be empty.");
+            .WithMessage(TaskPolicy.EmptyDescriptionMessage);
     }
 
     /// <summary>
@@ -73,7 +74,7 @@ public class TaskDescriptionTests
         // Assert
         act.Should()
             .Throw<DomainException>()
-            .WithMessage($"Task description cannot exceed {TaskDescription.MaxLength} characters.");
+            .WithMessage(TaskPolicy.TooLongDescriptionMessage);
     }
 
     /// <summary>

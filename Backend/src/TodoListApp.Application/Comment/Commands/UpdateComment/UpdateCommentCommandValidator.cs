@@ -16,11 +16,11 @@ public class UpdateCommentCommandValidator : AbstractValidator<UpdateCommentComm
     {
         this.RuleFor(x => x.UserId)
             .NotEmpty()
-                .WithMessage(UserPolicy.UserIdRequiredMessage);
+                .WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.CommentId)
             .NotEmpty()
-                .WithMessage(CommentPolicy.CommentIdRequiredMessage);
+                .WithMessage(CommentPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.NewContent)
             .NotEmpty()

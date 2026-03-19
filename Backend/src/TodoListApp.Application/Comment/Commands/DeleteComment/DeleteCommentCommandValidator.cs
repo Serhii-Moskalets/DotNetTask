@@ -14,7 +14,7 @@ public class DeleteCommentCommandValidator : AbstractValidator<DeleteCommentComm
     public DeleteCommentCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage(UserPolicy.UserIdRequiredMessage);
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.CommentId)
             .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);

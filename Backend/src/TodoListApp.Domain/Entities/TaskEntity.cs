@@ -1,4 +1,7 @@
-﻿using TodoListApp.Domain.Common;
+﻿using TinyResult;
+using TinyResult.Enums;
+using TodoListApp.Domain.Common;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
@@ -30,9 +33,9 @@ public class TaskEntity : BaseEntity
         DateTime? dueDate = null,
         TaskDescription? description = null)
     {
-        if (dueDate < DateTime.UtcNow)
+        if (dueDate.HasValue && dueDate < DateTime.UtcNow)
         {
-            throw new DomainException("Due date cannot be in the past.");
+            throw new DomainException(TaskPolicy.InvalidDueDateMessage);
         }
 
         this.OwnerId = ownerId;
@@ -126,7 +129,7 @@ public class TaskEntity : BaseEntity
     {
         if (dueDate.HasValue && dueDate < DateTime.UtcNow)
         {
-            throw new DomainException("Due date cannot be in the past.");
+            throw new DomainException(TaskPolicy.InvalidDueDateMessage);
         }
 
         this.Title = title ?? this.Title;
@@ -161,60 +164,35 @@ public class TaskEntity : BaseEntity
     /// If the new status is the same as the current one, no action is taken.
     /// </summary>
     /// <param name="newStatus">The new status to apply to the task.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when the provided <paramref name="newStatus"/> is not a valid <see cref="StatusTask"/> value.
-    /// </exception>
-    public void ChangeStatus(StatusTask newStatus)
+    /// <returns>A result indicating success or failure of the status transition.</returns>
+    public Result<bool> ChangeStatus(StatusTask newStatus)
     {
+        if (!Enum.IsDefined(newStatus))
+        {
+            return Result<bool>.Failure(ErrorCode.ValidationError, TaskPolicy.InvalidStatusMessage);
+        }
+
         if (this.Status == newStatus)
         {
-            return;
+            return Result<bool>.Success(true);
         }
 
-        switch (newStatus)
+        if (newStatus == StatusTask.NotStarted && this.Status == StatusTask.Done)
         {
-            case StatusTask.NotStarted:
-                this.SetNotStarted(); break;
-            case StatusTask.InProgress:
-                this.SetInProgress(); break;
-            case StatusTask.Done:
-                this.Complete(); break;
-            default:
-                throw new DomainException("Invalid task status.");
+            return Result<bool>.Failure(ErrorCode.ValidationError, TaskPolicy.DoneToNotStartedMessage);
         }
-    }
 
-    /// <summary>
-    /// Sets the task status to <see cref="StatusTask.NotStarted"/>.
-    /// </summary>
-    private void SetNotStarted()
-    {
-        this.Status = StatusTask.NotStarted;
-    }
-
-    /// <summary>
-    /// Sets the task status to <see cref="StatusTask.InProgress"/>.
-    /// </summary>
-    private void SetInProgress()
-    {
-        if (this.Status == StatusTask.Done)
+        if (newStatus == StatusTask.NotStarted && this.Status == StatusTask.InProgress)
         {
-            throw new DomainException("Cannot move from Done to InProgress.");
+            return Result<bool>.Failure(ErrorCode.ValidationError, TaskPolicy.InProgressToNotStartedMessage);
         }
 
-        this.Status = StatusTask.InProgress;
-    }
-
-    /// <summary>
-    /// Sets the task status to <see cref="StatusTask.Done"/>.
-    /// </summary>
-    private void Complete()
-    {
-        if (this.Status != StatusTask.InProgress)
+        if (newStatus == StatusTask.Done && this.Status != StatusTask.InProgress)
         {
-            throw new DomainException("Task must be InProgress to complete.");
+            return Result<bool>.Failure(ErrorCode.ValidationError, TaskPolicy.CompletionRequiresInProgressMessage);
         }
 
-        this.Status = StatusTask.Done;
+        this.Status = newStatus;
+        return Result<bool>.Success(true);
     }
 }

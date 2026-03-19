@@ -26,7 +26,7 @@ public class DeleteTagCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>

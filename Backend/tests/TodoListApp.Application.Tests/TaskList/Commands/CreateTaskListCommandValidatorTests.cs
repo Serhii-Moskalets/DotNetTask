@@ -62,7 +62,7 @@ public class CreateTaskListCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>

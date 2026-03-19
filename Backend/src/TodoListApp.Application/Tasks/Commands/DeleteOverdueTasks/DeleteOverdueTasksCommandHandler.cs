@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tasks.Commands.DeleteOverdueTasks;
 
@@ -27,7 +28,7 @@ public class DeleteOverdueTasksCommandHandler(
 
         if (taskList is null)
         {
-            return await Result<int>.FailureAsync(ErrorCode.NotFound, "Task list not found.");
+            return await Result<int>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         var deletedTasksCount = await this.UnitOfWork.Tasks

@@ -113,7 +113,7 @@ public class UpdatePasswordCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be(PasswordPolicy.IncorrectPasswordMessage);
+        result.Error.Message.Should().Be(PasswordPolicy.IncorrectMessage);
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

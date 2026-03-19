@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Commands.ChangeTaskStatus;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Enums;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
@@ -21,7 +22,7 @@ public class ChangeTaskStatusCommandValidatorTests
         var command = new ChangeTaskStatusCommand(Guid.Empty, Guid.NewGuid(), StatusTask.Done);
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
-            .WithErrorMessage("Task ID is required.");
+            .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -33,7 +34,7 @@ public class ChangeTaskStatusCommandValidatorTests
         var command = new ChangeTaskStatusCommand(Guid.NewGuid(), Guid.Empty, StatusTask.Done);
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -50,7 +51,7 @@ public class ChangeTaskStatusCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Status)
-              .WithErrorMessage("Invalid task status.");
+              .WithErrorMessage(TaskPolicy.InvalidTaskSatusMessage);
     }
 
     /// <summary>

@@ -35,7 +35,7 @@ public class CreateTagCommandHandler(
 
         if (task is null)
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.NotFound, TaskPolicy.TaskNotFoundMessage);
+            return await Result<Guid>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         var tagName = await uniqueValueService.GetUniqueValueAsync(

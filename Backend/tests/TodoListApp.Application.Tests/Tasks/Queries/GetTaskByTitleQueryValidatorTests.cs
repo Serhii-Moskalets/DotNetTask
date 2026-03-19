@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Queries.GetTaskByTitle;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Tasks.Queries;
 
@@ -27,7 +28,7 @@ public class GetTaskByTitleQueryValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User Id is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -88,12 +89,12 @@ public class GetTaskByTitleQueryValidatorTests
     {
         var query = new GetTaskByTitleQuery(
             UserId: Guid.NewGuid(),
-            Text: new string('a', 101));
+            Text: new string('a', CommonPolicy.MaxSearchTextLength + 1));
 
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.Text)
-              .WithErrorMessage("Search text cannot exceed 100 characters");
+              .WithErrorMessage(CommonPolicy.SearchTextTooLongMessage);
     }
 
     /// <summary>
@@ -104,7 +105,7 @@ public class GetTaskByTitleQueryValidatorTests
     {
         var query = new GetTaskByTitleQuery(
             UserId: Guid.NewGuid(),
-            Text: new string('a', 100));
+            Text: new string('a', CommonPolicy.MaxSearchTextLength));
 
         var result = this._validator.TestValidate(query);
 
@@ -125,7 +126,7 @@ public class GetTaskByTitleQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.Page)
-              .WithErrorMessage("Page must be at least 1.");
+              .WithErrorMessage(CommonPolicy.PageMinMessage);
     }
 
     /// <summary>
@@ -142,6 +143,6 @@ public class GetTaskByTitleQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.PageSize)
-            .WithErrorMessage("PageSize must be between 1 and 100.");
+            .WithErrorMessage(CommonPolicy.PageSizeRangeMessage);
     }
 }
