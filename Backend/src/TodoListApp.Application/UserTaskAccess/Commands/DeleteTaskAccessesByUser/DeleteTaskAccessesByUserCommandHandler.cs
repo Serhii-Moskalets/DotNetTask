@@ -2,6 +2,7 @@
 using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessesByUser;
 
@@ -26,7 +27,7 @@ public class DeleteTaskAccessesByUserCommandHandler(IUnitOfWork unitOfWork)
         var exists = await this.UnitOfWork.UserTaskAccesses.ExistsByUserIdAsync(command.UserId, cancellationToken);
         if (!exists)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.InvalidOperation, "There are no tasks shared with you.");
+            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.InvalidOperation, UserTaskAccessPolicy.NoUserAccessesMessage);
         }
 
         await this.UnitOfWork.UserTaskAccesses.DeleteAllByUserIdAsync(command.UserId, cancellationToken);

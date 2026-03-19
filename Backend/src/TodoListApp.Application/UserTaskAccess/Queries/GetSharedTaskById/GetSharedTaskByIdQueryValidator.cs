@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.UserTaskAccess.Queries.GetSharedTaskById;
 
@@ -13,8 +14,8 @@ public class GetSharedTaskByIdQueryValidator : AbstractValidator<GetSharedTaskBy
     public GetSharedTaskByIdQueryValidator()
     {
         this.RuleFor(x => x.TaskId)
-            .NotEmpty().WithMessage("TaskId is required.");
+            .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
     }
 }

@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessById;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
 
@@ -60,7 +61,7 @@ public class DeleteTaskAccessByIdCommandHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("You do not have permission to manage access for this task.", result.Error.Message);
+        Assert.Equal(UserTaskAccessPolicy.AccessDeniedMessage, result.Error.Message);
 
         this._accessRepoMock.Verify(r => r.DeleteByIdAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);

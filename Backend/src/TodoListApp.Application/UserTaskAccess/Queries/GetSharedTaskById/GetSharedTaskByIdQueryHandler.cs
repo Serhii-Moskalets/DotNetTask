@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.UserTaskAccess.Mappers;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.UserTaskAccess.Queries.GetSharedTaskById;
 
@@ -35,7 +36,7 @@ public class GetSharedTaskByIdQueryHandler(IUnitOfWork unitOfWork)
         {
             return await Result<TaskDto>.FailureAsync(
                 TinyResult.Enums.ErrorCode.NotFound,
-                "Task not found.");
+                TaskPolicy.NotFoundMessage);
         }
 
         return await Result<TaskDto>.SuccessAsync(

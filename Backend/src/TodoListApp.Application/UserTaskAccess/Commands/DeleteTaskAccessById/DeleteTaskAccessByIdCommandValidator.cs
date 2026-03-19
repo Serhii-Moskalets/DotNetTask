@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessById;
 
@@ -13,12 +14,12 @@ public class DeleteTaskAccessByIdCommandValidator : AbstractValidator<DeleteTask
     public DeleteTaskAccessByIdCommandValidator()
     {
         this.RuleFor(x => x.TaskId)
-            .NotEmpty().WithMessage("TaskId is required.");
+            .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.OwnerId)
-            .NotEmpty().WithMessage("OwnerId is required.");
+            .NotEmpty().WithMessage(UserTaskAccessPolicy.OwnerIdRequired);
     }
 }

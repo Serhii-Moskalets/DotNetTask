@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessByUserEmail;
 
@@ -14,13 +15,16 @@ public partial class DeleteTaskAccessByUserEmailCommandValidator
     public DeleteTaskAccessByUserEmailCommandValidator()
     {
         this.RuleFor(x => x.TaskId)
-             .NotEmpty().WithMessage("TaskId is required.");
+             .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);
+
         this.RuleFor(x => x.OwnerId)
-            .NotEmpty().WithMessage("OwnerId is required.");
+            .NotEmpty().WithMessage(UserTaskAccessPolicy.OwnerIdRequired);
+
         this.RuleFor(x => x.Email)
             .Cascade(CascadeMode.Stop)
-            .NotEmpty().WithMessage("Email cannot be null or empty.")
+            .NotEmpty()
+                .WithMessage(EmailPolicy.EmptyMessage)
             .EmailAddress(FluentValidation.Validators.EmailValidationMode.AspNetCoreCompatible)
-                .WithMessage("Email address is incorrect.");
+                .WithMessage(EmailPolicy.InvalidFormatMessage);
     }
 }

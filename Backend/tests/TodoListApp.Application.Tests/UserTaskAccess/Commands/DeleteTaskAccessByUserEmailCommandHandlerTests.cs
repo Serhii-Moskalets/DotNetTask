@@ -3,6 +3,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessByUserEmail;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -51,7 +52,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorCode.ValidationError, result.Error!.Code);
-        Assert.Equal("User doesn't have access to this task.", result.Error.Message);
+        Assert.Equal(UserTaskAccessPolicy.AccessDeniedMessage, result.Error.Message);
     }
 
     /// <summary>
@@ -76,7 +77,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("Operation error.", result.Error.Message);
+        Assert.Equal(UserTaskAccessPolicy.UserNotFoundMessage, result.Error.Message);
     }
 
     /// <summary>
@@ -105,7 +106,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("Access wasn't deleted.", result.Error.Message);
+        Assert.Equal(UserTaskAccessPolicy.DeleteFailedMessage, result.Error.Message);
     }
 
     /// <summary>

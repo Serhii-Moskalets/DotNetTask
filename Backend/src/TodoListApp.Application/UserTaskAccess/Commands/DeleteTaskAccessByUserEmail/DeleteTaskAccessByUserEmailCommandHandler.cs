@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessByUserEmail;
@@ -28,7 +29,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
         var hasAccess = await this.UnitOfWork.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, cancellationToken);
         if (!hasAccess)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "User doesn't have access to this task.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.AccessDeniedMessage);
         }
 
         var sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(
@@ -38,7 +39,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
 
         if (sharedUser is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "Operation error.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.UserNotFoundMessage);
         }
 
         var deleted = await this.UnitOfWork.UserTaskAccesses.DeleteByIdAsync(command.TaskId, sharedUser!.Id, cancellationToken);
@@ -46,7 +47,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
 
         if (deleted <= 0)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "Access wasn't deleted.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.DeleteFailedMessage);
         }
 
         return await Result<bool>.SuccessAsync(true);

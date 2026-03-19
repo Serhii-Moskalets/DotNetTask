@@ -3,6 +3,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Mappers;
 using TodoListApp.Application.UserTaskAccess.Queries.GetSharedTaskById;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -54,7 +55,7 @@ public class GetSharedTaskByIdQueryHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(TinyResult.Enums.ErrorCode.NotFound, result.Error!.Code);
-        Assert.Equal("Task not found.", result.Error.Message);
+        Assert.Equal(TaskPolicy.NotFoundMessage, result.Error.Message);
     }
 
     /// <summary>

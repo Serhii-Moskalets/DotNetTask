@@ -3,6 +3,7 @@ using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Queries.GetUsersWithTaskAccess;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -56,7 +57,7 @@ public class GetUsersWithTaskAccessQueryHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
-        result.Error.Message.Should().Be("Task not found or you do not have permission.");
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
     }
 
     /// <summary>
