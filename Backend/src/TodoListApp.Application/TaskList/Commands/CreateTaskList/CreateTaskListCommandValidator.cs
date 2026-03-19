@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.TaskList.Commands.CreateTaskList;
@@ -15,10 +16,12 @@ public class CreateTaskListCommandValidator : AbstractValidator<CreateTaskListCo
     public CreateTaskListCommandValidator()
     {
         this.RuleFor(x => x.Title)
-            .NotEmpty().WithMessage("Title cannot be null or empty.")
-            .MaximumLength(TaskListTitle.MaxLength).WithMessage($"Title cannot exceed {TaskListTitle.MaxLength} characters.");
+            .NotEmpty()
+                .WithMessage(TaskListPolicy.EmptyMessage)
+            .MaximumLength(TaskListTitle.MaxLength)
+                .WithMessage(TaskListPolicy.TooLongMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("OwnerId cannot be empty.");
+            .NotEmpty().WithMessage(UserPolicy.UserIdRequiredMessage);
     }
 }

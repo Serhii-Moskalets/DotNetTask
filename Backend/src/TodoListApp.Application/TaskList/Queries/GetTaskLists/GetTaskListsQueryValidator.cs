@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.TaskList.Queries.GetTaskLists;
 
@@ -13,12 +14,15 @@ public class GetTaskListsQueryValidator : AbstractValidator<GetTaskListsQuery>
     public GetTaskListsQueryValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty()
+                .WithMessage(UserPolicy.UserIdRequiredMessage);
 
         this.RuleFor(x => x.Page)
-            .GreaterThanOrEqualTo(1).WithMessage("Page must be at least 1.");
+            .GreaterThanOrEqualTo(1)
+                .WithMessage(PaginationPolicy.PageMinMessage);
 
         this.RuleFor(x => x.PageSize)
-                .InclusiveBetween(1, 100).WithMessage("PageSize must be between 1 and 100.");
+                .InclusiveBetween(1, 100)
+                    .WithMessage(PaginationPolicy.PageSizeRangeMessage);
     }
 }

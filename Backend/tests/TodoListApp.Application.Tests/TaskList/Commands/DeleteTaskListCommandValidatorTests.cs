@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.TaskList.Commands.DeleteTaskList;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.TaskList.Commands;
 
@@ -22,7 +23,7 @@ public class DeleteTaskListCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
     }
 
     /// <summary>
@@ -36,7 +37,7 @@ public class DeleteTaskListCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.TaskListId)
-              .WithErrorMessage("Task list ID is required.");
+              .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
 
     /// <summary>

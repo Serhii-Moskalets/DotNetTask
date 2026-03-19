@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.TaskList.Commands.UpdateTaskList;
@@ -33,7 +34,7 @@ public class UpdateTaskListCommandHandler(
 
         if (taskList is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Task list not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         if (taskList.Title.Value == command.NewTitle)

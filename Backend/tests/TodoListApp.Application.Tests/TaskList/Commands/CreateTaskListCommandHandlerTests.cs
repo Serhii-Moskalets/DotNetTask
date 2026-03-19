@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.TaskList.Commands.CreateTaskList;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
@@ -57,7 +58,7 @@ public class CreateTaskListCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.NotFound);
-        result.Error.Message.Should().Be("User not found.");
+        result.Error.Message.Should().Be(UserPolicy.AccountNotFoundMessage);
     }
 
     /// <summary>

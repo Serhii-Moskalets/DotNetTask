@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.TaskList.Commands.UpdateTaskList;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.TaskList.Commands;
@@ -22,7 +23,7 @@ public class UpdateTaskListCommandValidatorTests
 
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.NewTitle)
-            .WithErrorMessage("New title cannot be null or empty.");
+            .WithErrorMessage(TaskListPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -36,7 +37,7 @@ public class UpdateTaskListCommandValidatorTests
 
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.NewTitle)
-            .WithErrorMessage($"Title cannot exceed {TaskListTitle.MaxLength} characters.");
+            .WithErrorMessage(TaskListPolicy.TooLongMessage);
     }
 
     /// <summary>
@@ -49,7 +50,7 @@ public class UpdateTaskListCommandValidatorTests
 
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-            .WithErrorMessage("User ID is required.");
+            .WithErrorMessage(UserPolicy.UserIdRequiredMessage);
     }
 
     /// <summary>
@@ -62,7 +63,7 @@ public class UpdateTaskListCommandValidatorTests
 
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.TaskListId)
-            .WithErrorMessage("Task list ID is required.");
+            .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
 
     /// <summary>

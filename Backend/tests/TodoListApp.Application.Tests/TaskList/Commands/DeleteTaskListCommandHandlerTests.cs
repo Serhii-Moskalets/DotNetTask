@@ -3,6 +3,7 @@ using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.TaskList.Commands.DeleteTaskList;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.ValueObjects;
 
@@ -49,7 +50,7 @@ public class DeleteTaskListCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
-        result.Error!.Message.Should().Be("Task list not found.");
+        result.Error!.Message.Should().Be(TaskListPolicy.NotFoundMessage);
     }
 
     /// <summary>
