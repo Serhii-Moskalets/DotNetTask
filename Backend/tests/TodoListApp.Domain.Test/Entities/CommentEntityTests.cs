@@ -94,7 +94,7 @@ public class CommentEntityTests
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Error.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
         result.Error.Message.Should().Be(CommentPolicy.NoChangesDetectedMessage);
         comment.Content.Should().Be(this._validContent);
     }
