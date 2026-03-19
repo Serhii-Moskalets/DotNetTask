@@ -4,7 +4,9 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.TaskList.Commands.CreateTaskList;
 
@@ -15,7 +17,7 @@ namespace TodoListApp.Application.TaskList.Commands.CreateTaskList;
 /// </summary>
 public class CreateTaskListCommandHandler(
     IUnitOfWork unitOfWork,
-    IUniqueNameService uniqueNameService)
+    IUniqueValueService uniqueNameService)
     : HandlerBase(unitOfWork), IRequestHandler<CreateTaskListCommand, Result<Guid>>
 {
     /// <summary>
@@ -29,15 +31,16 @@ public class CreateTaskListCommandHandler(
         var user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: true, cancellationToken);
         if (user is null)
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.NotFound, "User not found.");
+            return await Result<Guid>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
-        string uniqueTitle = await uniqueNameService.GetUniqueNameAsync(
-            command.Title!,
-            (name, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(name, command.UserId, ct),
+        var title = await uniqueNameService.GetUniqueValueAsync(
+            command.Title,
+            name => TaskListTitle.Create(name),
+            (vo, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(vo, command.UserId, ct),
             cancellationToken);
 
-        var taskList = new TaskListEntity(user.Id, uniqueTitle);
+        var taskList = new TaskListEntity(user.Id, title);
 
         await this.UnitOfWork.TaskLists.AddAsync(taskList, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);

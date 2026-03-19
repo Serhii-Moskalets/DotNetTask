@@ -1,11 +1,10 @@
-﻿using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TinyResult;
 using TinyResult.Enums;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Api.Controllers;
 
@@ -54,7 +53,7 @@ public abstract class BaseController : ControllerBase
 
         if (userIdClaim is null || !Guid.TryParse(userIdClaim.Value, out var userId))
         {
-            throw new UnauthorizedAccessException("Invalid user identity.");
+            throw new UnauthorizedAccessException(CommonPolicy.InvalidUserIdentityMessage);
         }
 
         return userId;

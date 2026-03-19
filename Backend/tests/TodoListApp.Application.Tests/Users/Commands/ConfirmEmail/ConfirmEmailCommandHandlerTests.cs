@@ -1,12 +1,12 @@
 ﻿using FluentAssertions;
 using Moq;
 using TinyResult.Enums;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ConfirmEmail;
-using TodoListApp.Application.Users.Commands.ConfirmPasswordReset;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
-using TodoListApp.Domain.Exceptions;
+using TodoListApp.Domain.Test.Common;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmEmail;
 
@@ -15,9 +15,11 @@ namespace TodoListApp.Application.Tests.Users.Commands.ConfirmEmail;
 /// </summary>
 public class ConfirmEmailCommandHandlerTests
 {
+    private static readonly DateTime CurrentTime = DateTime.UtcNow;
+
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
+    private readonly Mock<IClock> _clock;
     private readonly ConfirmEmailCommandHandler _sut;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConfirmEmailCommandHandlerTests"/> class.
@@ -25,7 +27,8 @@ public class ConfirmEmailCommandHandlerTests
     public ConfirmEmailCommandHandlerTests()
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._sut = new ConfirmEmailCommandHandler(this._unitOfWorkMock.Object);
+        this._clock = new Mock<IClock>();
+        this._sut = new ConfirmEmailCommandHandler(this._unitOfWorkMock.Object, this._clock.Object);
     }
 
     /// <summary>
@@ -38,9 +41,10 @@ public class ConfirmEmailCommandHandlerTests
         // Arrange
         const string token = "valid-token";
         var command = new ConfirmEmailCommand(token);
-        var user = new UserEntity("John", "john", "test@example.com", this._passwordHash);
 
-        user.RequestEmailVerification(token, TimeSpan.FromHours(1));
+        var user = UserEntityFactory.Create();
+
+        user.RequestEmailVerification(token, TimeSpan.FromHours(1), CurrentTime);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -65,19 +69,18 @@ public class ConfirmEmailCommandHandlerTests
     {
         // Arrange
         var command = new ConfirmEmailCommand("wrong-token");
-        var user = new UserEntity("John", "john", "test@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
 
-        user.RequestEmailVerification("valid-token", TimeSpan.FromHours(1));
+        user.RequestEmailVerification("valid-token", TimeSpan.FromHours(1), CurrentTime);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         // Act
-        var act = () => this._sut.Handle(command, CancellationToken.None);
+        var result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
-        await act.Should().ThrowAsync<DomainException>()
-            .WithMessage("Invalid or expired email verification token.");
+        result.IsSuccess.Should().BeFalse();
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }

@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessById;
 
@@ -27,12 +28,12 @@ public class DeleteTaskAccessByIdCommandHandler(IUnitOfWork unitOfWork)
     {
         if (command.OwnerId == command.UserId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Cannot remove access for the owner of the task.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.OwnerAccessRemovalMessage);
         }
 
         if (!await this.UnitOfWork.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, cancellationToken))
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "You do not have permission to manage access for this task.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.AccessDeniedMessage);
         }
 
         await this.UnitOfWork.UserTaskAccesses.DeleteByIdAsync(command.TaskId, command.UserId, cancellationToken);

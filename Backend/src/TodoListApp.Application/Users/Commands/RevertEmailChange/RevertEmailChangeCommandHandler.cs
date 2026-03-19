@@ -1,8 +1,10 @@
 ﻿using MediatR;
 using TinyResult;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Commands.RevertEmailChange;
 
@@ -16,9 +18,11 @@ namespace TodoListApp.Application.Users.Commands.RevertEmailChange;
 /// </remarks>
 public class RevertEmailChangeCommandHandler(
     IUnitOfWork unitOfWork,
-    ITokenGenerator tokenGenerator) : HandlerBase(unitOfWork), IRequestHandler<RevertEmailChangeCommand, Result<string>>
+    ITokenGenerator tokenGenerator,
+    IClock clock) : HandlerBase(unitOfWork), IRequestHandler<RevertEmailChangeCommand, Result<string>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
+    private readonly IClock _clock = clock;
 
     /// <summary>
     /// Processes the revert request.
@@ -31,12 +35,16 @@ public class RevertEmailChangeCommandHandler(
         var user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChangeRevert, cancellationToken);
         if (user is null)
         {
-            return await Result<string>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Invalid or expired email revert token.");
+            return await Result<string>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailRevertTokenMessage);
         }
 
         var resetToken = this._tokenGenerator.GenerateSecureToken();
 
-        user.RevertEmailChange(command.Token, DateTime.UtcNow, resetToken, TimeSpan.FromMinutes(15));
+        var result = user.RevertEmailChange(command.Token, this._clock.UtcNow, resetToken, TimeSpan.FromMinutes(15));
+        if (!result.IsSuccess)
+        {
+            return Result<string>.Failure(result.Error!.Code, result.Error.Message);
+        }
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 

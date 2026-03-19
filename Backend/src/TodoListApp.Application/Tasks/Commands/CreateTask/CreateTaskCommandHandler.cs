@@ -2,7 +2,9 @@
 using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tasks.Commands.CreateTask;
 
@@ -29,13 +31,15 @@ public class CreateTaskCommandHandler(
 
         if (taskList is null)
         {
-            return await Result<Guid>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "Task list not found.");
+            return await Result<Guid>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
+
+        var taskTitle = TaskTitle.Create(command.Dto.Title);
 
         var task = new TaskEntity(
             command.UserId,
             command.Dto.TaskListId,
-            command.Dto.Title!,
+            taskTitle,
             command.Dto.DueDate);
 
         await this.UnitOfWork.Tasks.AddAsync(task, cancellationToken);

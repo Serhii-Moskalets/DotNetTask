@@ -1,5 +1,7 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Comment.Commands.CreateComment;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Comment.Commands;
 
@@ -20,12 +22,12 @@ public class CreateCommentCommandValidatorTests
         var command = new CreateCommentCommand(
             TaskId: Guid.NewGuid(),
             UserId: Guid.Empty,
-            Text: "Some text");
+            Content: "Some content");
 
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -37,12 +39,12 @@ public class CreateCommentCommandValidatorTests
         var command = new CreateCommentCommand(
             TaskId: Guid.Empty,
             UserId: Guid.NewGuid(),
-            Text: "Some text");
+            Content: "Some content");
 
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.TaskId)
-              .WithErrorMessage("Task ID is required.");
+              .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -54,12 +56,12 @@ public class CreateCommentCommandValidatorTests
         var command = new CreateCommentCommand(
             TaskId: Guid.Empty,
             UserId: Guid.NewGuid(),
-            Text: string.Empty);
+            Content: string.Empty);
 
         var result = this._validator.TestValidate(command);
 
-        result.ShouldHaveValidationErrorFor(c => c.Text)
-              .WithErrorMessage("Comment text cannot be null or empty.");
+        result.ShouldHaveValidationErrorFor(c => c.Content)
+              .WithErrorMessage(CommentPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -68,13 +70,13 @@ public class CreateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Text_Exceeds_MaxLength()
     {
-        var longText = new string('a', 1001);
+        var longText = new string('a', CommentContent.MaxLength + 1);
         var command = new CreateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), longText);
 
         var result = this._validator.TestValidate(command);
 
-        result.ShouldHaveValidationErrorFor(c => c.Text)
-              .WithErrorMessage("Comment text cannot exceed 1000 characters.");
+        result.ShouldHaveValidationErrorFor(c => c.Content)
+              .WithErrorMessage(CommentPolicy.TooLongMessage);
     }
 
     /// <summary>

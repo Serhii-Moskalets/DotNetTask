@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Comment.Commands.UpdateComment;
 
@@ -13,13 +15,17 @@ public class UpdateCommentCommandValidator : AbstractValidator<UpdateCommentComm
     public UpdateCommentCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty()
+                .WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.CommentId)
-            .NotEmpty().WithMessage("Comment ID is required.");
+            .NotEmpty()
+                .WithMessage(CommentPolicy.IdRequiredMessage);
 
-        this.RuleFor(x => x.NewText)
-            .NotEmpty().WithMessage("New text cannot be null or empty.")
-            .MaximumLength(1000).WithMessage("Comment text cannot exceed 1000 characters.");
+        this.RuleFor(x => x.NewContent)
+            .NotEmpty()
+                .WithMessage(CommentPolicy.EmptyMessage)
+            .MaximumLength(CommentContent.MaxLength)
+                .WithMessage(CommentPolicy.TooLongMessage);
     }
 }

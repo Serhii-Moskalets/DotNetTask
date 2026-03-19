@@ -1,4 +1,5 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Common.Services;
 
@@ -42,7 +43,7 @@ public class TaskAccessServiceTests
         var result = await this._service.HasAccessAsync(taskId, userId, CancellationToken.None);
 
         // Assert
-        Assert.True(result);
+        result.Should().BeTrue();
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ public class TaskAccessServiceTests
         var result = await this._service.HasAccessAsync(taskId, userId, CancellationToken.None);
 
         // Assert
-        Assert.True(result);
+        result.Should().BeTrue();
     }
 
     /// <summary>
@@ -92,6 +93,6 @@ public class TaskAccessServiceTests
         var result = await this._service.HasAccessAsync(taskId, userId, CancellationToken.None);
 
         // Assert
-        Assert.False(result);
+        result.Should().BeFalse();
     }
 }

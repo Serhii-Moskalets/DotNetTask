@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Comment.Commands.DeleteComment;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Comment.Commands;
 
@@ -22,7 +23,7 @@ public class DeleteCommentCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -36,7 +37,7 @@ public class DeleteCommentCommandValidatorTests
         var result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(c => c.CommentId)
-              .WithErrorMessage("Task ID is required.");
+              .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
 
     /// <summary>

@@ -4,6 +4,7 @@ using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Users.Mappers;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Queries.GetUserProfile;
 
@@ -32,7 +33,7 @@ public class GetUserProfileQueryHandler(IUnitOfWork unitOfWork)
         var user = await this.UnitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken: cancellationToken);
         if (user is null)
         {
-            return await Result<UserBriefDto>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, "User not found.");
+            return await Result<UserBriefDto>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         var userDto = UserMapper.Map(user);

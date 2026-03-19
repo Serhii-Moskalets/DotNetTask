@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Comment.Commands.DeleteComment;
 
@@ -13,9 +14,9 @@ public class DeleteCommentCommandValidator : AbstractValidator<DeleteCommentComm
     public DeleteCommentCommandValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.CommentId)
-            .NotEmpty().WithMessage("Task ID is required.");
+            .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);
     }
 }

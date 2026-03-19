@@ -1,10 +1,12 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tag.Commands.CreateTag;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tag.Commands;
 
@@ -18,7 +20,7 @@ public class CreateTagCommandHandlerTests
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<ITagRepository> _tagRepoMock;
     private readonly Mock<ITaskRepository> _taskRepoMock;
-    private readonly Mock<IUniqueNameService> _uniqueNameServiceMock;
+    private readonly Mock<IUniqueValueService> _uniqueNameServiceMock;
     private readonly CreateTagCommandHandler _handler;
 
     /// <summary>
@@ -29,7 +31,7 @@ public class CreateTagCommandHandlerTests
         this._uowMock = new Mock<IUnitOfWork>();
         this._tagRepoMock = new Mock<ITagRepository>();
         this._taskRepoMock = new Mock<ITaskRepository>();
-        this._uniqueNameServiceMock = new Mock<IUniqueNameService>();
+        this._uniqueNameServiceMock = new Mock<IUniqueValueService>();
 
         this._uowMock.Setup(u => u.Tags).Returns(this._tagRepoMock.Object);
         this._uowMock.Setup(u => u.Tasks).Returns(this._taskRepoMock.Object);
@@ -48,31 +50,36 @@ public class CreateTagCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var taskId = Guid.NewGuid();
-        var command = new CreateTagCommand(userId, taskId, "Tag");
-
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Title"));
+        var command = new CreateTagCommand(userId, task.Id, "Tag");
+        var expectedTagName = TagName.Create("Tag");
 
         this._uniqueNameServiceMock
-            .Setup(s => s.GetUniqueNameAsync(
+            .Setup(s => s.GetUniqueValueAsync<TagName>(
                 It.IsAny<string>(),
-                It.IsAny<Func<string,
-                CancellationToken,
-                Task<bool>>>(),
+                It.IsAny<Func<string, TagName>>(),
+                It.IsAny<Func<TagName, CancellationToken, Task<bool>>>(),
                 It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Tag");
+            .ReturnsAsync(expectedTagName);
 
         this._taskRepoMock
-            .Setup(r => r.GetTaskByIdForUserAsync(taskId, userId, false, It.IsAny<CancellationToken>()))
+            .Setup(r => r.GetTaskByIdForUserAsync(task.Id, userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
         // Act
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(result.Value, task.TagId);
-        this._tagRepoMock.Verify(r => r.AddAsync(It.Is<TagEntity>(t => t.Name == "Tag"), It.IsAny<CancellationToken>()), Times.Once);
+        result.IsSuccess.Should().BeTrue();
+
+        result.Value.Should().Be(task.TagId!.Value);
+        this._tagRepoMock.Verify(
+            r => r.AddAsync(It.IsAny<TagEntity>(), It.IsAny<CancellationToken>()),
+            Times.Once);
+
+        this._tagRepoMock.Verify(
+            r => r.AddAsync(It.Is<TagEntity>(t => t.Name.Value == "Tag"), It.IsAny<CancellationToken>()),
+            Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -92,15 +99,6 @@ public class CreateTagCommandHandlerTests
         var userId = Guid.NewGuid();
         var command = new CreateTagCommand(userId, Guid.NewGuid(), "Tag");
 
-        this._uniqueNameServiceMock
-            .Setup(s => s.GetUniqueNameAsync(
-                It.IsAny<string>(),
-                It.IsAny<Func<string,
-                CancellationToken,
-                Task<bool>>>(),
-                It.IsAny<CancellationToken>()))
-            .ReturnsAsync("Tag");
-
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(
                 It.IsAny<Guid>(),
@@ -113,8 +111,17 @@ public class CreateTagCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error?.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+
+        this._uniqueNameServiceMock.Verify(
+        s => s.GetUniqueValueAsync<TagName>(
+            It.IsAny<string>(),
+            It.IsAny<Func<string, TagName>>(),
+            It.IsAny<Func<TagName, CancellationToken, Task<bool>>>(),
+            It.IsAny<CancellationToken>()),
+        Times.Never);
+
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

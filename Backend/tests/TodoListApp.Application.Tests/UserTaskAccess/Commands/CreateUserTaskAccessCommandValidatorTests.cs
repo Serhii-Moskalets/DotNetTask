@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
 
@@ -19,7 +20,7 @@ public class CreateUserTaskAccessCommandValidatorTests
         var command = new CreateUserTaskAccessCommand(Guid.Empty, Guid.NewGuid(), "test@test.com");
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
-              .WithErrorMessage("TaskId is required.");
+              .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ public class CreateUserTaskAccessCommandValidatorTests
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.Empty, "test@test.com");
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.OwnerId)
-              .WithErrorMessage("OwnerId is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -43,7 +44,7 @@ public class CreateUserTaskAccessCommandValidatorTests
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.Email)
-              .WithErrorMessage("Email cannot be null or empty.");
+              .WithErrorMessage(EmailPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -58,7 +59,7 @@ public class CreateUserTaskAccessCommandValidatorTests
         var command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.Email)
-              .WithErrorMessage("Email address is incorrect.");
+              .WithErrorMessage(EmailPolicy.InvalidFormatMessage);
     }
 
     /// <summary>

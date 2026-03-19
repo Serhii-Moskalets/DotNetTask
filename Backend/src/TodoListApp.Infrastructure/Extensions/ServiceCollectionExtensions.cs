@@ -7,6 +7,7 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.TodoListAppDbContext;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Infrastructure.Notifications.Services;
 using TodoListApp.Infrastructure.Notifications.Settings;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
@@ -32,12 +33,17 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        var connectionString = config.GetConnectionString("DefaultConnection");
+        var connectionString = config.GetConnectionString(CommonPolicy.DataBaseConnectionString)
+                ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
+
         services.AddDbContext<TodoListAppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
         services.AddScoped<ITodoListAppDbContext>(provider =>
             provider.GetRequiredService<TodoListAppDbContext>());
+
+        // --- Add System time ---
+        services.AddSingleton<IClock, SystemClock>();
 
         // --- Add all repository ---
         services.AddScoped<ICommentRepository, CommentRepository>();

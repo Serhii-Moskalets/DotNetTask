@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.UserTaskAccess.Queries.GetSharedTasksByUserId;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Queries;
 
@@ -19,7 +20,7 @@ public class GetSharedTasksByUserIdQueryValidatorTests
         var query = new GetSharedTasksByUserIdQuery(Guid.Empty);
         var result = this._validator.TestValidate(query);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("UserId is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>

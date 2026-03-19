@@ -1,4 +1,7 @@
-﻿using TodoListApp.Application.Tag.Commands.CreateTag;
+﻿using FluentValidation.TestHelper;
+using TodoListApp.Application.Tag.Commands.CreateTag;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tag.Commands;
 
@@ -16,13 +19,15 @@ public class CreateTagCommandValidatorTests
     [Fact]
     public void Validate_ShouldHaveError_WhenNameIsEmpty()
     {
+        // Arrange
         var command = new CreateTagCommand(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
 
-        var result = this._validator.Validate(command);
+        // Act
+        var result = this._validator.TestValidate(command);
 
-        Assert.False(result.IsValid);
-        var error = Assert.Single(result.Errors, e => e.PropertyName == "Name");
-        Assert.Equal("Tag name cannot be null or empty.", error.ErrorMessage);
+        // Assert
+        result.ShouldHaveValidationErrorFor(c => c.Name)
+            .WithErrorMessage(TagPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -31,14 +36,16 @@ public class CreateTagCommandValidatorTests
     [Fact]
     public void Validate_ShouldHaveError_WhenNameIsTooLong()
     {
-        var longName = new string('a', 51);
+        // Arrange
+        var longName = new string('a', TagName.MaxLength + 1);
         var command = new CreateTagCommand(Guid.NewGuid(), Guid.NewGuid(), longName);
 
-        var result = this._validator.Validate(command);
+        // Act
+        var result = this._validator.TestValidate(command);
 
-        Assert.False(result.IsValid);
-        var error = Assert.Single(result.Errors, e => e.PropertyName == "Name");
-        Assert.Equal("Tag name cannot exceed 50 characters.", error.ErrorMessage);
+        // Assert
+        result.ShouldHaveValidationErrorFor(c => c.Name)
+            .WithErrorMessage(TagPolicy.TooLongMessage);
     }
 
     /// <summary>
@@ -47,10 +54,13 @@ public class CreateTagCommandValidatorTests
     [Fact]
     public void Validate_ShouldNotHaveError_WhenNameIsValid()
     {
+        // Arrange
         var command = new CreateTagCommand(Guid.NewGuid(), Guid.NewGuid(), "Tag");
 
-        var result = this._validator.Validate(command);
+        // Act
+        var result = this._validator.TestValidate(command);
 
-        Assert.True(result.IsValid);
+        // Assert
+        result.ShouldNotHaveValidationErrorFor(c => c.Name);
     }
 }

@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tasks.Queries.GetTaskByTitle;
 
@@ -13,16 +14,19 @@ public class GetTaskByTitleQueryValidator : AbstractValidator<GetTaskByTitleQuer
     public GetTaskByTitleQueryValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User Id is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.Text)
-            .MaximumLength(100).WithMessage("Search text cannot exceed 100 characters")
+            .MaximumLength(CommonPolicy.MaxSearchTextLength)
+                .WithMessage(CommonPolicy.SearchTextTooLongMessage)
             .When(x => !string.IsNullOrWhiteSpace(x.Text));
 
         this.RuleFor(x => x.Page)
-            .GreaterThanOrEqualTo(1).WithMessage("Page must be at least 1.");
+            .GreaterThanOrEqualTo(1)
+                .WithMessage(CommonPolicy.PageMinMessage);
 
         this.RuleFor(x => x.PageSize)
-                .InclusiveBetween(1, 100).WithMessage("PageSize must be between 1 and 100.");
+            .InclusiveBetween(1, 100)
+               .WithMessage(CommonPolicy.PageSizeRangeMessage);
     }
 }

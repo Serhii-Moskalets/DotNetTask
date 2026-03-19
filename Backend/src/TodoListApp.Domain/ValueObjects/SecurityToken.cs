@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Enums;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
@@ -37,7 +38,7 @@ public sealed record SecurityToken
         UserTokenType type,
         string? metadata)
     {
-        this.Value = value;
+        this.Value = value.Trim();
         this.ExpiresAt = expiresAt;
         this.Type = type;
         this.Metadata = metadata;
@@ -49,21 +50,22 @@ public sealed record SecurityToken
     /// <param name="value">The token string.</param>
     /// <param name="duration">How long the token should remain valid from now.</param>
     /// <param name="type">The intended use of the token.</param>
+    /// <param name="currentTime">The current time.</param>
     /// <param name="metadata">Optional associated data.</param>
     /// <returns>A new <see cref="SecurityToken"/> instance.</returns>
-    public static SecurityToken Create(string value, TimeSpan duration, UserTokenType type, string? metadata = null)
+    public static SecurityToken Create(string value, TimeSpan duration, UserTokenType type, DateTime currentTime, string? metadata = null)
     {
         if (string.IsNullOrEmpty(value))
         {
-            throw new DomainException("Invalid or missing security token.");
+            throw new DomainException(TokenPolicy.InvalidOrMissingMessage);
         }
 
         if (duration <= TimeSpan.Zero)
         {
-            throw new ArgumentException("Token duration must be positive.");
+            throw new DomainException(TokenPolicy.PositiveDurationMessage);
         }
 
-        return new SecurityToken(value, DateTime.UtcNow.Add(duration), type, metadata);
+        return new SecurityToken(value, currentTime.Add(duration), type, metadata);
     }
 
     /// <summary>

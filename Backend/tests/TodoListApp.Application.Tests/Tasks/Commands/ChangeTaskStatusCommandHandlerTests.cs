@@ -1,10 +1,13 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.ChangeTaskStatus;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -14,6 +17,8 @@ namespace TodoListApp.Application.Tests.Tasks.Commands;
 /// </summary>
 public class ChangeTaskStatusCommandHandlerTests
 {
+    private static readonly TaskTitle Title = TaskTitle.Create("Title");
+
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<ITaskRepository> _taskRepoMock;
     private readonly ChangeTaskStatusCommandHandler _handler;
@@ -51,9 +56,11 @@ public class ChangeTaskStatusCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error?.Code);
-        Assert.Equal("Task not found.", result.Error?.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be(TaskPolicy.NotFoundMessage);
+
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -71,7 +78,7 @@ public class ChangeTaskStatusCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
 
         var command = new ChangeTaskStatusCommand(task.Id, userId, task.Status);
 
@@ -83,7 +90,7 @@ public class ChangeTaskStatusCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -96,8 +103,9 @@ public class ChangeTaskStatusCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
+        var newStatus = StatusTask.InProgress;
 
-        var taskEntity = new TaskEntity(userId, Guid.NewGuid(), "Task");
+        var taskEntity = new TaskEntity(userId, Guid.NewGuid(), Title);
 
         this._taskRepoMock.Setup(r => r.GetTaskByIdForUserAsync(
             It.IsAny<Guid>(),
@@ -108,14 +116,15 @@ public class ChangeTaskStatusCommandHandlerTests
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        var command = new ChangeTaskStatusCommand(Guid.NewGuid(), userId, StatusTask.InProgress);
+        var command = new ChangeTaskStatusCommand(Guid.NewGuid(), userId, newStatus);
 
         // Act
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(StatusTask.InProgress, taskEntity.Status);
+        result.IsSuccess.Should().BeTrue();
+        taskEntity.Status.Should().Be(newStatus);
+
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

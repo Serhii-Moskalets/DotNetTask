@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
@@ -8,8 +9,13 @@ namespace TodoListApp.Domain.ValueObjects;
 /// </summary>
 public sealed partial record Email
 {
-    [GeneratedRegex(@"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(EmailPolicy.FormatRegex, RegexOptions.IgnoreCase)]
     private static partial Regex EmailRegex();
+
+    /// <summary>
+    /// The maximum allowed length for a email.
+    /// </summary>
+    public const int MaxLength = 254;
 
     /// <summary>
     /// Gets the string representation of the email address.
@@ -32,19 +38,19 @@ public sealed partial record Email
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new DomainException("Email cannot be empty.");
+            throw new DomainException(EmailPolicy.EmptyMessage);
         }
 
         var trimmedEmail = value.Trim();
 
-        if (trimmedEmail.Length > 100)
+        if (trimmedEmail.Length > MaxLength)
         {
-            throw new DomainException("An email cannot contain more than 100 characters.");
+            throw new DomainException(EmailPolicy.TooLongMessage);
         }
 
         if (!EmailRegex().IsMatch(trimmedEmail))
         {
-            throw new DomainException("Invalid email format.");
+            throw new DomainException(EmailPolicy.InvalidFormatMessage);
         }
 
         return new Email(trimmedEmail.ToLowerInvariant());

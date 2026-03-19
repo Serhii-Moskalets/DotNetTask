@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tag.Queries.GetTags;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Tag.Queries;
 
@@ -25,7 +26,7 @@ public class GetTagsQueryValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(q => q.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -58,7 +59,7 @@ public class GetTagsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.Page)
-              .WithErrorMessage("Page must be at least 1.");
+              .WithErrorMessage(CommonPolicy.PageMinMessage);
     }
 
     /// <summary>
@@ -75,7 +76,7 @@ public class GetTagsQueryValidatorTests
         var result = this._validator.TestValidate(query);
 
         result.ShouldHaveValidationErrorFor(x => x.PageSize)
-            .WithErrorMessage("PageSize must be between 1 and 100.");
+            .WithErrorMessage(CommonPolicy.PageSizeRangeMessage);
     }
 
     /// <summary>

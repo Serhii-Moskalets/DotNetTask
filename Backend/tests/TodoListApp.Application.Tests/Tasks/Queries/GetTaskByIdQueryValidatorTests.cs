@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Queries.GetTaskById;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Tasks.Queries;
 
@@ -25,7 +26,7 @@ public class GetTaskByIdQueryValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(q => q.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -42,7 +43,7 @@ public class GetTaskByIdQueryValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(q => q.TaskId)
-              .WithErrorMessage("Task ID is required.");
+              .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
 
     /// <summary>

@@ -1,10 +1,12 @@
-﻿using MediatR;
+﻿using FluentAssertions;
 using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tag.Commands.DeleteTag;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tag.Commands;
 
@@ -48,9 +50,10 @@ public class DeleteTagCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
-        Assert.Equal("Tag not found.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be(TagPolicy.NotFoundMessage);
     }
 
     /// <summary>
@@ -62,7 +65,7 @@ public class DeleteTagCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var tagEntity = new TagEntity("TagName", userId);
+        var tagEntity = new TagEntity(TagName.Create("Tag"), userId);
 
         this._tagRepoMock.Setup(r => r.GetTagByIdForUserAsync(tagEntity.Id, userId, false, It.IsAny<CancellationToken>()))
                    .ReturnsAsync(tagEntity);
@@ -77,7 +80,7 @@ public class DeleteTagCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._tagRepoMock.Verify(r => r.DeleteAsync(tagEntity, It.IsAny<CancellationToken>()), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.UpdatePassword;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.UpdatePassword;
 
@@ -9,6 +10,23 @@ namespace TodoListApp.Application.Tests.Users.Commands.UpdatePassword;
 public class UpdatePasswordCommandValidatorTests
 {
     private readonly UpdatePasswordCommandValidator _validator = new();
+
+    /// <summary>
+    /// Provides invalid password samples and their corresponding expected error messages from <see cref="PasswordPolicy"/>.
+    /// </summary>
+    /// <returns>An enumeration of test data arrays.</returns>
+    public static TheoryData<string, string> GetInvalidPasswordData()
+    {
+        return new TheoryData<string, string>
+        {
+            { string.Empty, PasswordPolicy.EmptyMessage },
+            { "short", PasswordPolicy.TooShortMessage },
+            { "nouppercase1!", PasswordPolicy.UppercaseMessage },
+            { "NOLOWERCASE1!", PasswordPolicy.LowercaseMessage },
+            { "NoNumber!", PasswordPolicy.NumberMessage },
+            { "NoSpecialChar1", PasswordPolicy.SpecialCharMessage },
+        };
+    }
 
     /// <summary>
     /// Verifies that the validator does not return any errors when all password requirements are met.
@@ -37,51 +55,47 @@ public class UpdatePasswordCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
-            .WithErrorMessage("New password and current password cannot be the same.");
+            .WithErrorMessage(PasswordPolicy.SameAsOldMessage);
     }
 
     /// <summary>
-    /// Verifies that empty or invalid mandatory fields trigger validation errors.
+    /// Verifies that an empty User ID triggers the appropriate validation error.
     /// </summary>
-    /// <param name="currentPass">The current password to validate.</param>
-    /// <param name="newPass">The new password to validate.</param>
-    /// <param name="expectedMessage">The expected error message for the specific failure.</param>
-    [Theory]
-    [InlineData("", "NewPass123!", "User ID is required.")]
-    [InlineData("Current123!", "", "Password is required.")]
-    public void Should_Have_Error_When_Required_Fields_Are_Empty(string currentPass, string newPass, string expectedMessage)
+    [Fact]
+    public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        var command = new UpdatePasswordCommand(currentPass, newPass, Guid.Empty);
+        var command = new UpdatePasswordCommand("OldPass123!", "NewPass456!", Guid.Empty);
 
         // Act & Assert
         var result = this._validator.TestValidate(command);
+        result.ShouldHaveValidationErrorFor(x => x.UserId)
+            .WithErrorMessage(UserPolicy.IdRequiredMessage);
+    }
 
-        if (string.IsNullOrEmpty(currentPass))
-        {
-            result.ShouldHaveValidationErrorFor(x => x.CurrentPassword);
-        }
+    /// <summary>
+    /// Verifies that an empty current password triggers the appropriate validation error.
+    /// </summary>
+    [Fact]
+    public void Should_Have_Error_When_CurrentPassword_Is_Empty()
+    {
+        // Arrange
+        var command = new UpdatePasswordCommand(string.Empty, "NewPass456!", Guid.NewGuid());
 
-        if (string.IsNullOrEmpty(newPass))
-        {
-            result.ShouldHaveValidationErrorFor(x => x.NewPassword).WithErrorMessage(expectedMessage);
-        }
-
-        result.ShouldHaveValidationErrorFor(x => x.UserId).WithErrorMessage("User ID is required.");
+        // Act & Assert
+        var result = this._validator.TestValidate(command);
+        result.ShouldHaveValidationErrorFor(x => x.CurrentPassword)
+            .WithErrorMessage(PasswordPolicy.EmptyMessage);
     }
 
     /// <summary>
     /// Verifies that various password complexity requirements are enforced for the new password.
     /// </summary>
     /// <param name="weakPassword">The password that fails complexity rules.</param>
-    /// <param name="expectedMessage">The expected error message for the specific failure.</param>
+    /// <param name="expectedMessage">The policy-defined error message expected for the failure.</param>
     [Theory]
-    [InlineData("short", "Password must be at least 8 characters long.")]
-    [InlineData("nouppercase1!", "Password must contain at least one uppercase letter.")]
-    [InlineData("NOLOWERCASE1!", "Password must contain at least one lowercase letter.")]
-    [InlineData("NoNumber!", "Password must contain at least one number.")]
-    [InlineData("NoSpecialChar1", "Password must contain at least one special character (!?*.).")]
-    public void Should_Have_Error_When_Password_Complexity_Is_Not_Met(string weakPassword, string expectedMessage)
+    [MemberData(nameof(GetInvalidPasswordData))]
+    public void Should_Have_Error_When_NewPassword_Complexity_Is_Not_Met(string weakPassword, string expectedMessage)
     {
         // Arrange
         var command = new UpdatePasswordCommand("ValidOldPass1!", weakPassword, Guid.NewGuid());

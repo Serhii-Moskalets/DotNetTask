@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.TaskList.Commands.DeleteTaskList;
 
@@ -29,7 +30,7 @@ public class DeleteTaskListCommandHandler(
             .GetTaskListByIdForUserAsync(command.TaskListId, command.UserId, asNoTracking: false, cancellationToken);
         if (taskList is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Task list not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         await this.UnitOfWork.TaskLists.DeleteAsync(taskList, cancellationToken);

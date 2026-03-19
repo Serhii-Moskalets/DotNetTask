@@ -28,6 +28,12 @@ namespace TodoListApp.Infrastructure.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)")
+                        .HasColumnName("content");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_date");
@@ -35,12 +41,6 @@ namespace TodoListApp.Infrastructure.Migrations
                     b.Property<Guid>("TaskId")
                         .HasColumnType("uuid")
                         .HasColumnName("task_id");
-
-                    b.Property<string>("Text")
-                        .IsRequired()
-                        .HasMaxLength(4000)
-                        .HasColumnType("character varying(4000)")
-                        .HasColumnName("text");
 
                     b.Property<Guid>("UserId")
                         .HasColumnType("uuid")
@@ -52,7 +52,7 @@ namespace TodoListApp.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("comments");
+                    b.ToTable("comments", (string)null);
                 });
 
             modelBuilder.Entity("TodoListApp.Domain.Entities.TagEntity", b =>
@@ -67,8 +67,8 @@ namespace TodoListApp.Infrastructure.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("name");
 
                     b.Property<Guid>("UserId")
@@ -79,21 +79,21 @@ namespace TodoListApp.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("tags");
+                    b.ToTable("tags", (string)null);
                 });
 
             modelBuilder.Entity("TodoListApp.Domain.Entities.TaskEntity", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("created_date");
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Description")
-                        .HasColumnType("text")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
                         .HasColumnName("description");
 
                     b.Property<DateTime?>("DueDate")
@@ -118,8 +118,8 @@ namespace TodoListApp.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("character varying(200)")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
                         .HasColumnName("title");
 
                     b.HasKey("Id");
@@ -130,7 +130,7 @@ namespace TodoListApp.Infrastructure.Migrations
 
                     b.HasIndex("TaskListId");
 
-                    b.ToTable("tasks");
+                    b.ToTable("tasks", (string)null);
                 });
 
             modelBuilder.Entity("TodoListApp.Domain.Entities.TaskListEntity", b =>
@@ -157,7 +157,7 @@ namespace TodoListApp.Infrastructure.Migrations
 
                     b.HasIndex("OwnerId");
 
-                    b.ToTable("task_lists");
+                    b.ToTable("task_lists", (string)null);
                 });
 
             modelBuilder.Entity("TodoListApp.Domain.Entities.UserEntity", b =>
@@ -242,7 +242,7 @@ namespace TodoListApp.Infrastructure.Migrations
 
                     b.HasIndex("TaskId");
 
-                    b.ToTable("user_task_access");
+                    b.ToTable("user_task_access", (string)null);
                 });
 
             modelBuilder.Entity("TodoListApp.Domain.Entities.CommentEntity", b =>
@@ -394,7 +394,7 @@ namespace TodoListApp.Infrastructure.Migrations
                         .IsRequired();
 
                     b.HasOne("TodoListApp.Domain.Entities.UserEntity", "User")
-                        .WithMany("TaskAccesses")
+                        .WithMany("UserAccesses")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -429,9 +429,9 @@ namespace TodoListApp.Infrastructure.Migrations
 
                     b.Navigation("Tags");
 
-                    b.Navigation("TaskAccesses");
-
                     b.Navigation("TaskLists");
+
+                    b.Navigation("UserAccesses");
                 });
 #pragma warning restore 612, 618
         }

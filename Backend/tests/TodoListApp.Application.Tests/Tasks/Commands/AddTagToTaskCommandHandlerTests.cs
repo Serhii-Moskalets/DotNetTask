@@ -1,9 +1,12 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.AddTagToTask;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -14,6 +17,8 @@ namespace TodoListApp.Application.Tests.Tasks.Commands;
 /// </summary>
 public class AddTagToTaskCommandHandlerTests
 {
+    private static readonly TaskTitle Title = TaskTitle.Create("Title");
+
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<ITaskRepository> _taskRepoMock;
     private readonly Mock<ITagRepository> _tagRepoMock;
@@ -53,8 +58,9 @@ public class AddTagToTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
     }
 
     /// <summary>
@@ -70,7 +76,7 @@ public class AddTagToTaskCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Test");
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
         var tagId = Guid.NewGuid();
         task.SetTag(tagId);
 
@@ -84,8 +90,10 @@ public class AddTagToTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
+
         this._tagRepoMock.Verify(t => t.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Never);
+        this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     /// <summary>
@@ -98,8 +106,8 @@ public class AddTagToTaskCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Test Task");
-        var tag = new TagEntity("Work", userId);
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        var tag = new TagEntity(TagName.Create("Tag"), userId);
 
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(task.Id, userId, false, It.IsAny<CancellationToken>()))
@@ -117,8 +125,9 @@ public class AddTagToTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(tag.Id, task.TagId);
+        result.IsSuccess.Should().BeTrue();
+        task.TagId.Should().Be(tag.Id);
+
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -131,7 +140,7 @@ public class AddTagToTaskCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Test Task");
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
         var tagId = Guid.NewGuid();
 
         this._taskRepoMock
@@ -148,9 +157,10 @@ public class AddTagToTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
-        Assert.Equal("Tag not found.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be(TagPolicy.NotFoundMessage);
     }
 
     /// <summary>
@@ -164,8 +174,8 @@ public class AddTagToTaskCommandHandlerTests
         var userId = Guid.NewGuid();
         var otherUserId = Guid.NewGuid();
 
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Test Task");
-        var tag = new TagEntity("Foreign Tag", otherUserId); // Чужий тег
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        var tag = new TagEntity(TagName.Create("Foreign Tag"), otherUserId);
 
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(task.Id, userId, false, It.IsAny<CancellationToken>()))
@@ -181,8 +191,9 @@ public class AddTagToTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("You do not own this tag.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(TagPolicy.DoNotHavePermission);
     }
 }

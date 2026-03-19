@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Infrastructure.Persistence.Configurations;
 
@@ -8,26 +9,34 @@ namespace TodoListApp.Infrastructure.Persistence.Configurations;
 /// Configures the <see cref="TaskListEntity"/> entity.
 /// Sets primary key, property constraints, and relationship with User.
 /// </summary>
-public class TaskListEntityConfiguration : IEntityTypeConfiguration<TaskListEntity>
+public class TaskListEntityConfiguration : BaseEntityConfiguration<TaskListEntity>
 {
     /// <summary>
     /// Configures the <see cref="TaskListEntity"/> entity type.
     /// </summary>
     /// <param name="builder">The builder used to configure the entity.</param>
-    public void Configure(EntityTypeBuilder<TaskListEntity> builder)
+    public override void Configure(EntityTypeBuilder<TaskListEntity> builder)
     {
-        // Set primary key
-        builder.HasKey(tl => tl.Id);
+        base.Configure(builder);
+        builder.ToTable("task_lists");
 
-        // Configure properties
-        builder.Property(tl => tl.Id).HasColumnType("uuid").ValueGeneratedNever();
-        builder.Property(tl => tl.OwnerId).IsRequired().HasColumnType("uuid");
-        builder.Property(tl => tl.Title).IsRequired().HasMaxLength(50);
+        builder.Property(tl => tl.OwnerId)
+            .HasColumnName("owner_id")
+            .HasColumnType("uuid")
+            .IsRequired();
 
-        // Configure relationship with User
+        builder.Property(tl => tl.Title)
+            .HasConversion(t => t.Value, v => TaskListTitle.Create(v))
+            .HasColumnName("title")
+            .HasMaxLength(TaskListTitle.MaxLength)
+            .IsRequired();
+
         builder.HasOne(tl => tl.Owner)
             .WithMany(o => o.TaskLists)
             .HasForeignKey(tl => tl.OwnerId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(tl => tl.Tasks)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

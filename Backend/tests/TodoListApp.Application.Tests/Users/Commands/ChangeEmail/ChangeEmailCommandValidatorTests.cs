@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.ChangeEmail;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ChangeEmail;
 
@@ -38,7 +39,7 @@ public class ChangeEmailCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-            .WithErrorMessage("User ID is required.");
+            .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -56,7 +57,7 @@ public class ChangeEmailCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewEmail)
-              .WithErrorMessage("Email is required.");
+              .WithErrorMessage(EmailPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -74,6 +75,6 @@ public class ChangeEmailCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewEmail)
-              .WithErrorMessage("Invalid email format.");
+              .WithErrorMessage(EmailPolicy.InvalidFormatMessage);
     }
 }

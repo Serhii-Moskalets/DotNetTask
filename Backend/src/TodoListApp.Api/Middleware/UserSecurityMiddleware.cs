@@ -1,10 +1,8 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Api.Middleware;
@@ -39,15 +37,15 @@ public class UserSecurityMiddleware(RequestDelegate next)
 
             if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId) || tokenStamp is null)
             {
-                throw new UnauthorizedAccessException("Invalid token claims.");
+                throw new UnauthorizedAccessException(TokenPolicy.InvalidUserIdentityMessage);
             }
 
             var (securityStamp, mustChangePassword) = await unitOfWork.Users.GetUsersSecurityInfoAsync(userId, context.RequestAborted)
-                ?? throw new UnauthorizedAccessException("User not found.");
+                ?? throw new UnauthorizedAccessException(UserPolicy.AccountNotFoundMessage);
 
             if (securityStamp != tokenStamp)
             {
-                throw new UnauthorizedAccessException("Session has expired. Please login again.");
+                throw new UnauthorizedAccessException(UserPolicy.SessionExpiredMessage);
             }
 
             if (mustChangePassword)

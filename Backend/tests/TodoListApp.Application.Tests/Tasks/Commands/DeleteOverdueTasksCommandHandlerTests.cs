@@ -1,9 +1,11 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.DeleteOverdueTasks;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -56,8 +58,9 @@ public class DeleteOverdueTasksCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
 
         this._taskRepoMock.Verify(
             r => r.DeleteOverdueTaskAsync(It.IsAny<Guid>(), It.IsAny<DateTime>(), It.IsAny<CancellationToken>()), Times.Never);
@@ -73,7 +76,7 @@ public class DeleteOverdueTasksCommandHandlerTests
         // Arrange
         var userId = Guid.NewGuid();
         var expectedDeletedCount = 5;
-        var taskList = new TaskListEntity(userId, "My list");
+        var taskList = new TaskListEntity(userId, TaskListTitle.Create("My list"));
 
         this._taskListRepoMock
             .Setup(r => r.GetTaskListByIdForUserAsync(taskList.Id, userId, true, It.IsAny<CancellationToken>()))
@@ -89,8 +92,8 @@ public class DeleteOverdueTasksCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(expectedDeletedCount, result.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().Be(expectedDeletedCount);
 
         this._taskRepoMock.Verify(
             r => r.DeleteOverdueTaskAsync(

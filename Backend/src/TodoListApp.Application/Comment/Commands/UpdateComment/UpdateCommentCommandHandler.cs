@@ -3,6 +3,8 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Comment.Commands.UpdateComment;
 
@@ -23,16 +25,22 @@ public class UpdateCommentCommandHandler(IUnitOfWork unitOfWork)
         var comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, false, cancellationToken);
         if (comment is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Comment not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
         }
 
         if (comment.UserId != command.UserId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "You don't have permission to update this comment.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, CommentPolicy.UpdateAccessDeniedMessage);
         }
 
-        var newText = command.NewText!;
-        comment.Update(newText);
+        var newContent = CommentContent.Create(command.NewContent);
+
+        var result = comment.Update(newContent);
+        if (!result.IsSuccess)
+        {
+            return result;
+        }
+
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);

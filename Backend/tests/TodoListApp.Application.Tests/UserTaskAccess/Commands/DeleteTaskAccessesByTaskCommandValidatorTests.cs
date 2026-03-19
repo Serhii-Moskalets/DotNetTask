@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessesByTask;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
 
@@ -19,7 +20,7 @@ public class DeleteTaskAccessesByTaskCommandValidatorTests
         var command = new DeleteTaskAccessesByTaskCommand(Guid.Empty, Guid.NewGuid());
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
-              .WithErrorMessage("TaskId is required.");
+              .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ public class DeleteTaskAccessesByTaskCommandValidatorTests
         var command = new DeleteTaskAccessesByTaskCommand(Guid.NewGuid(), Guid.Empty);
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("UserId is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>

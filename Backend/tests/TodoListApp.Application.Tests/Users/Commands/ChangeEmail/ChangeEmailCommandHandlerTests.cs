@@ -1,9 +1,12 @@
 ﻿using FluentAssertions;
 using Moq;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.ChangeEmail;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ChangeEmail;
@@ -14,12 +17,11 @@ namespace TodoListApp.Application.Tests.Users.Commands.ChangeEmail;
 public class ChangeEmailCommandHandlerTests
 {
     private const string NewEmail = "newemail@example.com";
-    private const string OldEmail = "oldemail@example.com";
     private const string GeneratedToken = "secure-token-123";
-    private readonly string passwordHashString = new('a', 64);
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ITokenGenerator> _tokenGeneratorMock;
+    private readonly Mock<IClock> _clock;
     private readonly ChangeEmailCommandHandler _sut;
 
     /// <summary>
@@ -29,8 +31,11 @@ public class ChangeEmailCommandHandlerTests
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
         this._tokenGeneratorMock = new Mock<ITokenGenerator>();
+        this._clock = new Mock<IClock>();
         this._sut = new ChangeEmailCommandHandler(
-            this._unitOfWorkMock.Object, this._tokenGeneratorMock.Object);
+            this._unitOfWorkMock.Object,
+            this._tokenGeneratorMock.Object,
+            this._clock.Object);
     }
 
     /// <summary>
@@ -42,7 +47,7 @@ public class ChangeEmailCommandHandlerTests
     {
         // Arrange
         var command = new ChangeEmailCommand(NewEmail, Guid.NewGuid());
-        var user = new UserEntity("John", "john", OldEmail, this.passwordHashString);
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -86,7 +91,7 @@ public class ChangeEmailCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
-        result.Error.Message.Should().Be("User not found.");
+        result.Error.Message.Should().Be(UserPolicy.AccountNotFoundMessage);
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never());
     }
@@ -100,7 +105,7 @@ public class ChangeEmailCommandHandlerTests
     {
         // Arrange
         var command = new ChangeEmailCommand(NewEmail, Guid.NewGuid());
-        var user = new UserEntity("John", "john", OldEmail, this.passwordHashString);
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -114,7 +119,7 @@ public class ChangeEmailCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.InvalidOperation);
-        result.Error.Message.Should().Be("This email is already in use.");
+        result.Error.Message.Should().Be(EmailPolicy.AlreadyInUseMessage);
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never());
         this._tokenGeneratorMock.Verify(x => x.GenerateSecureToken(), Times.Never());
@@ -128,8 +133,8 @@ public class ChangeEmailCommandHandlerTests
     public async Task Handle_Should_ReturnValidationError_When_EmailIsSameAsCurrent()
     {
         // Arrange
-        var command = new ChangeEmailCommand(OldEmail, Guid.NewGuid());
-        var user = new UserEntity("John", "john", OldEmail, this.passwordHashString);
+        var user = UserEntityFactory.Create();
+        var command = new ChangeEmailCommand(user.Email.Value, Guid.NewGuid());
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -140,7 +145,7 @@ public class ChangeEmailCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("New email is same as current.");
+        result.Error.Message.Should().Be(EmailPolicy.SameAsCurrentMessage);
 
         this._unitOfWorkMock.Verify(x => x.Users.ExistsByEmailAsync(It.IsAny<Email>(), It.IsAny<CancellationToken>()), Times.Never());
 

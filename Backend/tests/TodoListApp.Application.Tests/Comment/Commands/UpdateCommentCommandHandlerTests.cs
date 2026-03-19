@@ -1,9 +1,12 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Commands.UpdateComment;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Comment.Commands;
 
@@ -16,6 +19,8 @@ public class UpdateCommentCommandHandlerTests
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<ICommentRepository> _commentsRepoMock;
     private readonly UpdateCommentCommandHandler _handler;
+
+    private readonly CommentContent _oldContent = CommentContent.Create("Test");
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UpdateCommentCommandHandlerTests"/> class.
@@ -47,9 +52,10 @@ public class UpdateCommentCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
-        Assert.Equal("Comment not found.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be(CommentPolicy.CommentNotFoundMessage);
     }
 
     /// <summary>
@@ -60,7 +66,7 @@ public class UpdateCommentCommandHandlerTests
     public async Task HandleAsync_ShouldReturnFailure_WhenUserIsNotOwner()
     {
         // Arrange
-        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), "Old Text");
+        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._oldContent);
 
         this._uowMock.Setup(u => u.Comments.GetByIdAsync(comment.Id, false, It.IsAny<CancellationToken>()))
                .ReturnsAsync(comment);
@@ -71,9 +77,35 @@ public class UpdateCommentCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("You don't have permission to update this comment.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(CommentPolicy.UpdateAccessDeniedMessage);
+    }
+
+    /// <summary>
+    /// Verifies that a failure is returned when trying to update with the same content.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task HandleAsync_ShouldReturnFailure_WhenContentIsSame()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var comment = new CommentEntity(Guid.NewGuid(), userId, this._oldContent);
+
+        this._commentsRepoMock.Setup(r => r.GetByIdAsync(comment.Id, false, It.IsAny<CancellationToken>()))
+               .ReturnsAsync(comment);
+
+        var command = new UpdateCommentCommand(comment.Id, userId, this._oldContent.Value);
+
+        // Act
+        var result = await this._handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(CommentPolicy.NoChangesDetectedMessage);
     }
 
     /// <summary>
@@ -85,7 +117,7 @@ public class UpdateCommentCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var comment = new CommentEntity(Guid.NewGuid(), userId, "Old Text");
+        var comment = new CommentEntity(Guid.NewGuid(), userId, this._oldContent);
 
         this._uowMock.Setup(u => u.Comments.GetByIdAsync(comment.Id, false, It.IsAny<CancellationToken>()))
                .ReturnsAsync(comment);
@@ -99,8 +131,8 @@ public class UpdateCommentCommandHandlerTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal("New Text", comment.Text);
+        result.IsSuccess.Should().BeTrue();
+        comment.Content.Value.Should().Be("New Text");
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -1,9 +1,11 @@
 ﻿using MediatR;
 using TinyResult;
 using TinyResult.Enums;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.ChangeEmail;
@@ -18,10 +20,12 @@ namespace TodoListApp.Application.Users.Commands.ChangeEmail;
 /// </remarks>
 public class ChangeEmailCommandHandler(
     IUnitOfWork unitOfWork,
-    ITokenGenerator tokenGenerator)
+    ITokenGenerator tokenGenerator,
+    IClock clock)
     : HandlerBase(unitOfWork), IRequestHandler<ChangeEmailCommand, Result<bool>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
+    private readonly IClock _clock = clock;
 
     /// <summary>
     /// Processes the request to change a user's email address.
@@ -39,24 +43,25 @@ public class ChangeEmailCommandHandler(
         var user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "User not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         if (user.Email == newEmail)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "New email is same as current.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
         }
 
         var emailExist = await this.UnitOfWork.Users.ExistsByEmailAsync(newEmail, cancellationToken);
         if (emailExist)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "This email is already in use.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
         }
 
         var confirmationToken = this._tokenGenerator.GenerateSecureToken();
         var revertToken = this._tokenGenerator.GenerateSecureToken();
+        var now = this._clock.UtcNow;
 
-        user.RequestEmailChange(newEmail, confirmationToken, revertToken, TimeSpan.FromHours(1));
+        user.RequestEmailChange(newEmail, confirmationToken, revertToken, TimeSpan.FromHours(1), now);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
         return await Result<bool>.SuccessAsync(true);

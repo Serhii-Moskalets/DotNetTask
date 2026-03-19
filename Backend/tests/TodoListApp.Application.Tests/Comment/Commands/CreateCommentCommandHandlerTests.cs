@@ -1,9 +1,11 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Commands.CreateComment;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
 
 namespace TodoListApp.Application.Tests.Comment.Commands;
@@ -51,9 +53,10 @@ public class CreateCommentCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal("You don't have access to this task.", result.Error!.Message);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Message.Should().Be(TaskPolicy.AccessDeniedMessage);
+        result.Error.Code.Should().Be(ErrorCode.InvalidOperation);
     }
 
     /// <summary>
@@ -79,11 +82,11 @@ public class CreateCommentCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
 
         this._commentsRepoMock.Verify(
             r => r.AddAsync(
-                It.Is<CommentEntity>(c => c.TaskId == taskId && c.UserId == userId && c.Text == text),
+                It.Is<CommentEntity>(c => c.TaskId == taskId && c.UserId == userId && c.Content.Value == text),
                 It.IsAny<CancellationToken>()),
             Times.Once);
 

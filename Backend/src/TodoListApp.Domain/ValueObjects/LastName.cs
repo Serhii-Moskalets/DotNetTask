@@ -1,4 +1,5 @@
-﻿using TodoListApp.Domain.Exceptions;
+﻿using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Domain.ValueObjects;
 
@@ -8,6 +9,11 @@ namespace TodoListApp.Domain.ValueObjects;
 /// </summary>
 public sealed record LastName
 {
+    /// <summary>
+    /// The maximum allowed length for a last name.
+    /// </summary>
+    public const int MaxLength = 100;
+
     /// <summary>
     /// Gets the string value of the person's last name.
     /// </summary>
@@ -23,24 +29,35 @@ public sealed record LastName
     /// <param name="value">The name string to be validated and trimmed.</param>
     /// <returns>A validated <see cref="LastName"/> instance.</returns>
     /// <exception cref="DomainException">
-    /// Thrown when the last name contain more than 30 characters.
+    /// Thrown when the last name is null, empty, or exceeds <see cref="MaxLength"/> characters.
     /// </exception>
-    public static LastName? Create(string? value)
+    public static LastName Create(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            return null;
+            throw new DomainException(LastNamePolicy.EmptyMessage);
         }
 
         var trimmedValue = value.Trim();
 
-        if (trimmedValue.Length > 30)
+        if (trimmedValue.Length > MaxLength)
         {
-            throw new DomainException("Last name cannot contain more than 30 characters.");
+            throw new DomainException(LastNamePolicy.TooLongMessage);
         }
 
         return new LastName(trimmedValue);
     }
+
+    /// <summary>
+    /// Creates an optional LastName instance from the specified string value.
+    /// </summary>
+    /// <remarks>This method is useful for scenarios where a last name may or may not be provided, allowing
+    /// for a clean handling of optional values.</remarks>
+    /// <param name="value">The string value representing the last name. If the value is null or consists only of white-space characters,
+    /// the method returns null.</param>
+    /// <returns>An instance of LastName if the value is valid; otherwise, null.</returns>
+    public static LastName? CreateOptional(string? value)
+        => string.IsNullOrWhiteSpace(value) ? null : Create(value);
 
     /// <summary>
     /// Returns the string representation of the last name.

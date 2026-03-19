@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.ConfirmPasswordReset;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmPasswordReset;
 
@@ -46,7 +47,7 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.Token)
-              .WithErrorMessage("Token is required.");
+              .WithErrorMessage(TokenPolicy.RequiredMessage);
     }
 
     /// <summary>
@@ -61,7 +62,7 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
-              .WithErrorMessage("Password must be at least 8 characters long.");
+              .WithErrorMessage(PasswordPolicy.TooShortMessage);
     }
 
     /// <summary>
@@ -76,7 +77,7 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
-              .WithErrorMessage("Password must contain at least one uppercase letter.");
+              .WithErrorMessage(PasswordPolicy.UppercaseMessage);
     }
 
     /// <summary>
@@ -91,7 +92,7 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
-              .WithErrorMessage("Password must contain at least one lowercase letter.");
+              .WithErrorMessage(PasswordPolicy.LowercaseMessage);
     }
 
     /// <summary>
@@ -106,7 +107,7 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
-              .WithErrorMessage("Password must contain at least one number.");
+              .WithErrorMessage(PasswordPolicy.NumberMessage);
     }
 
     /// <summary>
@@ -124,6 +125,6 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
-              .WithErrorMessage("Password must contain at least one special character (!?*.).");
+              .WithErrorMessage(PasswordPolicy.SpecialCharMessage);
     }
 }

@@ -1,6 +1,7 @@
 ﻿using FluentAssertions;
 using TodoListApp.Application.UserTaskAccess.Mappers;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Mappers;
 
@@ -22,9 +23,9 @@ public class TaskAccessForUserMapperTests
         var task = new TaskEntity(
             ownerId,
             taskListId: Guid.NewGuid(),
-            "Shared Task Title",
+            TaskTitle.Create("Shared Task"),
             dueDate: DateTime.UtcNow.AddDays(1),
-            "Task Description");
+            TaskDescription.Create("Task Description"));
 
         var accessEntity = new UserTaskAccessEntity(task.Id, userId)
         {
@@ -37,8 +38,8 @@ public class TaskAccessForUserMapperTests
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().Be(task.Id);
-        result.Title.Should().Be(task.Title);
-        result.Description.Should().Be(task.Description);
+        result.Title.Should().Be(task.Title.Value);
+        result.Description.Should().Be(task.Description!.Value);
         result.DueDate.Should().Be(task.DueDate);
     }
 
@@ -52,8 +53,8 @@ public class TaskAccessForUserMapperTests
         var ownerId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
-        var task1 = new TaskEntity(ownerId, Guid.NewGuid(), "Task 1");
-        var task2 = new TaskEntity(ownerId, Guid.NewGuid(), "Task 2");
+        var task1 = new TaskEntity(ownerId, Guid.NewGuid(), TaskTitle.Create("Task 1"));
+        var task2 = new TaskEntity(ownerId, Guid.NewGuid(), TaskTitle.Create("Task 2"));
 
         var entities = new List<UserTaskAccessEntity>
         {
@@ -94,7 +95,7 @@ public class TaskAccessForUserMapperTests
     public void Map_TaskEntityDirectly_ShouldMapToTaskDto()
     {
         // Arrange
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), "Direct Map");
+        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), TaskTitle.Create("Direct Map"));
 
         // Act
         var result = TaskAccessForUserMapper.Map(task);

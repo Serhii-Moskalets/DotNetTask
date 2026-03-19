@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.LoginUser;
@@ -37,15 +38,13 @@ public class LoginUserCommandHandler(
         if (user is null || !this._passwordHasher.VerifyPassword(command.Password, user.PasswordHash.Value))
         {
             return await Result<LoginResponse>.FailureAsync(
-                ErrorCode.ValidationError,
-                "Invalid email or password.");
+                ErrorCode.ValidationError, UserPolicy.InvalidCredentialsMessage);
         }
 
         if (!user.EmailConfirmed)
         {
             return await Result<LoginResponse>.FailureAsync(
-                ErrorCode.ValidationError,
-                "Please confirm your email before logging in.");
+                ErrorCode.ValidationError, EmailPolicy.NotConfirmedMessage);
         }
 
         if (user.MustChangePassword)

@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Queries.GetUserProfile;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Queries.GetUserProfile;
 
@@ -37,6 +38,6 @@ public class GetUserProfileQueryValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 }

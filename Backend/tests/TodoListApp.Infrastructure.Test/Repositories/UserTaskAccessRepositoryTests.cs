@@ -1,6 +1,8 @@
 ﻿using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
 
@@ -12,7 +14,9 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class UserTaskAccessRepositoryTests
 {
-    private readonly string _passwordHash = new('a', 64);
+    private static readonly TaskTitle TaskTitle1 = TaskTitle.Create("Task title 1");
+    private static readonly TaskTitle TaskTitle2 = TaskTitle.Create("Task title 2");
+    private static readonly TaskListTitle TaskListTitle = TaskListTitle.Create("Task list title");
 
     /// <summary>
     /// Verifies that a user-task access entry can be added
@@ -26,15 +30,15 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user_1.Id, taskList.Id, "Task1");
+        var task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user_2.Id);
@@ -62,15 +66,15 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user_1.Id, taskList.Id, "Task1");
+        var task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user_2.Id);
@@ -98,18 +102,18 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task_1 = new TaskEntity(user_1.Id, taskList.Id, "Task 1");
+        var task_1 = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task_1);
 
-        var task_2 = new TaskEntity(user_2.Id, taskList.Id, "Task 2");
+        var task_2 = new TaskEntity(user_2.Id, taskList.Id, TaskTitle2);
         await context.Tasks.AddAsync(task_2);
 
         var access_1 = new UserTaskAccessEntity(task_1.Id, user_2.Id);
@@ -122,9 +126,9 @@ public class UserTaskAccessRepositoryTests
         // Act
         var deleted = await repo.DeleteAllByTaskIdAsync(task_1.Id);
 
-        Assert.Equal(1, deleted);
-        Assert.False(await repo.ExistsAsync(task_1.Id, user_2.Id));
-        Assert.True(await repo.ExistsAsync(task_2.Id, user_1.Id));
+        deleted.Should().Be(1);
+        (await repo.ExistsAsync(task_1.Id, user_2.Id)).Should().BeFalse();
+        (await repo.ExistsAsync(task_2.Id, user_1.Id)).Should().BeTrue();
     }
 
     /// <summary>
@@ -139,18 +143,18 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task_1 = new TaskEntity(user_1.Id, taskList.Id, "Task 1");
+        var task_1 = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task_1);
 
-        var task_2 = new TaskEntity(user_2.Id, taskList.Id, "Task 2");
+        var task_2 = new TaskEntity(user_2.Id, taskList.Id, TaskTitle2);
         await context.Tasks.AddAsync(task_2);
 
         var access_1 = new UserTaskAccessEntity(task_1.Id, user_2.Id);
@@ -163,9 +167,9 @@ public class UserTaskAccessRepositoryTests
         // Act
         var deleted = await repo.DeleteAllByUserIdAsync(user_2.Id);
 
-        Assert.Equal(1, deleted);
-        Assert.False(await repo.ExistsAsync(task_1.Id, user_2.Id));
-        Assert.True(await repo.ExistsAsync(task_2.Id, user_1.Id));
+        deleted.Should().Be(1);
+        (await repo.ExistsAsync(task_1.Id, user_2.Id)).Should().BeFalse();
+        (await repo.ExistsAsync(task_2.Id, user_1.Id)).Should().BeTrue();
     }
 
     /// <summary>
@@ -180,18 +184,18 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
+        var owner = UserEntityFactory.Create();
         await context.Users.AddAsync(owner);
 
-        var taskList = new TaskListEntity(owner.Id, "List");
+        var taskList = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(owner.Id, taskList.Id, "Task1") { CreatedDate = DateTime.UtcNow };
+        var task = new TaskEntity(owner.Id, taskList.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow };
         await context.Tasks.AddAsync(task);
 
         for (int i = 0; i < 15; i++)
         {
-            var user = new UserEntity($"User{i}", $"user{i}", $"u{i}@ex.com", this._passwordHash);
+            var user = UserEntityFactory.Create($"User{i}", $"user{i}", $"u{i}@ex.com");
             await context.Users.AddAsync(user);
             await repo.AddAsync(new UserTaskAccessEntity(task.Id, user.Id));
         }
@@ -202,12 +206,12 @@ public class UserTaskAccessRepositoryTests
         var (items, totalCount) = await repo.GetUserTaskAccessByTaskIdAsync(task.Id, page: 1, pageSize: 10);
 
         // Assert
-        Assert.Equal(15, totalCount);
-        Assert.Equal(10, items.Count);
-        Assert.All(items, x =>
+        totalCount.Should().Be(15);
+        items.Should().HaveCount(10);
+        items.Should().AllSatisfy(x =>
         {
-            Assert.NotNull(x.User);
-            Assert.Equal(task.Id, x.TaskId);
+            x.User.Should().NotBeNull();
+            x.TaskId.Should().Be(task.Id);
         });
     }
 
@@ -223,16 +227,16 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
-        var sharedUser = new UserEntity("Shared", "shared", "shared@example.com", this._passwordHash);
+        var owner = UserEntityFactory.Create("Owner", "owner", "owner@example.com");
+        var sharedUser = UserEntityFactory.Create("Shared", "shared", "shared@example.com");
         await context.Users.AddRangeAsync(owner, sharedUser);
 
-        var list = new TaskListEntity(owner.Id, "List");
+        var list = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
         for (int i = 0; i < 5; i++)
         {
-            var t = new TaskEntity(owner.Id, list.Id, $"Task{i}") { CreatedDate = DateTime.UtcNow.AddMinutes(i) };
+            var t = new TaskEntity(owner.Id, list.Id, TaskTitle.Create($"Task{i}")) { CreatedDate = DateTime.UtcNow.AddMinutes(i) };
             await context.Tasks.AddAsync(t);
             await repo.AddAsync(new UserTaskAccessEntity(t.Id, sharedUser.Id));
         }
@@ -243,8 +247,8 @@ public class UserTaskAccessRepositoryTests
         var (items, totalCount) = await repo.GetSharedTasksByUserIdAsync(sharedUser.Id, page: 2, pageSize: 2);
 
         // Assert
-        Assert.Equal(5, totalCount);
-        Assert.Equal(2, items.Count);
+        totalCount.Should().Be(5);
+        items.Should().HaveCount(2);
     }
 
     /// <summary>
@@ -259,13 +263,13 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user = new UserEntity("User", "user", "u@e.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
-        var list = new TaskListEntity(user.Id, "L");
+        var list = new TaskListEntity(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
-        var oldTask = new TaskEntity(user.Id, list.Id, "Old") { CreatedDate = DateTime.UtcNow.AddDays(-1) };
-        var newTask = new TaskEntity(user.Id, list.Id, "New") { CreatedDate = DateTime.UtcNow };
+        var oldTask = new TaskEntity(user.Id, list.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow.AddDays(-1) };
+        var newTask = new TaskEntity(user.Id, list.Id, TaskTitle2) { CreatedDate = DateTime.UtcNow };
 
         await context.Tasks.AddRangeAsync(oldTask, newTask);
         await repo.AddAsync(new UserTaskAccessEntity(oldTask.Id, user.Id));
@@ -276,7 +280,7 @@ public class UserTaskAccessRepositoryTests
         var (items, _) = await repo.GetSharedTasksByUserIdAsync(user.Id, page: 1, pageSize: 10);
 
         // Assert
-        Assert.Equal("New", items.First().Task.Title);
+        items.First().Task.Title.Should().Be(TaskTitle2);
     }
 
     /// <summary>
@@ -291,15 +295,15 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
-        var sharedUser = new UserEntity("Shared", "shared", "shared@example.com", this._passwordHash);
+        var owner = UserEntityFactory.Create("Owner", "owner", "owner@example.com");
+        var sharedUser = UserEntityFactory.Create("Shared", "shared", "shared@example.com");
         await context.Users.AddRangeAsync(owner, sharedUser);
 
-        var taskList = new TaskListEntity(owner.Id, "List");
+        var taskList = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task1 = new TaskEntity(owner.Id, taskList.Id, "Task1") { CreatedDate = DateTime.UtcNow };
-        var task2 = new TaskEntity(owner.Id, taskList.Id, "Task2") { CreatedDate = DateTime.UtcNow.AddMinutes(1) };
+        var task1 = new TaskEntity(owner.Id, taskList.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow };
+        var task2 = new TaskEntity(owner.Id, taskList.Id, TaskTitle2) { CreatedDate = DateTime.UtcNow.AddMinutes(1) };
         await context.Tasks.AddRangeAsync(task1, task2);
 
         var access1 = new UserTaskAccessEntity(task1.Id, sharedUser.Id);
@@ -312,9 +316,9 @@ public class UserTaskAccessRepositoryTests
         var (items, totalCount) = await repo.GetSharedTasksByUserIdAsync(sharedUser.Id);
 
         // Assert
-        Assert.Equal(2, totalCount);
-        Assert.Equal(2, items.Count);
-        Assert.All(items, t => Assert.Equal(sharedUser.Id, t.UserId));
+        totalCount.Should().Be(2);
+        items.Should().HaveCount(2);
+        items.Should().AllSatisfy(t => t.UserId.Should().Be(sharedUser.Id));
     }
 
     /// <summary>
@@ -329,16 +333,18 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user = new UserEntity("SharedUser", "user", "user@e.com", this._passwordHash);
-        var owner = new UserEntity("Owner", "owner", "owner@e.com", this._passwordHash);
+        var user = UserEntityFactory.Create("SharedUser", "user", "user@e.com");
+        var owner = UserEntityFactory.Create("Owner", "owner", "owner@e.com");
         await context.Users.AddRangeAsync(user, owner);
 
-        var list = new TaskListEntity(owner.Id, "List");
+        var list = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
-        var task1 = new TaskEntity(owner.Id, list.Id, "Oldest");
-        var task2 = new TaskEntity(owner.Id, list.Id, "Middle");
-        var task3 = new TaskEntity(owner.Id, list.Id, "Newest");
+        var title3 = TaskTitle.Create("Task Title 3");
+
+        var task1 = new TaskEntity(owner.Id, list.Id, TaskTitle1);
+        var task2 = new TaskEntity(owner.Id, list.Id, TaskTitle2);
+        var task3 = new TaskEntity(owner.Id, list.Id, title3);
         await context.Tasks.AddRangeAsync(task1, task2, task3);
 
         var accessOld = new UserTaskAccessEntity(task1.Id, user.Id) { CreatedDate = DateTime.UtcNow.AddHours(-2) };
@@ -352,11 +358,7 @@ public class UserTaskAccessRepositoryTests
         var (items, _) = await repo.GetSharedTasksByUserIdAsync(user.Id, page: 1, pageSize: 10);
 
         // Assert
-        var titlesInOrder = items.Select(x => x.Task.Title).ToList();
-
-        Assert.Equal("Newest", titlesInOrder[0]);
-        Assert.Equal("Middle", titlesInOrder[1]);
-        Assert.Equal("Oldest", titlesInOrder[2]);
+        items.Select(x => x.Task.Title).Should().ContainInConsecutiveOrder(title3, TaskTitle2, TaskTitle1);
     }
 
     /// <summary>
@@ -371,15 +373,15 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create("John", "john", "john@example.com");
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("John2", "john2", "john2@example.com");
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user_1.Id, taskList.Id, "Task1");
+        var task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user_2.Id);
@@ -387,7 +389,7 @@ public class UserTaskAccessRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        Assert.True(await repo.ExistsAsync(task.Id, user_2.Id));
+        (await repo.ExistsAsync(task.Id, user_2.Id)).Should().BeTrue();
     }
 
     /// <summary>
@@ -402,15 +404,15 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user_1 = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user_1 = UserEntityFactory.Create("John", "john", "john@example.com");
         await context.Users.AddAsync(user_1);
-        var user_2 = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash);
+        var user_2 = UserEntityFactory.Create("John2", "john2", "john2@example.com");
         await context.Users.AddAsync(user_2);
 
-        var taskList = new TaskListEntity(user_1.Id, "Task list 1");
+        var taskList = new TaskListEntity(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user_1.Id, taskList.Id, "Task1");
+        var task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user_2.Id);
@@ -418,8 +420,8 @@ public class UserTaskAccessRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        Assert.False(await repo.ExistsAsync(Guid.NewGuid(), user_2.Id));
-        Assert.False(await repo.ExistsAsync(task.Id, Guid.NewGuid()));
+        (await repo.ExistsAsync(Guid.NewGuid(), user_2.Id)).Should().BeFalse();
+        (await repo.ExistsAsync(task.Id, Guid.NewGuid())).Should().BeFalse();
     }
 
     /// <summary>
@@ -434,13 +436,13 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
-        var taskList = new TaskListEntity(user.Id, "List");
+        var taskList = new TaskListEntity(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user.Id, taskList.Id, "Task1");
+        var task = new TaskEntity(user.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var access = new UserTaskAccessEntity(task.Id, user.Id);
@@ -448,7 +450,7 @@ public class UserTaskAccessRepositoryTests
         await context.SaveChangesAsync();
 
         // Assert
-        Assert.True(await repo.ExistsByUserIdAsync(user.Id));
+        (await repo.ExistsByUserIdAsync(user.Id)).Should().BeTrue();
     }
 
     /// <summary>
@@ -464,7 +466,7 @@ public class UserTaskAccessRepositoryTests
         var repo = new UserTaskAccessRepository(context);
 
         // Assert
-        Assert.False(await repo.ExistsByUserIdAsync(Guid.NewGuid()));
+        (await repo.ExistsByUserIdAsync(Guid.NewGuid())).Should().BeFalse();
     }
 
     /// <summary>
@@ -479,21 +481,21 @@ public class UserTaskAccessRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
-        var taskList = new TaskListEntity(user.Id, "List");
+        var taskList = new TaskListEntity(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        var task = new TaskEntity(user.Id, taskList.Id, "Task1");
+        var task = new TaskEntity(user.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         await repo.AddAsync(new UserTaskAccessEntity(task.Id, user.Id));
         await context.SaveChangesAsync();
 
         // Assert
-        Assert.True(await repo.ExistsByTaskIdAsync(task.Id));
-        Assert.False(await repo.ExistsByTaskIdAsync(Guid.NewGuid()));
+        (await repo.ExistsByTaskIdAsync(task.Id)).Should().BeTrue();
+        (await repo.ExistsByTaskIdAsync(Guid.NewGuid())).Should().BeFalse();
     }
 
     /// <summary>
@@ -507,17 +509,17 @@ public class UserTaskAccessRepositoryTests
         await using var context = SqliteInMemoryDbContextFactory.Create();
         var repo = new UserTaskAccessRepository(context);
 
-        var owner = new UserEntity("Owner", "owner", "owner@example.com", this._passwordHash);
+        var owner = UserEntityFactory.Create();
         await context.Users.AddAsync(owner);
-        var taskList = new TaskListEntity(owner.Id, "List");
+        var taskList = new TaskListEntity(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
-        var task = new TaskEntity(owner.Id, taskList.Id, "Task1");
+        var task = new TaskEntity(owner.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
         var userNames = new[] { "Zebra", "Alice", "Charlie", "Bob" };
         foreach (var name in userNames)
         {
-            var user = new UserEntity(name, name.ToLower(), $"{name}@ex.com", this._passwordHash);
+            var user = UserEntityFactory.Create(name, name.ToLower(), $"{name}@ex.com");
             await context.Users.AddAsync(user);
             await repo.AddAsync(new UserTaskAccessEntity(task.Id, user.Id));
         }
@@ -528,11 +530,7 @@ public class UserTaskAccessRepositoryTests
         var (items, _) = await repo.GetUserTaskAccessByTaskIdAsync(task.Id, page: 1, pageSize: 10);
 
         // Assert
-        var namesInOrder = items.Select(x => x.User.FirstName.Value).ToList();
-
-        Assert.Equal("Alice", namesInOrder[0]);
-        Assert.Equal("Bob", namesInOrder[1]);
-        Assert.Equal("Charlie", namesInOrder[2]);
-        Assert.Equal("Zebra", namesInOrder[3]);
+        items.Select(x => x.User.FirstName.Value)
+             .Should().ContainInConsecutiveOrder("Alice", "Bob", "Charlie", "Zebra");
     }
 }

@@ -4,7 +4,9 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Comment.Commands.CreateComment;
 
@@ -34,12 +36,12 @@ public class CreateCommentCommandHandler(
     {
         if (!await this._taskAccessService.HasAccessAsync(command.TaskId, command.UserId, cancellationToken))
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.InvalidOperation, "You don't have access to this task.");
+            return await Result<Guid>.FailureAsync(ErrorCode.InvalidOperation, TaskPolicy.AccessDeniedMessage);
         }
 
-        var text = command.Text!;
+        var content = CommentContent.Create(command.Content);
 
-        var commentEntity = new CommentEntity(command.TaskId, command.UserId, text);
+        var commentEntity = new CommentEntity(command.TaskId, command.UserId, content);
 
         await this.UnitOfWork.Comments.AddAsync(commentEntity, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);

@@ -13,7 +13,8 @@
     <PackageReference Include="coverlet.collector" Version="6.0.4" />
     <PackageReference Include="FluentAssertions" Version="8.8.0" />
     <PackageReference Include="FluentValidation" Version="12.1.1" />
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0" />
+    <PackageReference Include="MimeKit" Version="4.15.1" />
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="Roslynator.Analyzers" Version="4.15.0">
       <PrivateAssets>all</PrivateAssets>
@@ -32,6 +33,7 @@
     <ProjectReference Include="..\..\src\TodoListApp.Application\TodoListApp.Application.csproj" />
     <ProjectReference Include="..\..\src\TodoListApp.Domain\TodoListApp.Domain.csproj" />
     <ProjectReference Include="..\..\src\TodoListApp.Infrastructure\TodoListApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\TodoListApp.Domain.Test\TodoListApp.Domain.Test.csproj" />
   </ItemGroup>
 
   <ItemGroup>

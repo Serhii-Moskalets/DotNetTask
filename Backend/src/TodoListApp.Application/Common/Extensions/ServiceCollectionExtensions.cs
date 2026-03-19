@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using TodoListApp.Application.Abstractions.Behaviors;
+using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Common.Services;
 
@@ -29,7 +30,7 @@ public static class ServiceCollectionExtensions
 
         // --- Custom Application Services ---
         services.AddScoped<ITaskAccessService, TaskAccessService>();
-        services.AddScoped<IUniqueNameService, UniqueNameService>();
+        services.AddScoped<IUniqueValueService, UniqueValueService>();
         services.AddScoped<IUserTaskAccessService, UserTaskAccessService>();
     }
 }

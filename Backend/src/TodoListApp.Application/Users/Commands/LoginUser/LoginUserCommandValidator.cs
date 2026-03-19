@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.LoginUser;
 
@@ -14,11 +16,16 @@ public class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
     {
         this.RuleFor(x => x.Email)
             .Cascade(CascadeMode.Stop)
-            .NotEmpty().WithMessage("Email cannot be null or empty.")
-            .EmailAddress().WithMessage("Email address is incorrect.")
-            .Matches("^[^<>]+$").WithMessage("Email address is incorrect.");
+            .NotEmpty()
+                .WithMessage(EmailPolicy.EmptyMessage)
+            .EmailAddress()
+                .WithMessage(EmailPolicy.InvalidFormatMessage)
+            .MaximumLength(Email.MaxLength)
+                .WithMessage(EmailPolicy.TooLongMessage)
+            .Matches(EmailPolicy.FormatRegex)
+                .WithMessage(EmailPolicy.InvalidFormatMessage);
 
         this.RuleFor(x => x.Password)
-            .NotEmpty().WithMessage("Password is required.");
+            .NotEmpty().WithMessage(PasswordPolicy.EmptyMessage);
     }
 }

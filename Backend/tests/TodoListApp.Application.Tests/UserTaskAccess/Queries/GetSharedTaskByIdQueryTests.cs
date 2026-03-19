@@ -3,7 +3,10 @@ using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Mappers;
 using TodoListApp.Application.UserTaskAccess.Queries.GetSharedTaskById;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Queries;
 
@@ -16,7 +19,6 @@ public class GetSharedTaskByIdQueryHandlerTests
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IUserTaskAccessRepository> _userTaskAccessRepoMock;
     private readonly GetSharedTaskByIdQueryHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetSharedTaskByIdQueryHandlerTests"/> class.
@@ -53,7 +55,7 @@ public class GetSharedTaskByIdQueryHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(TinyResult.Enums.ErrorCode.NotFound, result.Error!.Code);
-        Assert.Equal("Task not found.", result.Error.Message);
+        Assert.Equal(TaskPolicy.NotFoundMessage, result.Error.Message);
     }
 
     /// <summary>
@@ -68,8 +70,8 @@ public class GetSharedTaskByIdQueryHandlerTests
         var userId = Guid.NewGuid();
         var taskAccess = new UserTaskAccessEntity(taskId, userId)
         {
-            Task = new TaskEntity(userId, Guid.NewGuid(), "Test Task"),
-            User = new UserEntity("John", "john", "john@example.com", this._passwordHash),
+            Task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Task")),
+            User = UserEntityFactory.Create(),
         };
 
         this._userTaskAccessRepoMock

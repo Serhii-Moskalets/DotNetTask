@@ -1,10 +1,14 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.TaskList.Commands.CreateTaskList;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.TaskList.Commands;
 
@@ -15,10 +19,9 @@ namespace TodoListApp.Application.Tests.TaskList.Commands;
 public class CreateTaskListCommandHandlerTests
 {
     private readonly Mock<IUnitOfWork> _uowMock;
-    private readonly Mock<IUniqueNameService> _uniqueNameServiceMock;
+    private readonly Mock<IUniqueValueService> _uniqueNameServiceMock;
     private readonly Mock<ITaskListRepository> _taskListRepoMock;
     private readonly CreateTaskListCommandHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="CreateTaskListCommandHandlerTests"/> class.
@@ -26,7 +29,7 @@ public class CreateTaskListCommandHandlerTests
     public CreateTaskListCommandHandlerTests()
     {
         this._uowMock = new Mock<IUnitOfWork>();
-        this._uniqueNameServiceMock = new Mock<IUniqueNameService>();
+        this._uniqueNameServiceMock = new Mock<IUniqueValueService>();
         this._taskListRepoMock = new Mock<ITaskListRepository>();
 
         this._uowMock.Setup(tl => tl.TaskLists).Returns(this._taskListRepoMock.Object);
@@ -52,10 +55,10 @@ public class CreateTaskListCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Error);
-        Assert.Equal(ErrorCode.NotFound, result.Error.Code);
-        Assert.Equal("User not found.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be(UserPolicy.AccountNotFoundMessage);
     }
 
     /// <summary>
@@ -66,7 +69,8 @@ public class CreateTaskListCommandHandlerTests
     public async Task Handle_ShouldCreateTaskList_WhenNameIsUnique()
     {
         // Arrange
-        var user = new UserEntity("John", "john", "john@example.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
+        var uniqueTaskListTitle = TaskListTitle.Create("My Task List");
 
         this._uowMock.Setup(u => u.Users.GetByIdAsync(user.Id, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync(user);
@@ -77,11 +81,12 @@ public class CreateTaskListCommandHandlerTests
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
                .ReturnsAsync(1);
 
-        this._uniqueNameServiceMock.Setup(s => s.GetUniqueNameAsync(
+        this._uniqueNameServiceMock.Setup(s => s.GetUniqueValueAsync<TaskListTitle>(
             It.IsAny<string>(),
-            It.IsAny<Func<string, CancellationToken, Task<bool>>>(),
+            It.IsAny<Func<string, TaskListTitle>>(),
+            It.IsAny<Func<TaskListTitle, CancellationToken, Task<bool>>>(),
             It.IsAny<CancellationToken>()))
-            .ReturnsAsync("My Task List");
+            .ReturnsAsync(uniqueTaskListTitle);
 
         var command = new CreateTaskListCommand(user.Id, "My Task List");
 
@@ -89,11 +94,12 @@ public class CreateTaskListCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._uowMock.Verify(
             u => u.TaskLists.AddAsync(
-                It.Is<TaskListEntity>(t => t.OwnerId == user.Id && t.Title == "My Task List"),
+                It.Is<TaskListEntity>(t => t.OwnerId == user.Id && t.Title.Value == "My Task List"),
                 It.IsAny<CancellationToken>()), Times.Once);
+
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.RevertEmailChange;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.RevertEmail;
 
@@ -44,6 +45,6 @@ public class RevertEmailChangeCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Token)
-              .WithErrorMessage("Token is required.");
+              .WithErrorMessage(TokenPolicy.RequiredMessage);
     }
 }

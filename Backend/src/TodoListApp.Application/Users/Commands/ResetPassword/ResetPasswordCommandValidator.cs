@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.ResetPassword;
 
@@ -13,8 +15,12 @@ public class ResetPasswordCommandValidator : AbstractValidator<ResetPasswordComm
     public ResetPasswordCommandValidator()
     {
         this.RuleFor(x => x.Email)
-            .NotEmpty().WithMessage("Email is required.")
-            .EmailAddress()
-            .WithMessage("Invalid email format.");
+            .Cascade(CascadeMode.Stop)
+            .NotEmpty()
+                .WithMessage(EmailPolicy.EmptyMessage)
+            .MaximumLength(Email.MaxLength)
+                .WithMessage(EmailPolicy.TooLongMessage)
+            .Matches(EmailPolicy.FormatRegex)
+                .WithMessage(EmailPolicy.InvalidFormatMessage);
     }
 }

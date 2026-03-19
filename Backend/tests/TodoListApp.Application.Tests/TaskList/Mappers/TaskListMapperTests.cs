@@ -1,5 +1,7 @@
-﻿using TodoListApp.Application.TaskList.Mappers;
+﻿using FluentAssertions;
+using TodoListApp.Application.TaskList.Mappers;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.TaskList.Mappers;
 
@@ -17,16 +19,16 @@ public class TaskListMapperTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var entity = new TaskListEntity(userId, "My Awesome List");
+        var entity = new TaskListEntity(userId, TaskListTitle.Create("My Awesome List"));
 
         // Act
         var dto = TaskListMapper.Map(entity);
 
         // Assert
-        Assert.NotNull(dto);
-        Assert.Equal(entity.Id, dto.Id);
-        Assert.Equal(entity.Title, dto.Title);
-        Assert.Equal(entity.OwnerId, dto.OwnerId);
+        dto.Should().NotBeNull();
+        dto.Id.Should().Be(entity.Id);
+        dto.Title.Should().Be(entity.Title.Value);
+        dto.OwnerId.Should().Be(entity.OwnerId);
     }
 
     /// <summary>
@@ -40,26 +42,20 @@ public class TaskListMapperTests
         var userId = Guid.NewGuid();
         var entities = new List<TaskListEntity>
     {
-        new(userId, "List 1"),
-        new(userId, "List 2"),
-        new(userId, "List 3"),
+        new(userId, TaskListTitle.Create("List 1")),
+        new(userId, TaskListTitle.Create("List 2")),
+        new(userId, TaskListTitle.Create("List 3")),
     };
 
         // Act
         var result = TaskListMapper.Map(entities);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(entities.Count, result.Count);
+        result.Should().NotBeNull();
+        result.Should().HaveCount(entities.Count);
 
-        var entityList = entities.ToList();
-        var dtoList = result.ToList();
-
-        for (int i = 0; i < entities.Count; i++)
-        {
-            Assert.Equal(entityList[i].Title, dtoList[i].Title);
-            Assert.Equal(entityList[i].Id, dtoList[i].Id);
-        }
+        result.Select(x => x.Title).Should().Equal(entities.Select(x => x.Title.Value));
+        result.Select(x => x.Id).Should().Equal(entities.Select(x => x.Id));
     }
 
     /// <summary>
@@ -75,6 +71,6 @@ public class TaskListMapperTests
         var result = TaskListMapper.Map(entities);
 
         // Assert
-        Assert.Empty(result);
+        result.Should().BeEmpty();
     }
 }

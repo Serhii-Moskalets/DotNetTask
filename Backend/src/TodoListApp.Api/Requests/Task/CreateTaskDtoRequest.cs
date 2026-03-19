@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace TodoListApp.Api.Requests.Task;
+﻿namespace TodoListApp.Api.Requests.Task;
 
 /// <summary>
 /// Data Transfer Object for creating a new task.
@@ -8,5 +6,5 @@ namespace TodoListApp.Api.Requests.Task;
 /// <param name="Title">The title of the task. Can be null.</param>
 /// <param name="DueDate">The due date of the task. Can be null.</param>
 public record CreateTaskDtoRequest(
-    string? Title = null,
+    string Title,
     DateTime? DueDate = null);

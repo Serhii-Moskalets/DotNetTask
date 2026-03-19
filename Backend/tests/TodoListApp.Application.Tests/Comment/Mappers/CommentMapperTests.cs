@@ -1,6 +1,9 @@
-﻿using TodoListApp.Application.Comment.Mappers;
+﻿using FluentAssertions;
+using TodoListApp.Application.Comment.Mappers;
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Comment.Mappers;
 
@@ -9,7 +12,7 @@ namespace TodoListApp.Application.Tests.Comment.Mappers;
 /// </summary>
 public class CommentMapperTests
 {
-    private readonly string _passwordHash = new('a', 64);
+    private readonly CommentContent _content = CommentContent.Create("Content");
 
     /// <summary>
     /// Verifies that all properties are correctly mapped from <see cref="CommentEntity"/> to <see cref="CommentDto"/>.
@@ -19,22 +22,22 @@ public class CommentMapperTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var user = new UserEntity("John", "johnd", "john@example.com", this._passwordHash, "Joe");
-        var comment = new CommentEntity(taskId, user.Id, "This is a test comment", user);
+        var user = UserEntityFactory.Create();
+        var comment = new CommentEntity(taskId, user.Id, this._content, user);
 
         // Act
         var result = CommentMapper.Map(comment);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(comment.Text, result.Text);
-        Assert.Equal(comment.CreatedDate, result.CreatedDate);
+        result.Should().NotBeNull();
+        result.Content.Should().Be(comment.Content.Value);
+        result.CreatedDate.Should().Be(comment.CreatedDate);
 
-        Assert.NotNull(result.User);
-        Assert.Equal(user.UserName.Value, result.User.UserName);
-        Assert.Equal(user.FirstName.Value, result.User.FirstName);
-        Assert.Equal(user.LastName!.Value, result.User.LastName);
-        Assert.Equal(user.Email.Value, result.User.Email);
+        result.User.Should().NotBeNull();
+        result.User.UserName.Should().Be(user.UserName.Value);
+        result.User.FirstName.Should().Be(user.FirstName.Value);
+        result.User.LastName.Should().Be(user.LastName!.Value);
+        result.User.Email.Should().Be(user.Email.Value);
     }
 
     /// <summary>
@@ -45,21 +48,22 @@ public class CommentMapperTests
     {
         // Arrange
         var taskId = Guid.NewGuid();
-        var user = new UserEntity("Alice", "alice", "alice@test.com", this._passwordHash);
+        var user = UserEntityFactory.Create();
         var entities = new List<CommentEntity>
         {
-            new(taskId, user.Id, "Comment 1", user),
-            new(taskId, user.Id, "Comment 2", user),
+            new(taskId, user.Id, this._content, user),
+            new(taskId, user.Id, CommentContent.Create("Content_2"), user),
         };
 
         // Act
         var result = CommentMapper.Map(entities);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(entities.Count, result.Count);
-        Assert.Equal(entities[0].Text, result.First().Text);
-        Assert.Equal(entities[1].Text, result.Last().Text);
+        result.Should().NotBeNull();
+        result.Should().HaveCount(entities.Count);
+        result.Select(r => r.Content).Should().ContainInOrder(
+            entities[0].Content.Value,
+            entities[1].Content.Value);
     }
 
     /// <summary>
@@ -69,17 +73,17 @@ public class CommentMapperTests
     public void Map_UserEntityToUserBriefDto_ReturnsCorrectDto()
     {
         // Arrange
-        var user = new UserEntity("John", "johnd", "john@example.com", this._passwordHash, "Joe");
+        var user = UserEntityFactory.Create();
 
         // Act
         var result = CommentMapper.Map(user);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(user.Id, result.Id);
-        Assert.Equal(user.UserName.Value, result.UserName);
-        Assert.Equal(user.FirstName.Value, result.FirstName);
-        Assert.Equal(user.Email.Value, result.Email);
-        Assert.Equal(user.LastName!.Value, result.LastName);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(user.Id);
+        result.UserName.Should().Be(user.UserName.Value);
+        result.FirstName.Should().Be(user.FirstName.Value);
+        result.LastName.Should().Be(user.LastName!.Value);
+        result.Email.Should().Be(user.Email.Value);
     }
 }

@@ -1,5 +1,9 @@
-﻿using TodoListApp.Domain.Entities;
+﻿using FluentAssertions;
+using TinyResult.Enums;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Exceptions;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Domain.Test.Entities;
 
@@ -8,99 +12,90 @@ namespace TodoListApp.Domain.Test.Entities;
 /// </summary>
 public class CommentEntityTests
 {
-    private const string Text = "Hello";
+    private const string ValidText = "Hello";
+
+    private static readonly FirstName FirstName = FirstName.Create("Test");
+    private static readonly UserName UserName = UserName.Create("Test");
+    private static readonly Email Email = Email.Create("test@test.com");
+    private static readonly PasswordHash PasswordHash = PasswordHash.Create(new('a', 64));
+
+    private readonly CommentContent _validContent = CommentContent.Create(ValidText);
 
     /// <summary>
-    /// Verifies that the constructor creates a comment
-    /// when valid task ID, user ID, and text are provided.
+    /// Verifies that the constructor successfully creates a <see cref="CommentEntity"/>
+    /// when valid task ID, user ID, and content are provided.
     /// </summary>
     [Fact]
     public void Constructor_ShouldCreateComment_WhenValidData()
     {
+        // Arrange
         var taskId = Guid.NewGuid();
         var userId = Guid.NewGuid();
 
-        var comment = new CommentEntity(taskId, userId, Text);
+        // Act
+        var comment = new CommentEntity(taskId, userId, this._validContent);
 
-        Assert.Equal(taskId, comment.TaskId);
-        Assert.Equal(userId, comment.UserId);
-        Assert.Equal(Text, comment.Text);
-        Assert.True(comment.CreatedDate <= DateTime.UtcNow);
+        // Assert
+        comment.TaskId.Should().Be(taskId);
+        comment.UserId.Should().Be(userId);
+        comment.Content.Value.Should().Be(ValidText);
+        comment.CreatedDate.Should().BeOnOrBefore(DateTime.UtcNow);
     }
 
     /// <summary>
-    /// Verifies that the constructor throws an <see cref="DomainException"/>
-    /// when the comment text is null, empty, or whitespace.
-    /// </summary>
-    /// <param name="invalidText">An invalid comment text.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Constructor_ShouldThrow_WhenTextInvalid(string? invalidText)
-    {
-        var taskId = Guid.NewGuid();
-        var userId = Guid.NewGuid();
-
-        Assert.Throws<DomainException>(() => new CommentEntity(taskId, userId, invalidText!));
-    }
-
-    /// <summary>
-    /// Verifies that the constructor trims whitespace
-    /// from the comment text.
-    /// </summary>
-    /// <param name="text">A comment text containing leading or trailing whitespace.</param>
-    [Theory]
-    [InlineData("   Hello    ")]
-    [InlineData("   Hello")]
-    [InlineData("Hello    ")]
-    public void Constructor_ShouldTrimName(string text)
-    {
-        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), text);
-        Assert.Equal(Text, comment.Text);
-    }
-
-    /// <summary>
-    /// Verifies that the comment text is updated
-    /// when a valid new text is provided.
+    /// Verifies that the constructor throws a <see cref="DomainException"/>
+    /// when the provided user entity ID does not match the specified user ID.
     /// </summary>
     [Fact]
-    public void Update_ShouldChangeText_WhenValid()
+    public void Constructor_ShouldThrow_WhenUserIdMismatch()
     {
-        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), "Old");
-        comment.Update("New");
-        Assert.Equal("New", comment.Text);
+        // Arrange
+        var userId = Guid.NewGuid();
+        var differentUser = new UserEntity(FirstName, UserName, Email, PasswordHash);
+
+        // Act
+        var act = () => new CommentEntity(Guid.NewGuid(), userId, this._validContent, differentUser);
+
+        // Assert
+        act.Should().Throw<DomainException>();
     }
 
     /// <summary>
-    /// Verifies that <see cref="CommentEntity.Update"/>
-    /// throws an <see cref="DomainException"/>
-    /// when the new text is invalid.
+    /// Verifies that the <see cref="CommentEntity.Update"/> method correctly updates
+    /// the comment's content and returns success when a different <see cref="CommentContent"/> is provided.
     /// </summary>
-    /// <param name="invalidText">An invalid new comment text.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("  ")]
-    public void Update_ShouldThrow_WhenTextInvalid(string? invalidText)
+    [Fact]
+    public void Update_ShouldChangeContent_WhenNewContentIsDifferent()
     {
-        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), "Old");
-        Assert.Throws<DomainException>(() => comment.Update(invalidText!));
+        // Arrange
+        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
+        var newContent = CommentContent.Create("Updated text");
+
+        // Act
+        var result = comment.Update(newContent);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        comment.Content.Should().Be(newContent);
     }
 
     /// <summary>
-    /// Verifies that <see cref="CommentEntity.Update"/>
-    /// trims whitespace from the updated comment text.
+    /// Verifies that the <see cref="CommentEntity.Update"/> method returns a failure result
+    /// with the correct error code and message when the new content is identical to the current one.
     /// </summary>
-    /// <param name="text">A new comment text containing leading or trailing whitespace.</param>
-    [Theory]
-    [InlineData("   New text   ")]
-    [InlineData("   New text")]
-    [InlineData("New text    ")]
-    public void Update_ShouldTrimName(string text)
+    [Fact]
+    public void Update_ShouldReturnFailure_WhenContentIsSame()
     {
-        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), Text);
-        comment.Update(text);
-        Assert.Equal("New text", comment.Text);
+        // Arrange
+        var comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
+
+        // Act
+        var result = comment.Update(this._validContent);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(CommentPolicy.NoChangesDetectedMessage);
+        comment.Content.Should().Be(this._validContent);
     }
 }

@@ -123,8 +123,8 @@ public class TaskRepository(TodoListAppDbContext context)
                 : tasksQuery.OrderByDescending(t => t.DueDate),
 
             TaskSortBy.Title => ascending
-                ? tasksQuery.OrderBy(t => t.Title)
-                : tasksQuery.OrderByDescending(t => t.Title),
+                ? tasksQuery.OrderBy(t => t.Title.Value)
+                : tasksQuery.OrderByDescending(t => t.Title.Value),
 
             TaskSortBy.Status => ascending
                 ? tasksQuery.OrderBy(t => t.Status)
@@ -159,7 +159,7 @@ public class TaskRepository(TodoListAppDbContext context)
         CancellationToken cancellationToken = default)
     {
         var query = this.DbSet.AsNoTracking()
-        .Where(x => x.OwnerId == userId && EF.Functions.Like(x.Title, $"%{searchText}%"));
+        .Where(x => x.OwnerId == userId && EF.Functions.Like(x.Title.Value, $"%{searchText}%"));
 
         var totalCount = await query.CountAsync(cancellationToken);
 

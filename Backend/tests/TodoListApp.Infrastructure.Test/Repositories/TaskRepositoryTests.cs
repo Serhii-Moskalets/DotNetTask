@@ -1,5 +1,7 @@
-﻿using TodoListApp.Domain.Entities;
+﻿using FluentAssertions;
+using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
@@ -32,6 +34,7 @@ public class TaskRepositoryTests
     [Fact]
     public async Task CountOverdueTask_ReturnsCorrectCount()
     {
+        // Arrange
         var userId = Guid.NewGuid();
         var taskListId = Guid.NewGuid();
 
@@ -40,9 +43,9 @@ public class TaskRepositoryTests
 
         var tasks = new[]
         {
-            new TaskEntity(userId, taskListId, "Task_1", pastTime),
-            new TaskEntity(userId, taskListId, "Task_2", pastTime),
-            new TaskEntity(userId, taskListId, "Task_3", now.AddMinutes(10)),
+            new TaskEntity(userId, taskListId, TaskTitle.Create("Task_1"), pastTime),
+            new TaskEntity(userId, taskListId, TaskTitle.Create("Task_2"), pastTime),
+            new TaskEntity(userId, taskListId, TaskTitle.Create("Task_3"), now.AddMinutes(10)),
         };
 
         foreach (var task in tasks)
@@ -52,8 +55,11 @@ public class TaskRepositoryTests
 
         await this._context.SaveChangesAsync();
 
+        // Act
         var count = await this._repo.CountOverdueTasksAsync(userId, taskListId, now);
-        Assert.Equal(2, count);
+
+        // Assert
+        count.Should().Be(2);
     }
 
     /// <summary>
@@ -64,14 +70,16 @@ public class TaskRepositoryTests
     [Fact]
     public async Task IsOwnerTask_ReturnsCorrectValue()
     {
+        // Arrange
         var userId_1 = Guid.NewGuid();
         var userId_2 = Guid.NewGuid();
-        var task = new TaskEntity(userId_1, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(userId_1, Guid.NewGuid(), TaskTitle.Create("Task"));
         await this._repo.AddAsync(task);
         await this._context.SaveChangesAsync();
 
-        Assert.True(await this._repo.IsTaskOwnerAsync(task.Id, userId_1));
-        Assert.False(await this._repo.IsTaskOwnerAsync(task.Id, userId_2));
+        // Act & Assert
+        (await this._repo.IsTaskOwnerAsync(task.Id, userId_1)).Should().BeTrue();
+        (await this._repo.IsTaskOwnerAsync(task.Id, userId_2)).Should().BeFalse();
     }
 
     /// <summary>
@@ -87,7 +95,7 @@ public class TaskRepositoryTests
 
         for (int i = 1; i <= 5; i++)
         {
-            var task = new TaskEntity(userId, taskListId, $"Task_{i}", DateTime.UtcNow.AddDays(i));
+            var task = new TaskEntity(userId, taskListId, TaskTitle.Create($"Task_{i}"), DateTime.UtcNow.AddDays(i));
             await this._repo.AddAsync(task);
         }
 
@@ -99,8 +107,8 @@ public class TaskRepositoryTests
             page: 2,
             pageSize: 2);
 
-        Assert.Equal(5, total);
-        Assert.Equal(2, items.Count);
+        total.Should().Be(5);
+        items.Should().HaveCount(2);
     }
 
     /// <summary>
@@ -116,9 +124,9 @@ public class TaskRepositoryTests
 
         var tasks = new[]
         {
-            new TaskEntity(userId, listId, "Apple"),
-            new TaskEntity(userId, listId, "Application"),
-            new TaskEntity(userId, listId, "Banana"),
+            new TaskEntity(userId, listId, TaskTitle.Create("Apple")),
+            new TaskEntity(userId, listId, TaskTitle.Create("Application")),
+            new TaskEntity(userId, listId, TaskTitle.Create("Banana")),
         };
 
         foreach (var task in tasks)
@@ -130,8 +138,8 @@ public class TaskRepositoryTests
 
         var (items, total) = await this._repo.SearchByTitleAsync(userId, "App", page: 1, pageSize: 10);
 
-        Assert.Equal(2, total);
-        Assert.All(items, x => Assert.Contains("App", x.Title));
+        total.Should().Be(2);
+        items.Should().AllSatisfy(task => task.Title.Value.Should().Contain("App"));
     }
 
     /// <summary>
@@ -145,15 +153,15 @@ public class TaskRepositoryTests
         var userId = Guid.NewGuid();
         var taskListId = Guid.NewGuid();
 
-        await this._repo.AddAsync(new TaskEntity(userId, taskListId, "Task_1"));
-        await this._repo.AddAsync(new TaskEntity(userId, taskListId, "Task_2"));
+        await this._repo.AddAsync(new TaskEntity(userId, taskListId, TaskTitle.Create("Task_1")));
+        await this._repo.AddAsync(new TaskEntity(userId, taskListId, TaskTitle.Create("Task_2")));
         await this._context.SaveChangesAsync();
 
         var (_, total1) = await this._repo.GetTasksAsync(userId, taskListId, statuses: null);
         var (items2, _) = await this._repo.GetTasksAsync(userId, taskListId, statuses: []);
 
-        Assert.Equal(2, total1);
-        Assert.Equal(2, items2.Count);
+        total1.Should().Be(2);
+        items2.Should().HaveCount(2);
     }
 
     /// <summary>
@@ -171,15 +179,15 @@ public class TaskRepositoryTests
         // Arrange
         var userId = Guid.NewGuid();
         var listId = Guid.NewGuid();
-        await this._repo.AddAsync(new TaskEntity(userId, listId, "B-Task"));
-        await this._repo.AddAsync(new TaskEntity(userId, listId, "A-Task"));
+        await this._repo.AddAsync(new TaskEntity(userId, listId, TaskTitle.Create("B-Task")));
+        await this._repo.AddAsync(new TaskEntity(userId, listId, TaskTitle.Create("A-Task")));
         await this._context.SaveChangesAsync();
 
         // Act
         var (items, _) = await this._repo.GetTasksAsync(userId, listId, sortBy: TaskSortBy.Title, ascending: true);
 
         // Assert
-        Assert.Equal("A-Task", items.First().Title);
+        items.First().Title.Value.Should().Be("A-Task");
     }
 
     /// <summary>
@@ -190,13 +198,17 @@ public class TaskRepositoryTests
     [Fact]
     public async Task GetTaskByIdForUser_ReturnsNull_WhenUserMismatch()
     {
+        // Arrange
         var user1 = Guid.NewGuid();
         var user2 = Guid.NewGuid();
-        var task = new TaskEntity(user1, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(user1, Guid.NewGuid(), TaskTitle.Create("Task"));
         await this._repo.AddAsync(task);
         await this._context.SaveChangesAsync();
 
+        // Act
         var result = await this._repo.GetTaskByIdForUserAsync(task.Id, user2);
-        Assert.Null(result);
+
+        // Assert
+        result.Should().BeNull();
     }
 }

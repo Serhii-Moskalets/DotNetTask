@@ -1,6 +1,9 @@
-﻿using TodoListApp.Application.Common.Dtos;
+﻿using FluentAssertions;
+using TinyResult;
+using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Tag.Mappers;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tag.Mappers;
 
@@ -18,17 +21,17 @@ public class TagMapperTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var entity = new TagEntity("Work", userId);
+        var entity = new TagEntity(TagName.Create("Work"), userId);
         var tagId = Guid.NewGuid();
         typeof(TagEntity).GetProperty(nameof(TagEntity.Id))?.SetValue(entity, tagId);
 
         // Act
-        var dto = TagMapper.Map(entity);
+        var result = TagMapper.Map(entity);
 
         // Assert
-        Assert.NotNull(dto);
-        Assert.Equal(tagId, dto.Id);
-        Assert.Equal("Work", dto.Name);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(tagId);
+        result.Name.Should().Be("Work");
     }
 
     /// <summary>
@@ -41,22 +44,20 @@ public class TagMapperTests
         var userId = Guid.NewGuid();
         var entities = new List<TagEntity>
         {
-            new("Urgent", userId),
-            new("Personal", userId),
-            new("Study", userId),
+            new(TagName.Create("Urgent"), userId),
+            new(TagName.Create("Personal"), userId),
+            new(TagName.Create("Study"), userId),
         };
 
         // Act
-        var dtos = TagMapper.Map(entities);
+        var result = TagMapper.Map(entities);
 
         // Assert
-        Assert.NotNull(dtos);
-        Assert.Equal(entities.Count, dtos.Count);
-        Assert.Collection(
-            dtos,
-            item => Assert.Equal("Urgent", item.Name),
-            item => Assert.Equal("Personal", item.Name),
-            item => Assert.Equal("Study", item.Name));
+        result.Should().NotBeNull();
+        result.Should().HaveCount(3);
+        result.Select(x => x.Name)
+            .Should()
+            .ContainInOrder("Urgent", "Personal", "Study");
     }
 
     /// <summary>
@@ -69,10 +70,10 @@ public class TagMapperTests
         var entities = new List<TagEntity>();
 
         // Act
-        var dtos = TagMapper.Map(entities);
+        var result = TagMapper.Map(entities);
 
         // Assert
-        Assert.NotNull(dtos);
-        Assert.Empty(dtos);
+        result.Should().NotBeNull();
+        result.Should().BeEmpty();
     }
 }

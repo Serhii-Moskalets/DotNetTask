@@ -4,7 +4,9 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Users.Commands.LoginUser;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Commands.LoginUser;
@@ -14,6 +16,8 @@ namespace TodoListApp.Application.Tests.Users.Commands.LoginUser;
 /// </summary>
 public class LoginUserCommandHandlerTests
 {
+    private static readonly DateTime CurrentTime = DateTime.UtcNow;
+
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<IJwtTokenGenerator> _jwtTokenGeneratorMock;
@@ -43,7 +47,7 @@ public class LoginUserCommandHandlerTests
     {
         // Arrange
         var command = new LoginUserCommand("john@test.com", "CorrectPassword123!");
-        var user = new UserEntity("John", "johndoe", command.Email, new('a', 64), "Doe");
+        var user = UserEntityFactory.Create(email: command.Email);
 
         ConfirmEmail(user);
 
@@ -88,7 +92,7 @@ public class LoginUserCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("Invalid email or password.");
+        result.Error.Message.Should().Be(UserPolicy.InvalidCredentialsMessage);
 
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
     }
@@ -102,7 +106,7 @@ public class LoginUserCommandHandlerTests
     {
         // Arrange
         var command = new LoginUserCommand("john@test.com", "WrongPassword!");
-        var user = new UserEntity("John", "johndoe", command.Email, new('a', 64), "Doe");
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -116,7 +120,7 @@ public class LoginUserCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Be("Invalid email or password.");
+        result.Error.Message.Should().Be(UserPolicy.InvalidCredentialsMessage);
 
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
     }
@@ -132,12 +136,12 @@ public class LoginUserCommandHandlerTests
     {
         // Arrange
         var command = new LoginUserCommand("john@test.com", "Password123!");
-        var user = new UserEntity("John", "johndoe", command.Email, new('a', 64));
+        var user = UserEntityFactory.Create();
 
         ConfirmEmail(user);
 
         var revertToken = "revert";
-        user.RequestEmailChange(Email.Create("new@test.com"), "token", revertToken, TimeSpan.FromHours(1));
+        user.RequestEmailChange(Email.Create("new@test.com"), "token", revertToken, TimeSpan.FromHours(1), CurrentTime);
         user.ConfirmEmailChange("token", DateTime.UtcNow);
         user.RevertEmailChange(revertToken, DateTime.UtcNow, "reset-token", TimeSpan.FromMinutes(15));
 
@@ -166,7 +170,7 @@ public class LoginUserCommandHandlerTests
     {
         // Arrange
         var command = new LoginUserCommand("john@test.com", "Password123!");
-        var user = new UserEntity("John", "johndoe", command.Email, new('a', 64));
+        var user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -178,13 +182,13 @@ public class LoginUserCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-        result.Error!.Message.Should().Be("Please confirm your email before logging in.");
+        result.Error!.Message.Should().Be(EmailPolicy.NotConfirmedMessage);
     }
 
     private static void ConfirmEmail(UserEntity user)
     {
         var token = "any-token";
-        user.RequestEmailVerification(token, TimeSpan.FromHours(1));
+        user.RequestEmailVerification(token, TimeSpan.FromHours(1), CurrentTime);
         user.ConfirmEmailVerification(token, DateTime.UtcNow);
     }
 }

@@ -1,8 +1,12 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Queries.GetUsersWithTaskAccess;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Queries;
 
@@ -16,7 +20,6 @@ public class GetUsersWithTaskAccessQueryHandlerTests
     private readonly Mock<ITaskRepository> _tasksRepoMock;
     private readonly Mock<IUserTaskAccessRepository> _userTaskAccessRepoMock;
     private readonly GetUsersWithTaskAccessQueryHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetUsersWithTaskAccessQueryHandlerTests"/> class.
@@ -52,9 +55,9 @@ public class GetUsersWithTaskAccessQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.NotNull(result.Error);
-        Assert.Equal("Task not found or you do not have permission.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
     }
 
     /// <summary>
@@ -66,7 +69,7 @@ public class GetUsersWithTaskAccessQueryHandlerTests
     {
         // Arrange
         var ownerId = Guid.NewGuid();
-        var task = new TaskEntity(ownerId, Guid.NewGuid(), "Task");
+        var task = new TaskEntity(ownerId, Guid.NewGuid(), TaskTitle.Create("Task"));
         var query = new GetUsersWithTaskAccessQuery(task.Id, ownerId);
 
         this._tasksRepoMock.Setup(r => r.GetTaskByIdForUserAsync(task.Id, ownerId, true, It.IsAny<CancellationToken>()))
@@ -74,8 +77,8 @@ public class GetUsersWithTaskAccessQueryHandlerTests
 
         var sharedUsers = new List<UserTaskAccessEntity>
         {
-            new(task.Id, Guid.NewGuid()) { User = new UserEntity("John1", "john1", "john1@example.com", this._passwordHash) },
-            new(task.Id, Guid.NewGuid()) { User = new UserEntity("John2", "john2", "john2@example.com", this._passwordHash) },
+            new(task.Id, Guid.NewGuid()) { User = UserEntityFactory.Create() },
+            new(task.Id, Guid.NewGuid()) { User = UserEntityFactory.Create("rick", "rickky", "rick@test.com") },
         };
 
         this._userTaskAccessRepoMock.Setup(r => r.GetUserTaskAccessByTaskIdAsync(
@@ -89,14 +92,14 @@ public class GetUsersWithTaskAccessQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(task.Id, result.Value!.Id);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Id.Should().Be(task.Id);
 
-        Assert.Equal(2, result.Value.Users.TotalCount);
-        Assert.Equal(2, result.Value.Users.Items.Count);
+        result.Value.Users.TotalCount.Should().Be(2);
+        result.Value.Users.Items.Should().HaveCount(2);
 
-        Assert.Contains(result.Value.Users.Items, u => u.Email == "john1@example.com");
-        Assert.Contains(result.Value.Users.Items, u => u.Email == "john2@example.com");
+        result.Value.Users.Items.Should().Contain(u => u.Email == UserEntityFactory.Email);
+        result.Value.Users.Items.Should().Contain(u => u.Email == "rick@test.com");
     }
 }

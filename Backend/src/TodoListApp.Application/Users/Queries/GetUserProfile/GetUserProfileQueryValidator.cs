@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Queries.GetUserProfile;
 
@@ -13,6 +14,6 @@ public class GetUserProfileQueryValidator : AbstractValidator<GetUserProfileQuer
     public GetUserProfileQueryValidator()
     {
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
     }
 }

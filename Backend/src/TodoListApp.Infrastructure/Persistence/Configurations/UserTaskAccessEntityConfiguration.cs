@@ -16,26 +16,31 @@ public class UserTaskAccessEntityConfiguration : IEntityTypeConfiguration<UserTa
     /// <param name="builder">The builder used to configure the entity.</param>
     public void Configure(EntityTypeBuilder<UserTaskAccessEntity> builder)
     {
-        // Set composite primary key
+        builder.ToTable("user_task_access");
+
         builder.HasKey(uta => new { uta.UserId, uta.TaskId });
 
-        // Configure properties
-        builder.Property(uta => uta.UserId).HasColumnType("uuid");
-        builder.Property(uta => uta.TaskId).HasColumnType("uuid");
+        builder.Property(uta => uta.UserId)
+            .HasColumnName("user_id")
+            .HasColumnType("uuid");
 
-        // Configure relationship with User
+        builder.Property(uta => uta.TaskId)
+            .HasColumnName("task_id")
+            .HasColumnType("uuid");
+
+        builder.Property(uta => uta.CreatedDate)
+            .HasColumnName("created_date");
+
         builder.HasOne(uta => uta.User)
-            .WithMany(u => u.TaskAccesses)
+            .WithMany(u => u.UserAccesses)
             .HasForeignKey(uta => uta.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Configure relationship with Task
         builder.HasOne(uta => uta.Task)
             .WithMany(t => t.UserAccesses)
             .HasForeignKey(uta => uta.TaskId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        // Configure index
         builder.HasIndex(uta => uta.TaskId);
     }
 }

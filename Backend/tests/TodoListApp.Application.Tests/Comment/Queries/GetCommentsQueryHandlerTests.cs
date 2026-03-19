@@ -1,10 +1,14 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Comment.Queries.GetComments;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Comment.Queries;
 
@@ -18,7 +22,6 @@ public class GetCommentsQueryHandlerTests
     private readonly Mock<ITaskAccessService> _taskAccessMock;
     private readonly Mock<ICommentRepository> _commentsRepoMock;
     private readonly GetCommentsQueryHandler _handler;
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="GetCommentsQueryHandlerTests"/> class.
@@ -55,9 +58,10 @@ public class GetCommentsQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("You don't have access to this task.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(TaskPolicy.AccessDeniedMessage);
     }
 
     /// <summary>
@@ -73,14 +77,13 @@ public class GetCommentsQueryHandlerTests
         var page = 1;
         var pageSize = 10;
 
-        var author = new UserEntity("Alice", "alice", "alice@example.com", this._passwordHash);
+        var author = UserEntityFactory.Create();
         var comments = new List<CommentEntity>
         {
-            new(taskId, author.Id, "Comment 1", author),
-            new(taskId, author.Id, "Comment 2", author),
+            new(taskId, author.Id, CommentContent.Create("Comment_1"), author),
+            new(taskId, author.Id, CommentContent.Create("Comment_2"), author),
         };
 
-        // Налаштовуємо доступ
         this._taskAccessMock
             .Setup(s => s.HasAccessAsync(taskId, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
@@ -95,10 +98,10 @@ public class GetCommentsQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(2, result.Value.TotalCount);
-        Assert.Equal(2, result.Value.Items.Count);
-        Assert.Equal("Comment 1", result.Value.Items.First().Text);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.TotalCount.Should().Be(2);
+        result.Value.Items.Should().HaveCount(2);
+        result.Value.Items.First().Content.Should().Be("Comment_1");
     }
 }

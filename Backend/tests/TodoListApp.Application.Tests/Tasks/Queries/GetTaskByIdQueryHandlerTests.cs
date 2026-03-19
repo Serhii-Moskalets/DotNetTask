@@ -1,9 +1,12 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Queries.GetTaskById;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Queries;
 
@@ -47,9 +50,10 @@ public class GetTaskByIdQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
-        Assert.Equal("Task not found.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be(TaskPolicy.NotFoundMessage);
     }
 
     /// <summary>
@@ -61,7 +65,7 @@ public class GetTaskByIdQueryHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var task = new TaskEntity(userId, Guid.NewGuid(), "Test Task", DateTime.UtcNow.AddDays(1));
+        var task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Task"), DateTime.UtcNow.AddDays(1));
 
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(
@@ -77,11 +81,14 @@ public class GetTaskByIdQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Equal(task.Title, result.Value!.Title);
-        Assert.Equal(task.Id, result.Value!.Id);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Title.Should().Be(task.Title.Value);
+        result.Value.Id.Should().Be(task.Id);
 
-        this._taskRepoMock.Verify(r => r.GetTaskByIdForUserAsync(task.Id, userId, It.IsAny<bool>(), It.IsAny<CancellationToken>()), Times.Once);
+        this._taskRepoMock.Verify(
+            r => r.GetTaskByIdForUserAsync(
+                task.Id, userId, It.IsAny<bool>(), It.IsAny<CancellationToken>()),
+            Times.Once);
     }
 }

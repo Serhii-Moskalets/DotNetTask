@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Tasks.Commands.AddTagToTask;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -19,7 +20,7 @@ public class AddTagToTaskCommandValidatorTests
         var command = new AddTagToTaskCommand(Guid.Empty, Guid.NewGuid(), Guid.NewGuid());
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
-              .WithErrorMessage("Task ID is required.");
+              .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -31,7 +32,7 @@ public class AddTagToTaskCommandValidatorTests
         var command = new AddTagToTaskCommand(Guid.NewGuid(), Guid.Empty, Guid.NewGuid());
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
-              .WithErrorMessage("User ID is required.");
+              .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -43,7 +44,7 @@ public class AddTagToTaskCommandValidatorTests
         var command = new AddTagToTaskCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty);
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TagId)
-              .WithErrorMessage("Tag ID is required.");
+              .WithErrorMessage(TagPolicy.IdRequiredMessage);
     }
 
     /// <summary>

@@ -5,6 +5,7 @@ using TodoListApp.Application.Users.Events;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Events;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Events;
@@ -14,10 +15,11 @@ namespace TodoListApp.Application.Tests.Users.Events;
 /// </summary>
 public class UserRegisteredDomainEventHandlerTests
 {
+    private static readonly DateTime CurrentTime = DateTime.UtcNow;
+
     private readonly Mock<IEmailService> _emailServiceMock;
     private readonly Mock<IUrlProvider> _urlProviderMock;
     private readonly UserRegisteredDomainEventHandler _sut;
-    private readonly string _passwordHash = new('a', 60);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UserRegisteredDomainEventHandlerTests"/> class
@@ -40,12 +42,8 @@ public class UserRegisteredDomainEventHandlerTests
     public async Task Handle_ShouldGenerateLinkAndSendEmail_WhenEventIsRaised()
     {
         // Arrange
-        var user = new UserEntity(
-            "John",
-            "john_doe",
-            "john@example.com",
-            this._passwordHash);
-        var token = SecurityToken.Create("test-token", TimeSpan.FromDays(1), UserTokenType.EmailVerification);
+        var user = UserEntityFactory.Create();
+        var token = SecurityToken.Create("test-token", TimeSpan.FromDays(1), UserTokenType.EmailVerification, CurrentTime);
         var notification = new UserRegisteredDomainEvent(user, token);
         var expectedLink = "https://test.com/confirm?token=test-token";
 

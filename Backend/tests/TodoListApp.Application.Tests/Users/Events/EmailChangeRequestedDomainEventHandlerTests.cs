@@ -3,9 +3,9 @@ using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Notifications;
 using TodoListApp.Application.Users.Events;
-using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Events;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Users.Events;
@@ -20,6 +20,8 @@ namespace TodoListApp.Application.Tests.Users.Events;
 /// </remarks>
 public class EmailChangeRequestedDomainEventHandlerTests
 {
+    private static readonly DateTime CurrentTime = DateTime.UtcNow;
+
     private readonly Mock<IEmailService> _emailServiceMock;
     private readonly Mock<IUrlProvider> _urlProviderMock;
     private readonly EmailChangeRequestedDomainEventHandler _sut;
@@ -45,9 +47,13 @@ public class EmailChangeRequestedDomainEventHandlerTests
     public async Task Handle_ShouldSendBothEmails_WhenDataIsValid()
     {
         // Arrange
-        var user = CreateTestUser();
-        var confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange, "new@email.com");
-        var revertToken = SecurityToken.Create("revert-123", TimeSpan.FromHours(1), UserTokenType.EmailChangeRevert, "old@email.com");
+        var newEmail = "new@email.com";
+        var oldEmail = "old@email.com";
+
+        var user = UserEntityFactory.Create(email: oldEmail);
+
+        var confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime, newEmail);
+        var revertToken = SecurityToken.Create("revert-123", TimeSpan.FromHours(1), UserTokenType.EmailChangeRevert, CurrentTime, oldEmail);
 
         var domainEvent = new EmailChangeRequestedDomainEvent(user, confirmToken, revertToken);
 
@@ -73,7 +79,7 @@ public class EmailChangeRequestedDomainEventHandlerTests
         this._emailServiceMock.Verify(
             x => x.SendEmailChangeSecurityAlertAsync(
                 revertToken.Metadata,
-                user.Email.Value,
+                confirmToken.Metadata,
                 user.UserName.Value,
                 "http://revert-link.com",
                 It.IsAny<CancellationToken>()), Times.Once);
@@ -92,9 +98,9 @@ public class EmailChangeRequestedDomainEventHandlerTests
     public async Task Handle_ShouldThrowException_WhenOriginalEmailIsMissingInMetadata()
     {
         // Arrange
-        var user = CreateTestUser();
-        var confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange);
-        var revertToken = SecurityToken.Create("revert-123", TimeSpan.FromHours(1), UserTokenType.EmailChangeRevert, metadata: null);
+        var user = UserEntityFactory.Create();
+        var confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
+        var revertToken = SecurityToken.Create("revert-123", TimeSpan.FromHours(1), UserTokenType.EmailChangeRevert, CurrentTime, metadata: null);
 
         var domainEvent = new EmailChangeRequestedDomainEvent(user, confirmToken, revertToken);
 
@@ -102,7 +108,4 @@ public class EmailChangeRequestedDomainEventHandlerTests
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
             this._sut.Handle(domainEvent, CancellationToken.None));
     }
-
-    private static UserEntity CreateTestUser()
-        => new("John", "Smith", "new@email.com", new('a', 64));
 }

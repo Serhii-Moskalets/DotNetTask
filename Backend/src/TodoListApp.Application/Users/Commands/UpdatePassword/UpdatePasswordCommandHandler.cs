@@ -4,6 +4,7 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.UpdatePassword;
@@ -39,14 +40,14 @@ public class UpdatePasswordCommandHandler(
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "User not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         var isPasswordValid = this._passwordHasher.VerifyPassword(command.CurrentPassword, user.PasswordHash.Value);
 
         if (!isPasswordValid)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Incorrect password.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, PasswordPolicy.IncorrectMessage);
         }
 
         var newHashString = this._passwordHasher.HashPassword(command.NewPassword);

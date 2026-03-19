@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.UserTaskAccess.Queries.GetUsersWithTaskAccess;
 
@@ -13,15 +14,15 @@ public class GetUsersWithTaskAccessQueryValidator : AbstractValidator<GetUsersWi
     public GetUsersWithTaskAccessQueryValidator()
     {
         this.RuleFor(x => x.TaskId)
-            .NotEmpty().WithMessage("TaskId is required.");
+            .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("UserId is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.Page)
-            .GreaterThanOrEqualTo(1).WithMessage("Page must be at least 1.");
+            .GreaterThanOrEqualTo(1).WithMessage(CommonPolicy.PageMinMessage);
 
         this.RuleFor(x => x.PageSize)
-            .InclusiveBetween(1, 100).WithMessage("PageSize must be between 1 and 100.");
+            .InclusiveBetween(1, 100).WithMessage(CommonPolicy.PageSizeRangeMessage);
     }
 }

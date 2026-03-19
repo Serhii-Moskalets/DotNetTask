@@ -1,10 +1,9 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
-using Moq;
+﻿using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.UserTaskAccess.Commands.DeleteTaskAccessesByUser;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.UserTaskAccess.Commands;
 
@@ -28,7 +27,6 @@ public class DeleteTaskAccessesByUserCommandHandlerTests
 
         this._unitOfWorkMock.Setup(u => u.UserTaskAccesses).Returns(this._userTaskAccessRepoMock.Object);
 
-        // Хендлер тепер чистий від валідаторів
         this._handler = new DeleteTaskAccessesByUserCommandHandler(this._unitOfWorkMock.Object);
     }
 
@@ -53,7 +51,7 @@ public class DeleteTaskAccessesByUserCommandHandlerTests
         // Assert
         Assert.False(result.IsSuccess);
         Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal("There are no tasks shared with you.", result.Error.Message);
+        Assert.Equal(UserTaskAccessPolicy.NoUserAccessesMessage, result.Error.Message);
     }
 
     /// <summary>

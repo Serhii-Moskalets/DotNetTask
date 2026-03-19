@@ -7,13 +7,14 @@ using Serilog;
 using Serilog.Sinks.PostgreSQL;
 using TodoListApp.Api.Middleware;
 using TodoListApp.Application.Common.Extensions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Infrastructure.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-    ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found");
+var connectionString = builder.Configuration.GetConnectionString(CommonPolicy.DataBaseConnectionString)
+    ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
 
 var columnWriters = new Dictionary<string, ColumnWriterBase>
 {

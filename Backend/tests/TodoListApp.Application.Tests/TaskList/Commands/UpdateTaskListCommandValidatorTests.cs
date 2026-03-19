@@ -1,5 +1,7 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.TaskList.Commands.UpdateTaskList;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.TaskList.Commands;
 
@@ -20,7 +22,8 @@ public class UpdateTaskListCommandValidatorTests
         var command = new UpdateTaskListCommand(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
 
         var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(c => c.NewTitle);
+        result.ShouldHaveValidationErrorFor(c => c.NewTitle)
+            .WithErrorMessage(TaskListPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -29,11 +32,12 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_NewTitle_Exceeds_MaxLength()
     {
-        var longTitle = new string('A', 51);
+        var longTitle = new string('A', TaskListTitle.MaxLength + 1);
         var command = new UpdateTaskListCommand(Guid.NewGuid(), Guid.NewGuid(), longTitle);
 
         var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(c => c.NewTitle);
+        result.ShouldHaveValidationErrorFor(c => c.NewTitle)
+            .WithErrorMessage(TaskListPolicy.TooLongMessage);
     }
 
     /// <summary>
@@ -45,7 +49,8 @@ public class UpdateTaskListCommandValidatorTests
         var command = new UpdateTaskListCommand(Guid.NewGuid(), Guid.Empty, "Valid Title");
 
         var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(c => c.UserId);
+        result.ShouldHaveValidationErrorFor(c => c.UserId)
+            .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
 
     /// <summary>
@@ -57,7 +62,8 @@ public class UpdateTaskListCommandValidatorTests
         var command = new UpdateTaskListCommand(Guid.Empty, Guid.NewGuid(), "Valid Title");
 
         var result = this._validator.TestValidate(command);
-        result.ShouldHaveValidationErrorFor(c => c.TaskListId);
+        result.ShouldHaveValidationErrorFor(c => c.TaskListId)
+            .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
 
     /// <summary>

@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Users.Commands.ConfirmPasswordReset;
 
@@ -13,14 +14,20 @@ public class ConfirmPasswordResetCommandValidator : AbstractValidator<ConfirmPas
     public ConfirmPasswordResetCommandValidator()
     {
         this.RuleFor(x => x.Token)
-            .NotEmpty().WithMessage("Token is required.");
+            .NotEmpty().WithMessage(TokenPolicy.RequiredMessage);
 
         this.RuleFor(x => x.NewPassword)
-            .NotEmpty().WithMessage("Password is required.")
-            .MinimumLength(8).WithMessage("Password must be at least 8 characters long.")
-            .Matches("[A-Z]").WithMessage("Password must contain at least one uppercase letter.")
-            .Matches("[a-z]").WithMessage("Password must contain at least one lowercase letter.")
-            .Matches("[0-9]").WithMessage("Password must contain at least one number.")
-            .Matches(@"[\!\?\*\.]").WithMessage("Password must contain at least one special character (!?*.).");
+            .NotEmpty()
+                .WithMessage(PasswordPolicy.EmptyMessage)
+            .MinimumLength(PasswordPolicy.MinLength)
+                .WithMessage(PasswordPolicy.TooShortMessage)
+            .Matches(PasswordPolicy.UppercaseRegex)
+                .WithMessage(PasswordPolicy.UppercaseMessage)
+            .Matches(PasswordPolicy.LowercaseRegex)
+                .WithMessage(PasswordPolicy.LowercaseMessage)
+            .Matches(PasswordPolicy.NumberRegex)
+                .WithMessage(PasswordPolicy.NumberMessage)
+            .Matches(PasswordPolicy.SpecialCharRegex)
+                .WithMessage(PasswordPolicy.SpecialCharMessage);
     }
 }

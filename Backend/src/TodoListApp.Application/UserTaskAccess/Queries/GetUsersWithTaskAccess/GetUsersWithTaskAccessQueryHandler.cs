@@ -6,6 +6,7 @@ using TodoListApp.Application.Abstractions.Messaging;
 using TodoListApp.Application.Common.Extensions;
 using TodoListApp.Application.UserTaskAccess.Dtos;
 using TodoListApp.Application.UserTaskAccess.Mappers;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.UserTaskAccess.Queries.GetUsersWithTaskAccess;
 
@@ -31,7 +32,7 @@ public class GetUsersWithTaskAccessQueryHandler(IUnitOfWork unitOfWork)
             .GetTaskByIdForUserAsync(query.TaskId, query.UserId, asNoTracking: true, cancellationToken);
         if (task is null)
         {
-            return await Result<TaskAccessListDto>.FailureAsync(ErrorCode.NotFound, "Task not found or you do not have permission.");
+            return await Result<TaskAccessListDto>.FailureAsync(ErrorCode.NotFound, UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
         }
 
         var (items, totalCount) = await this.UnitOfWork.UserTaskAccesses
@@ -44,7 +45,7 @@ public class GetUsersWithTaskAccessQueryHandler(IUnitOfWork unitOfWork)
         return await Result<TaskAccessListDto>.SuccessAsync(new TaskAccessListDto
         {
             Id = task.Id,
-            Title = task.Title,
+            Title = task.Title.Value,
             Users = items.ToPagedResult(totalCount, query.Page, query.PageSize, TaskAccessForOwnerMapper.Map),
         });
     }

@@ -1,6 +1,9 @@
-﻿using TodoListApp.Domain.Entities;
+﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.Exceptions;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Domain.Test.Entities;
 
@@ -9,8 +12,12 @@ namespace TodoListApp.Domain.Test.Entities;
 /// </summary>
 public class TaskEntityTests
 {
-    private const string Title = "Task title";
-    private const string Description = "Description description";
+    private static readonly TaskTitle Title = TaskTitle.Create("Task title");
+    private static readonly TaskTitle NewTitle = TaskTitle.Create("New title");
+    private static readonly TaskDescription Description = TaskDescription.Create("Description description");
+
+    private static readonly Guid UserId = Guid.NewGuid();
+    private static readonly Guid TaskListId = Guid.NewGuid();
 
     /// <summary>
     /// Verifies that the constructor creates a task
@@ -19,19 +26,20 @@ public class TaskEntityTests
     [Fact]
     public void Constructor_ShouldCreateTask_WhenValidData()
     {
-        var ownerId = Guid.NewGuid();
-        var taskListId = Guid.NewGuid();
+        // Arrange
         var dueDate = DateTime.UtcNow.AddMinutes(5);
 
-        var task = new TaskEntity(ownerId, taskListId, Title, dueDate, Description);
+        // Act
+        var task = CreateTask(dueDate, Description);
 
-        Assert.Equal(ownerId, task.OwnerId);
-        Assert.Equal(taskListId, task.TaskListId);
-        Assert.Equal(Title, task.Title);
-        Assert.Equal(dueDate, task.DueDate);
-        Assert.Equal(Description, task.Description);
-        Assert.Equal(StatusTask.NotStarted, task.Status);
-        Assert.True(task.CreatedDate <= DateTime.UtcNow);
+        // Assert
+        task.OwnerId.Should().Be(UserId);
+        task.TaskListId.Should().Be(TaskListId);
+        task.Title.Should().Be(Title);
+        task.DueDate.Should().Be(dueDate);
+        task.Description.Should().Be(Description);
+        task.Status.Should().Be(StatusTask.NotStarted);
+        task.CreatedDate.Should().BeBefore(DateTime.UtcNow.AddMilliseconds(1));
     }
 
     /// <summary>
@@ -40,17 +48,16 @@ public class TaskEntityTests
     [Fact]
     public void Constructor_ShouldCreateTask_WithoutDueDate_WhenValidData()
     {
-        var ownerId = Guid.NewGuid();
-        var taskListId = Guid.NewGuid();
+        // Act
+        var task = CreateTask(description: Description);
 
-        var task = new TaskEntity(ownerId, taskListId, Title, description: Description);
-
-        Assert.Equal(ownerId, task.OwnerId);
-        Assert.Equal(taskListId, task.TaskListId);
-        Assert.Equal(Title, task.Title);
-        Assert.Null(task.DueDate);
-        Assert.Equal(Description, task.Description);
-        Assert.True((DateTime.UtcNow - task.CreatedDate).TotalSeconds < 1);
+        // Assert
+        task.OwnerId.Should().Be(UserId);
+        task.TaskListId.Should().Be(TaskListId);
+        task.Title.Should().Be(Title);
+        task.DueDate.Should().BeNull();
+        task.Description.Should().Be(Description);
+        (DateTime.UtcNow - task.CreatedDate).TotalSeconds.Should().BeLessThan(1);
     }
 
     /// <summary>
@@ -59,18 +66,19 @@ public class TaskEntityTests
     [Fact]
     public void Constructor_ShouldCreateTask_WithoutDescription_WhenValidData()
     {
-        var ownerId = Guid.NewGuid();
-        var taskListId = Guid.NewGuid();
+        // Arrange
         var dueDate = DateTime.UtcNow.AddMinutes(5);
 
-        var task = new TaskEntity(ownerId, taskListId, Title, dueDate: dueDate);
+        // Act
+        var task = CreateTask(dueDate: dueDate);
 
-        Assert.Equal(ownerId, task.OwnerId);
-        Assert.Equal(taskListId, task.TaskListId);
-        Assert.Equal(Title, task.Title);
-        Assert.Equal(dueDate, task.DueDate);
-        Assert.Null(task.Description);
-        Assert.True((DateTime.UtcNow - task.CreatedDate).TotalSeconds < 1);
+        // Assert
+        task.OwnerId.Should().Be(UserId);
+        task.TaskListId.Should().Be(TaskListId);
+        task.Title.Should().Be(Title);
+        task.DueDate.Should().Be(dueDate);
+        task.Description.Should().BeNull();
+        (DateTime.UtcNow - task.CreatedDate).TotalSeconds.Should().BeLessThan(1);
     }
 
     /// <summary>
@@ -79,100 +87,48 @@ public class TaskEntityTests
     [Fact]
     public void Constructor_ShouldCreateTask_WithoutDueDateAndDescription_WhenValidData()
     {
-        var ownerId = Guid.NewGuid();
-        var taskListId = Guid.NewGuid();
+        // Act
+        var task = CreateTask();
 
-        var task = new TaskEntity(ownerId, taskListId, Title);
-
-        Assert.Equal(ownerId, task.OwnerId);
-        Assert.Equal(taskListId, task.TaskListId);
-        Assert.Equal(Title, task.Title);
-        Assert.Null(task.DueDate);
-        Assert.Null(task.Description);
-        Assert.True((DateTime.UtcNow - task.CreatedDate).TotalSeconds < 1);
+        // Assert
+        task.OwnerId.Should().Be(UserId);
+        task.TaskListId.Should().Be(TaskListId);
+        task.Title.Should().Be(Title);
+        task.DueDate.Should().BeNull();
+        task.Description.Should().BeNull();
+        (DateTime.UtcNow - task.CreatedDate).TotalSeconds.Should().BeLessThan(1);
     }
 
     /// <summary>
-    /// Verifies that the constructor throws an <see cref="DomainException"/>
-    /// when the task title is invalid.
-    /// </summary>
-    /// <param name="invalidTitle">An invalid task title.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public void Constructor_ShouldThrow_WhenTitleInvalid(string? invalidTitle)
-    {
-        Assert.Throws<DomainException>(() =>
-        new TaskEntity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            invalidTitle!));
-    }
-
-    /// <summary>
-    /// Verifies that the constructor trims whitespace from the task title.
-    /// </summary>
-    /// <param name="title">A title containing leading or trailing whitespace.</param>
-    [Theory]
-    [InlineData("   Task title   ")]
-    [InlineData("Task title   ")]
-    [InlineData("   Task title")]
-    public void Constructor_ShouldTrimName(string title)
-    {
-        var task = new TaskEntity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            title);
-
-        Assert.Equal(Title, task.Title);
-    }
-
-    /// <summary>
-    /// Verifies that the constructor trims whitespace from the task description.
-    /// </summary>
-    /// <param name="description">A description containing leading or trailing whitespace.</param>
-    [Theory]
-    [InlineData("   Description description   ")]
-    [InlineData("Description description   ")]
-    [InlineData("   Description description")]
-    public void Constructor_ShouldTrimDescription(string description)
-    {
-        var task = new TaskEntity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Title,
-            description: description);
-
-        Assert.Equal(Description, task.Description);
-    }
-
-    /// <summary>
-    /// Verifies that the comments collection is initialized on creation.
+    /// Verifies that the comments and user accesses collections is initialized on creation.
     /// </summary>
     [Fact]
-    public void Constructor_ShouldInitializeCommentsCollection()
+    public void Constructor_ShouldInitializeCollections()
     {
-        var task = new TaskEntity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Title);
-        Assert.NotNull(task.Comments);
-        Assert.Empty(task.Comments);
+        // Arrange & Act
+        var task = CreateTask();
+
+        // Assert
+        task.Comments.Should().NotBeNull().And.BeEmpty();
+        task.UserAccesses.Should().NotBeNull().And.BeEmpty();
     }
 
     /// <summary>
-    /// Verifies that the user accesses collection is initialized on creation.
+    /// Verifies that creating a task with a due date in the past
+    /// throws a <see cref="DomainException"/>.
     /// </summary>
     [Fact]
-    public void Constructor_ShouldInitializeUserAccessesCollection()
+    public void Constructor_ShouldThrow_WhenDueDateInPast()
     {
-        var task = new TaskEntity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            Title);
-        Assert.NotNull(task.UserAccesses);
-        Assert.Empty(task.UserAccesses);
+        // Arrange
+        var pastDate = DateTime.UtcNow.AddMinutes(-5);
+
+        // Act
+        Action act = () => CreateTask(pastDate);
+
+        // Assert
+        act.Should().Throw<DomainException>()
+            .WithMessage(TaskPolicy.InvalidDueDateMessage);
     }
 
     /// <summary>
@@ -181,35 +137,14 @@ public class TaskEntityTests
     [Fact]
     public void Update_ShouldChangeDetails_WhenValid_WithoutDueDateAndDescription()
     {
-        var task = new TaskEntity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "Old title");
-
-        task.UpdateDetails("New title");
-
-        Assert.Equal("New title", task.Title);
-    }
-
-    /// <summary>
-    /// Verifies that the existing task title is preserved when the provided update value
-    /// is null or an empty string.
-    /// </summary>
-    /// <param name="invalidTitle">The null or empty title string to test.</param>
-    [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    public void Update_ShouldKeepOldTitle_WhenTitleIsNullOrEmpty(string? invalidTitle)
-    {
         // Arrange
-        var oldTitle = "Old title";
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), oldTitle);
+        var task = CreateTask();
 
         // Act
-        task.UpdateDetails(invalidTitle);
+        task.UpdateDetails(NewTitle);
 
         // Assert
-        Assert.Equal(oldTitle, task.Title);
+        task.Title.Value.Should().Be("New title");
     }
 
     /// <summary>
@@ -221,13 +156,13 @@ public class TaskEntityTests
     {
         // Arrange
         var oldDate = DateTime.UtcNow.AddDays(1);
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), "Title", oldDate);
+        var task = CreateTask(dueDate: oldDate);
 
         // Act
-        task.UpdateDetails("New Title", dueDate: null);
+        task.UpdateDetails(title: null, Description, dueDate: null);
 
         // Assert
-        Assert.Equal(oldDate, task.DueDate);
+        task.DueDate.Should().Be(oldDate);
     }
 
     /// <summary>
@@ -238,13 +173,13 @@ public class TaskEntityTests
     public void Update_ShouldClearDescription_WhenDescriptionIsNull()
     {
         // Arrange
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), "Title", description: "Old Description");
+        var task = CreateTask(description: Description);
 
         // Act
-        task.UpdateDetails("Title", description: null);
+        task.UpdateDetails(Title, description: null);
 
         // Assert
-        Assert.Null(task.Description);
+        task.Description.Should().BeNull();
     }
 
     /// <summary>
@@ -254,76 +189,53 @@ public class TaskEntityTests
     [Fact]
     public void Update_ShouldChangeDetails_WhenValidWithDueDateAndDescription()
     {
-        var task = new TaskEntity(
-            Guid.NewGuid(),
-            Guid.NewGuid(),
-            "Old title");
+        // Arrange
+        var task = CreateTask();
         var newDueDate = DateTime.UtcNow.AddMinutes(5);
 
-        task.UpdateDetails("New title", Description, newDueDate);
+        // Act
+        task.UpdateDetails(NewTitle, Description, newDueDate);
 
-        Assert.Equal("New title", task.Title);
-        Assert.Equal(Description, task.Description);
-        Assert.Equal(newDueDate, task.DueDate);
-        Assert.Equal(newDueDate, task.DueDate);
+        // Assert
+        task.Title.Value.Should().Be("New title");
+        task.Description.Should().Be(Description);
+        task.DueDate.Should().Be(newDueDate);
     }
 
     /// <summary>
-    /// Verifies that <see cref="TaskEntity.UpdateDetails"/> trims whitespace
-    /// from the updated title.
+    /// Verifies that updating task details with a due date in the past
+    /// throws a <see cref="DomainException"/>.
     /// </summary>
-    /// <param name="title">A title containing leading or trailing whitespace.</param>
-    [Theory]
-    [InlineData("   New title   ")]
-    [InlineData("New title   ")]
-    [InlineData("   New title")]
-    public void UpdateDetails_ShouldTrimTitle(string title)
+    [Fact]
+    public void Update_ShouldThrow_WhenDueDateInPast()
     {
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), "Old title");
-        task.UpdateDetails(title);
-        Assert.Equal("New title", task.Title);
-    }
+        // Arrange
+        var task = CreateTask();
+        var pastDate = DateTime.UtcNow.AddMinutes(-1);
 
-    /// <summary>
-    /// Verifies that <see cref="TaskEntity.UpdateDetails"/> trims whitespace
-    /// from the updated description.
-    /// </summary>
-    /// <param name="description">A description containing leading or trailing whitespace.</param>
-    [Theory]
-    [InlineData("   Description description  ")]
-    [InlineData("Description description ")]
-    [InlineData("   Description description")]
-    public void UpdateDetails_ShouldTrimDescription(string description)
-    {
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
-        task.UpdateDetails(Title, description);
-        Assert.Equal(Description, task.Description);
+        // Act
+        Action act = () => task.UpdateDetails(Title, Description, pastDate);
+
+        // Assert
+        act.Should().Throw<DomainException>()
+            .WithMessage(TaskPolicy.InvalidDueDateMessage);
     }
 
     /// <summary>
     /// Verifies that a task can transition from InProgress to Done status.
     /// </summary>
     [Fact]
-    public void ChangeStatus_ShouldCompleteTask_WhenInProgress()
+    public void ChangeStatus_ShouldReturnSuccess_WhenTransitionIsValid()
     {
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
-        task.ChangeStatus(StatusTask.InProgress);
-        task.ChangeStatus(StatusTask.Done);
-        Assert.Equal(StatusTask.Done, task.Status);
-    }
+        // Arrange
+        var task = CreateTask();
 
-    /// <summary>
-    /// Verifies that changing task status from Done back to InProgress
-    /// throws a <see cref="DomainException"/>.
-    /// </summary>
-    [Fact]
-    public void ChangeStatus_ShouldThrow_WhenDoneToInProgress()
-    {
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
-        task.ChangeStatus(StatusTask.InProgress);
-        task.ChangeStatus(StatusTask.Done);
+        // Act
+        var result = task.ChangeStatus(StatusTask.InProgress);
 
-        Assert.Throws<DomainException>(() => task.ChangeStatus(StatusTask.InProgress));
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        task.Status.Should().Be(StatusTask.InProgress);
     }
 
     /// <summary>
@@ -331,19 +243,17 @@ public class TaskEntityTests
     /// does not modify the task state.
     /// </summary>
     [Fact]
-    public void ChangeStatus_ShouldDoNothing_WhenSameStatus()
+    public void ChangeStatus_ShouldReturnSuccess_WhenSameStatus()
     {
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
+        // Arrange
+        var task = CreateTask();
 
-        task.ChangeStatus(StatusTask.NotStarted);
-        Assert.Equal(StatusTask.NotStarted, task.Status);
+        // Act
+        var result = task.ChangeStatus(StatusTask.NotStarted);
 
-        task.ChangeStatus(StatusTask.NotStarted);
-        Assert.Equal(StatusTask.NotStarted, task.Status);
-
-        task.ChangeStatus(StatusTask.InProgress);
-        task.ChangeStatus(StatusTask.InProgress);
-        Assert.Equal(StatusTask.InProgress, task.Status);
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        task.Status.Should().Be(StatusTask.NotStarted);
     }
 
     /// <summary>
@@ -351,12 +261,90 @@ public class TaskEntityTests
     /// throws a <see cref="DomainException"/>.
     /// </summary>
     [Fact]
-    public void ChangeStatus_ShouldThrow_WhenInvalidEnum()
+    public void ChangeStatus_ShouldReturnFailure_WhenInvalidEnum()
     {
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
+        // Arrange
+        var task = CreateTask();
         const StatusTask invalidStatus = (StatusTask)999;
 
-        Assert.Throws<DomainException>(() => task.ChangeStatus(invalidStatus));
+        // Act
+        var result = task.ChangeStatus(invalidStatus);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Message.Should().Be(TaskPolicy.InvalidStatusMessage);
+    }
+
+    /// <summary>
+    /// Verifies that changing task status from <see cref="StatusTask.Done"/>
+    /// to <see cref="StatusTask.NotStarted"/> returns a failure result.
+    /// </summary>
+    [Fact]
+    public void ChangeStatus_ShouldReturnFailure_WhenDoneToNotStarted()
+    {
+        // Arrange
+        var task = CreateTask();
+        task.ChangeStatus(StatusTask.InProgress);
+        task.ChangeStatus(StatusTask.Done);
+
+        // Act
+        var result = task.ChangeStatus(StatusTask.NotStarted);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Message.Should().Be(TaskPolicy.DoneToNotStartedMessage);
+    }
+
+    /// <summary>
+    /// Verifies that changing task status from <see cref="StatusTask.InProgress"/>
+    /// to <see cref="StatusTask.NotStarted"/> returns a failure result.
+    /// </summary>
+    [Fact]
+    public void ChangeStatus_ShouldReturnFailure_WhenInProgressToNotStarted()
+    {
+        // Arrange
+        var task = CreateTask();
+        task.ChangeStatus(StatusTask.InProgress);
+
+        // Act
+        var result = task.ChangeStatus(StatusTask.NotStarted);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Message.Should().Be(TaskPolicy.InProgressToNotStartedMessage);
+    }
+
+    /// <summary>
+    /// Verifies that a task can successfully complete the full lifecycle:
+    /// NotStarted → InProgress → Done.
+    /// </summary>
+    [Fact]
+    public void ChangeStatus_ShouldFollowFullLifecycle()
+    {
+        var task = CreateTask();
+
+        task.ChangeStatus(StatusTask.InProgress);
+        task.ChangeStatus(StatusTask.Done);
+
+        task.Status.Should().Be(StatusTask.Done);
+    }
+
+    /// <summary>
+    /// Verifies that changing task status directly to <see cref="StatusTask.Done"/>
+    /// without first setting it to <see cref="StatusTask.InProgress"/> returns a failure result.
+    /// </summary>
+    [Fact]
+    public void ChangeStatus_ShouldReturnFailure_WhenCompletingWithoutInProgress()
+    {
+        // Arrange
+        var task = CreateTask();
+
+        // Act
+        var result = task.ChangeStatus(StatusTask.Done);
+
+        // Assert
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Message.Should().Be(TaskPolicy.CompletionRequiresInProgressMessage);
     }
 
     /// <summary>
@@ -366,13 +354,16 @@ public class TaskEntityTests
     [Fact]
     public void SetTag_ShouldUpdateTagIdAndResetTag()
     {
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
+        // Arrange
+        var task = CreateTask();
         var tagId = Guid.NewGuid();
 
+        // Act
         task.SetTag(tagId);
 
-        Assert.Equal(tagId, task.TagId);
-        Assert.Null(task.Tag);
+        // Assert
+        task.TagId.Should().Be(tagId);
+        task.Tag.Should().BeNull();
     }
 
     /// <summary>
@@ -382,13 +373,37 @@ public class TaskEntityTests
     [Fact]
     public void SetTag_ShouldRemoveTag_WhenNull()
     {
-        var task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
+        // Arrange
+        var task = CreateTask();
         var tagId = Guid.NewGuid();
         task.SetTag(tagId);
 
+        // Act
         task.SetTag(null);
 
-        Assert.Null(task.TagId);
-        Assert.Null(task.Tag);
+        // Assert
+        task.TagId.Should().BeNull();
+        task.Tag.Should().BeNull();
     }
+
+    /// <summary>
+    /// Verifies that setting the same tag ID does not modify the task state.
+    /// </summary>
+    [Fact]
+    public void SetTag_ShouldDoNothing_WhenSameTagId()
+    {
+        // Arrange
+        var task = CreateTask();
+        var tagId = Guid.NewGuid();
+        task.SetTag(tagId);
+
+        // Act
+        task.SetTag(tagId);
+
+        // Assert
+        task.TagId.Should().Be(tagId);
+    }
+
+    private static TaskEntity CreateTask(DateTime? dueDate = null, TaskDescription? description = null)
+        => new(UserId, TaskListId, Title, dueDate, description);
 }

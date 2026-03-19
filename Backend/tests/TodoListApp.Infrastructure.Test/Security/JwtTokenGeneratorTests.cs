@@ -3,6 +3,7 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using Moq;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Infrastructure.Security;
 using TodoListApp.Infrastructure.Security.Settings;
 
@@ -44,7 +45,7 @@ public class JwtTokenGeneratorTests
     public void GenerateToken_ShouldReturnValidJwt_WhenUserIsValid()
     {
         // Arrange
-        var user = new UserEntity("John", "johndoe", "john@test.com", new('a', 64), "Doe");
+        var user = UserEntityFactory.Create();
 
         // Act
         var tokenString = this._sut.GenerateToken(user);

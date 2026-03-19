@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tasks.Commands.DeleteOverdueTasks;
 
@@ -13,9 +14,9 @@ public class DeleteOverdueTasksCommandValidator : AbstractValidator<DeleteOverdu
     public DeleteOverdueTasksCommandValidator()
     {
         this.RuleFor(x => x.TaskListId)
-            .NotEmpty().WithMessage("Task list ID is required.");
+            .NotEmpty().WithMessage(TaskListPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("Task list ID is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
     }
 }

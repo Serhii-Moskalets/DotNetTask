@@ -1,9 +1,11 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Tasks.Queries.GetTaskByTitle;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Queries;
 
@@ -46,8 +48,8 @@ public class GetTaskByTitleQueryHandlerTests
 
         var taskEntities = new List<TaskEntity>
         {
-            new(userId, Guid.NewGuid(), "Task 1", DateTime.UtcNow.AddDays(1)),
-            new(userId, Guid.NewGuid(), "Task 2", DateTime.UtcNow.AddDays(2)),
+            new(userId, Guid.NewGuid(), TaskTitle.Create("Task 1"), DateTime.UtcNow.AddDays(1)),
+            new(userId, Guid.NewGuid(), TaskTitle.Create("Task 2"), DateTime.UtcNow.AddDays(2)),
         };
 
         this._taskRepoMock
@@ -60,11 +62,12 @@ public class GetTaskByTitleQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Equal(taskEntities.Count, result.Value!.TotalCount);
-        Assert.Equal(taskEntities.Count, result.Value.Items.Count);
-        Assert.Equal(page, result.Value.Page);
-        Assert.Equal("Task 1", result.Value.Items.First().Title);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.TotalCount.Should().Be(taskEntities.Count);
+        result.Value.Items.Should().HaveCount(taskEntities.Count);
+        result.Value.Page.Should().Be(page);
+        result.Value.Items.First().Title.Should().Be("Task 1");
     }
 
     /// <summary>
@@ -90,9 +93,11 @@ public class GetTaskByTitleQueryHandlerTests
         var result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Empty(result.Value!.Items);
-        Assert.Equal(0, result.Value.TotalCount);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value!.Items.Should().BeEmpty();
+        result.Value.TotalCount.Should().Be(0);
+
         this._taskRepoMock.Verify(
             r =>
             r.SearchByTitleAsync(

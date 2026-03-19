@@ -5,6 +5,7 @@ using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
 using TodoListApp.Application.Common.Dtos;
 using TodoListApp.Application.Tasks.Mappers;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tasks.Queries.GetTaskById;
 
@@ -32,7 +33,7 @@ public class GetTaskByIdQueryHandler(
 
         if (taskEntity is null)
         {
-            return await Result<TaskDto>.FailureAsync(ErrorCode.NotFound, "Task not found.");
+            return await Result<TaskDto>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         var taskDto = TaskMapper.Map(taskEntity);

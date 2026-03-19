@@ -4,6 +4,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tag.Commands.DeleteTag;
 
@@ -31,7 +32,7 @@ public class DeleteTagCommandHandler(
             .GetTagByIdForUserAsync(command.TagId, command.UserId, asNoTracking: false, cancellationToken);
         if (tag is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Tag not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
         }
 
         await this.UnitOfWork.Tags.DeleteAsync(tag, cancellationToken);

@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <IsPackable>false</IsPackable>
-    <NoWarn>SA1200,SA1633,SA1309,SA1000</NoWarn>
+    <NoWarn>SA1200,SA1633,SA1309,SA1000,IDE0290</NoWarn>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
@@ -29,6 +29,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\TodoListApp.Application\TodoListApp.Application.csproj" />
     <ProjectReference Include="..\..\src\TodoListApp.Domain\TodoListApp.Domain.csproj" />
   </ItemGroup>
 

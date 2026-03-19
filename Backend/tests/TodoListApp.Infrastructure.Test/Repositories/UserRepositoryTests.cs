@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Moq;
 using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
+using TodoListApp.Domain.Test.Common;
 using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
@@ -14,7 +14,7 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class UserRepositoryTests
 {
-    private readonly string _passwordHash = new('a', 64);
+    private static readonly DateTime CurrentTime = DateTime.UtcNow;
 
     /// <summary>
     /// Verifies that <see cref="UserRepository.ExistsByEmailAsync"/>
@@ -28,7 +28,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
 
         var repo = new UserRepository(context);
-        var user = this.CreateTestUser();
+        var user = UserEntityFactory.Create();
 
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
@@ -52,7 +52,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
 
         var repo = new UserRepository(context);
-        var user = this.CreateTestUser();
+        var user = UserEntityFactory.Create();
 
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
@@ -76,7 +76,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
 
         var repo = new UserRepository(context);
-        var userEntity = this.CreateTestUser();
+        var userEntity = UserEntityFactory.Create();
 
         await context.Users.AddAsync(userEntity);
         await context.SaveChangesAsync();
@@ -122,7 +122,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
         var email = Email.Create("track@test.com");
-        var user = this.CreateTestUser(email: email.Value);
+        var user = UserEntityFactory.Create(email: email.Value);
 
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
@@ -152,7 +152,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
         var email = Email.Create("notrack@test.com");
-        var user = this.CreateTestUser(email: email.Value);
+        var user = UserEntityFactory.Create(email: email.Value);
 
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
@@ -178,7 +178,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
 
         var repo = new UserRepository(context);
-        var userEntity = this.CreateTestUser();
+        var userEntity = UserEntityFactory.Create();
 
         await context.Users.AddAsync(userEntity);
         await context.SaveChangesAsync();
@@ -222,7 +222,7 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
 
-        var user = this.CreateTestUser();
+        var user = UserEntityFactory.Create();
 
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
@@ -267,9 +267,9 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
 
-        var token = SecurityToken.Create("current-secret-code", TimeSpan.FromHours(1), UserTokenType.PasswordReset);
+        var token = SecurityToken.Create("current-secret-code", TimeSpan.FromHours(1), UserTokenType.PasswordReset, CurrentTime);
 
-        var user = this.CreateTestUser();
+        var user = UserEntityFactory.Create();
         typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
 
         await context.Users.AddAsync(user);
@@ -295,9 +295,9 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
 
-        var token = SecurityToken.Create("revert-secret-code", TimeSpan.FromHours(1), UserTokenType.EmailChange);
+        var token = SecurityToken.Create("revert-secret-code", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 
-        var user = this.CreateTestUser();
+        var user = UserEntityFactory.Create();
         typeof(UserEntity).GetProperty(nameof(UserEntity.RevertToken))?.SetValue(user, token);
 
         await context.Users.AddAsync(user);
@@ -323,9 +323,9 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
 
-        var token = SecurityToken.Create("same-code", TimeSpan.FromHours(1), UserTokenType.EmailChange);
+        var token = SecurityToken.Create("same-code", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 
-        var user = this.CreateTestUser();
+        var user = UserEntityFactory.Create();
         typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
 
         await context.Users.AddAsync(user);
@@ -349,9 +349,9 @@ public class UserRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new UserRepository(context);
 
-        var token = SecurityToken.Create("track-token", TimeSpan.FromHours(1), UserTokenType.EmailChange);
+        var token = SecurityToken.Create("track-token", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 
-        var user = this.CreateTestUser();
+        var user = UserEntityFactory.Create();
         typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
 
         await context.Users.AddAsync(user);
@@ -365,7 +365,4 @@ public class UserRepositoryTests
         Assert.NotNull(result);
         Assert.NotEqual(EntityState.Detached, context.Entry(result).State);
     }
-
-    private UserEntity CreateTestUser(string email = "test@example.com", string username = "testuser")
-       => new("FirstName", username, email, this._passwordHash);
 }

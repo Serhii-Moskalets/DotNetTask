@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Extensions;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 
@@ -27,21 +28,10 @@ public class TaskListRepository(TodoListAppDbContext context)
     /// /// <remarks>
     /// Uses `EF.Functions.Like` for real databases, and case-insensitive comparison for InMemory provider.
     /// </remarks>
-    public async Task<bool> ExistsByTitleAsync(string title, Guid userId, CancellationToken cancellationToken = default)
+    public async Task<bool> ExistsByTitleAsync(TaskListTitle title, Guid userId, CancellationToken cancellationToken = default)
     {
-        if (string.IsNullOrWhiteSpace(title))
-        {
-            throw new ArgumentException("Title of the task list cannot be empty.", nameof(title));
-        }
-
-        if (this.Context.Database.ProviderName == "Microsoft.EntityFrameworkCore.InMemory")
-        {
-            return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => x.Title.ToLowerInvariant() == title.ToLowerInvariant() && x.OwnerId == userId, cancellationToken);
-        }
-
         return await this.DbSet.AsNoTracking()
-            .AnyAsync(x => EF.Functions.Like(x.Title, title) && x.OwnerId == userId, cancellationToken);
+            .AnyAsync(x => x.Title == title && x.OwnerId == userId, cancellationToken);
     }
 
     /// <summary>

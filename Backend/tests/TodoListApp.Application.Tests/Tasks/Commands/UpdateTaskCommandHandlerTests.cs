@@ -1,10 +1,13 @@
-﻿using Moq;
+﻿using FluentAssertions;
+using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Tasks.Commands.UpdateTask;
 using TodoListApp.Application.Tasks.Dtos;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tests.Tasks.Commands;
 
@@ -14,6 +17,8 @@ namespace TodoListApp.Application.Tests.Tasks.Commands;
 /// </summary>
 public class UpdateTaskCommandHandlerTests
 {
+    private static readonly TaskTitle Title = TaskTitle.Create("Title");
+
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<ITaskRepository> _taskRepoMock;
     private readonly UpdateTaskCommandHandler _handler;
@@ -59,9 +64,10 @@ public class UpdateTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.NotFound, result.Error!.Code);
-        Assert.Equal("Task not found.", result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error!.Code.Should().Be(ErrorCode.NotFound);
+        result.Error.Message.Should().Be(TaskPolicy.NotFoundMessage);
     }
 
     /// <summary>
@@ -75,7 +81,7 @@ public class UpdateTaskCommandHandlerTests
         var userId = Guid.NewGuid();
         var taskListId = Guid.NewGuid();
 
-        var task = new TaskEntity(userId, taskListId, "Old Title");
+        var task = new TaskEntity(userId, taskListId, Title);
 
         this._taskRepoMock.Setup(
             r =>
@@ -102,11 +108,11 @@ public class UpdateTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
 
-        Assert.Equal("New Title", task.Title);
-        Assert.Equal("New Description", task.Description);
-        Assert.Equal(dto.DueDate, task.DueDate);
+        task.Title.Value.Should().Be("New Title");
+        task.Description?.Value.Should().Be("New Description");
+        task.DueDate.Should().Be(dto.DueDate);
 
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -121,8 +127,7 @@ public class UpdateTaskCommandHandlerTests
     {
         // Arrange
         var userId = Guid.NewGuid();
-        var title = "Same Title";
-        var task = new TaskEntity(userId, Guid.NewGuid(), title);
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
 
         this._taskRepoMock.Setup(
             r =>
@@ -136,8 +141,8 @@ public class UpdateTaskCommandHandlerTests
         var dto = new UpdateTaskDto
         {
             TaskId = task.Id,
-            Title = title,
-            Description = task.Description,
+            Title = Title.Value,
+            Description = null,
             DueDate = task.DueDate,
         };
 
@@ -147,7 +152,92 @@ public class UpdateTaskCommandHandlerTests
         var result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Verifies that the handler does not save changes when Title is null (not provided)
+    /// and other fields match the current entity state.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Handle_ShouldNotSave_WhenTitleIsNullAndOtherFieldsMatch()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
+
+        this._taskRepoMock.Setup(
+            r =>
+            r.GetTaskByIdForUserAsync(
+                task.Id,
+                userId,
+                false,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(task);
+
+        var dto = new UpdateTaskDto
+        {
+            TaskId = task.Id,
+            Title = null,
+            Description = null,
+            DueDate = task.DueDate,
+        };
+
+        var command = new UpdateTaskCommand(dto, userId);
+
+        // Act
+        var result = await this._handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Verifies that the handler updates the task when Title is null but Description or DueDate changes.
+    /// Title should remain unchanged.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Handle_ShouldUpdate_WhenTitleIsNullButOtherFieldsChanged()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        var newDescription = TaskDescription.Create("New Description");
+        var newDueDate = DateTime.UtcNow.AddDays(2);
+
+        this._taskRepoMock.Setup(
+            r =>
+            r.GetTaskByIdForUserAsync(
+                task.Id,
+                userId,
+                false,
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(task);
+
+        this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+        var dto = new UpdateTaskDto
+        {
+            TaskId = task.Id,
+            Title = null,
+            Description = newDescription.Value,
+            DueDate = newDueDate,
+        };
+
+        var command = new UpdateTaskCommand(dto, userId);
+
+        // Act
+        var result = await this._handler.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        task.Title.Should().Be(Title);
+        task.Description.Should().Be(newDescription);
+        task.DueDate.Should().Be(newDueDate);
+        this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

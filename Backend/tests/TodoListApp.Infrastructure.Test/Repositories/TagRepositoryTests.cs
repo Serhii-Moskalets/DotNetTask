@@ -1,4 +1,6 @@
-﻿using TodoListApp.Domain.Entities;
+﻿using FluentAssertions;
+using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Test.Helpers;
 
@@ -10,6 +12,8 @@ namespace TodoListApp.Infrastructure.Test.Repositories;
 /// </summary>
 public class TagRepositoryTests
 {
+    private static readonly TagName TagName = TagName.Create("Tag");
+
     /// <summary>
     /// Tests that checking tag existence by name returns false when the tag does not exist.
     /// </summary>
@@ -22,8 +26,11 @@ public class TagRepositoryTests
         var repo = new TagRepository(context);
         var userId = Guid.NewGuid();
 
-        // Act & Assert
-        Assert.False(await repo.ExistsByNameAsync("NonExistingTag", userId));
+        // Act
+        var result = await repo.ExistsByNameAsync(TagName, userId);
+
+        // Assert
+        result.Should().BeFalse();
     }
 
     /// <summary>
@@ -38,13 +45,16 @@ public class TagRepositoryTests
         await using var context = InMemoryDbContextFactory.Create();
         var repo = new TagRepository(context);
         var userId = Guid.NewGuid();
-        var tag = new TagEntity("Tag", userId);
+        var tag = new TagEntity(TagName, userId);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();
 
-        // Act & Assert
-        Assert.True(await repo.ExistsByNameAsync("Tag", userId));
+        // Act
+        var result = await repo.ExistsByNameAsync(TagName, userId);
+
+        // Assert
+        result.Should().BeTrue();
     }
 
     /// <summary>
@@ -64,8 +74,8 @@ public class TagRepositoryTests
         var (items, totalCount) = await repo.GetTagsAsync(userId, page: 1, pageSize: 10);
 
         // Assert
-        Assert.Empty(items);
-        Assert.Equal(0, totalCount);
+        items.Should().BeEmpty();
+        totalCount.Should().Be(0);
     }
 
     /// <summary>
@@ -83,7 +93,7 @@ public class TagRepositoryTests
 
         for (int i = 1; i <= 15; i++)
         {
-            await repo.AddAsync(new TagEntity($"Tag_{i:D2}", userId));
+            await repo.AddAsync(new TagEntity(TagName.Create($"Tag_{i:D2}"), userId));
         }
 
         await context.SaveChangesAsync();
@@ -91,10 +101,11 @@ public class TagRepositoryTests
         var (items, totalCount) = await repo.GetTagsAsync(userId, page: 1, pageSize: 10);
 
         // Assert
-        Assert.Equal(10, items.Count);
-        Assert.Equal(15, totalCount);
-        Assert.Equal("Tag_01", items.First().Name);
-        Assert.Equal("Tag_10", items.Last().Name);
+        items.Should().NotBeEmpty();
+        items.Count.Should().Be(10);
+        totalCount.Should().Be(15);
+        items.First().Name.Value.Should().Be("Tag_01");
+        items.Last().Name.Value.Should().Be("Tag_10");
     }
 
     /// <summary>
@@ -110,9 +121,9 @@ public class TagRepositoryTests
         var repo = new TagRepository(context);
         var userId = Guid.NewGuid();
 
-        var tagOld = new TagEntity("Oldest", userId) { CreatedDate = DateTime.UtcNow.AddMinutes(-10) };
-        var tagMiddle = new TagEntity("Middle", userId) { CreatedDate = DateTime.UtcNow.AddMinutes(-5) };
-        var tagNew = new TagEntity("Newest", userId) { CreatedDate = DateTime.UtcNow };
+        var tagOld = new TagEntity(TagName.Create("Oldest"), userId) { CreatedDate = DateTime.UtcNow.AddMinutes(-10) };
+        var tagMiddle = new TagEntity(TagName.Create("Middle"), userId) { CreatedDate = DateTime.UtcNow.AddMinutes(-5) };
+        var tagNew = new TagEntity(TagName.Create("Newest"), userId) { CreatedDate = DateTime.UtcNow };
 
         context.Tags.AddRange(tagMiddle, tagOld, tagNew);
         await context.SaveChangesAsync();
@@ -122,10 +133,10 @@ public class TagRepositoryTests
         var itemsList = items.ToList();
 
         // Assert
-        Assert.Equal(3, totalCount);
-        Assert.Equal("Oldest", itemsList[0].Name);
-        Assert.Equal("Middle", itemsList[1].Name);
-        Assert.Equal("Newest", itemsList[2].Name);
+        totalCount.Should().Be(3);
+        itemsList[0].Name.Value.Should().Be("Oldest");
+        itemsList[1].Name.Value.Should().Be("Middle");
+        itemsList[2].Name.Value.Should().Be("Newest");
     }
 
     /// <summary>
@@ -141,7 +152,7 @@ public class TagRepositoryTests
         var repo = new TagRepository(context);
         var ownerId = Guid.NewGuid();
         var strangerId = Guid.NewGuid();
-        var tag = new TagEntity("OwnerTag", ownerId);
+        var tag = new TagEntity(TagName, ownerId);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();
@@ -151,9 +162,9 @@ public class TagRepositoryTests
         var notFoundTag = await repo.GetTagByIdForUserAsync(tag.Id, strangerId);
 
         // Assert
-        Assert.NotNull(foundTag);
-        Assert.Equal("OwnerTag", foundTag.Name);
-        Assert.Null(notFoundTag);
+        foundTag.Should().NotBeNull();
+        foundTag.Name.Value.Should().Be(TagName.Value);
+        notFoundTag.Should().BeNull();
     }
 
     /// <summary>
@@ -169,13 +180,16 @@ public class TagRepositoryTests
         var repo = new TagRepository(context);
         var userId_1 = Guid.NewGuid();
         var userId_2 = Guid.NewGuid();
-        var tag = new TagEntity("Tag", userId_1);
+        var tag = new TagEntity(TagName, userId_1);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();
 
         // Act & Assert
-        Assert.True(await repo.IsTagOwnerAsync(tag.Id, userId_1));
-        Assert.False(await repo.IsTagOwnerAsync(tag.Id, userId_2));
+        var result1 = await repo.IsTagOwnerAsync(tag.Id, userId_1);
+        var result2 = await repo.IsTagOwnerAsync(tag.Id, userId_2);
+
+        result1.Should().BeTrue();
+        result2.Should().BeFalse();
     }
 }

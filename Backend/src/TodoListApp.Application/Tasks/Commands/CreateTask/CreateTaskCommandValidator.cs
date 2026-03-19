@@ -1,4 +1,6 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Tasks.Commands.CreateTask;
 
@@ -13,17 +15,19 @@ public class CreateTaskCommandValidator : AbstractValidator<CreateTaskCommand>
     public CreateTaskCommandValidator()
     {
         this.RuleFor(x => x.Dto.TaskListId)
-            .NotEmpty().WithMessage("Task list ID is required.");
+            .NotEmpty().WithMessage(TaskListPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.Dto.Title)
-            .NotEmpty().WithMessage("Task title cannot be empty.")
-            .MaximumLength(100).WithMessage("Title cannot exceed 100 characters.");
+            .NotEmpty().
+                WithMessage(TaskPolicy.EmptyTitleMessage)
+            .MaximumLength(TaskTitle.MaxLength)
+                .WithMessage(TaskPolicy.TooLongTitleMessage);
 
         this.RuleFor(x => x.Dto.DueDate)
             .Must((dueDate) => dueDate == null || dueDate.Value >= DateTime.UtcNow)
-            .WithMessage("Due date cannot be in the past.");
+                .WithMessage(TaskPolicy.InvalidDueDateMessage);
     }
 }

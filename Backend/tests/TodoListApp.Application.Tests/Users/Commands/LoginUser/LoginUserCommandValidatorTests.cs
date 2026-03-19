@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.LoginUser;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.LoginUser;
 
@@ -47,7 +48,7 @@ public class LoginUserCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.Email)
-              .WithErrorMessage("Email cannot be null or empty.");
+              .WithErrorMessage(EmailPolicy.EmptyMessage);
     }
 
     /// <summary>
@@ -67,7 +68,7 @@ public class LoginUserCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.Email)
-              .WithErrorMessage("Email address is incorrect.");
+              .WithErrorMessage(EmailPolicy.InvalidFormatMessage);
     }
 
     /// <summary>
@@ -82,6 +83,6 @@ public class LoginUserCommandValidatorTests
         // Act & Assert
         var result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.Password)
-              .WithErrorMessage("Password is required.");
+              .WithErrorMessage(PasswordPolicy.EmptyMessage);
     }
 }

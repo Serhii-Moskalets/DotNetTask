@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tasks.Commands.ChangeTaskStatus;
 
@@ -13,12 +14,12 @@ public class ChangeTaskStatusCommandValidator : AbstractValidator<ChangeTaskStat
     public ChangeTaskStatusCommandValidator()
     {
         this.RuleFor(x => x.TaskId)
-            .NotEmpty().WithMessage("Task ID is required.");
+            .NotEmpty().WithMessage(TaskPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required.");
+            .NotEmpty().WithMessage(UserPolicy.IdRequiredMessage);
 
         this.RuleFor(x => x.Status)
-            .IsInEnum().WithMessage("Invalid task status.");
+            .IsInEnum().WithMessage(TaskPolicy.InvalidTaskSatusMessage);
     }
 }

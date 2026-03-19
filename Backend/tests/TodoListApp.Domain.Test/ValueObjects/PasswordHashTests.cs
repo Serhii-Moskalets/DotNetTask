@@ -1,4 +1,5 @@
 ﻿using FluentAssertions;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Domain.ValueObjects;
 
@@ -41,25 +42,7 @@ public class PasswordHashTests
 
         // Assert
         act.Should().Throw<DomainException>()
-            .WithMessage("The password hash cannot be empty.");
-    }
-
-    /// <summary>
-    /// Tests that <see cref="PasswordHash.Create"/> throws <see cref="DomainException"/>
-    /// when the hash length is less than 64 characters.
-    /// </summary>
-    /// <param name="shortHash">The string with insufficient length.</param>
-    [Theory]
-    [InlineData("too-short")]
-    [InlineData("a1b2c3d4e5f6")]
-    public void Create_Should_ThrowDomainException_When_HashIsTooShort(string shortHash)
-    {
-        // Act
-        Action act = () => PasswordHash.Create(shortHash);
-
-        // Assert
-        act.Should().Throw<DomainException>()
-            .WithMessage("Invalid password hash format.");
+            .WithMessage(SecurityPolicy.HashEmptyMessage);
     }
 
     /// <summary>

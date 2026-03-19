@@ -1,5 +1,6 @@
 ﻿using FluentValidation.TestHelper;
 using TodoListApp.Application.Users.Commands.ConfirmEmail;
+using TodoListApp.Domain.Constants;
 
 namespace TodoListApp.Application.Tests.Users.Commands.ConfirmEmail;
 
@@ -43,6 +44,6 @@ public class ConfirmEmailCommandValidatorTests
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Token)
-              .WithErrorMessage("Token is required.");
+              .WithErrorMessage(TokenPolicy.RequiredMessage);
     }
 }

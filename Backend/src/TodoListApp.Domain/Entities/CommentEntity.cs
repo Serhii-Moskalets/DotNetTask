@@ -1,13 +1,14 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using TinyResult;
 using TodoListApp.Domain.Common;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Domain.Entities;
 
 /// <summary>
 /// Represents a user's comment on a task.
 /// </summary>
-[Table("comments")]
 public class CommentEntity : BaseEntity
 {
     /// <summary>
@@ -15,25 +16,12 @@ public class CommentEntity : BaseEntity
     /// </summary>
     /// <param name="taskId">The ID of the task the comment belongs to.</param>
     /// <param name="userId">The ID of the user who created the comment.</param>
-    /// <param name="text">The text content of the comment.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="text"/> is null, empty, or consists only of white-space characters or exceed 1000 characters.
-    /// </exception>
-    public CommentEntity(Guid taskId, Guid userId, string text)
+    /// <param name="content">The text content of the comment.</param>
+    public CommentEntity(Guid taskId, Guid userId, CommentContent content)
     {
-        if (string.IsNullOrWhiteSpace(text))
-        {
-            throw new DomainException("Comment text cannot be empty.");
-        }
-
-        if (text.Length > 1000)
-        {
-            throw new DomainException("Comment text cannot exceed 1000 characters.");
-        }
-
         this.TaskId = taskId;
         this.UserId = userId;
-        this.Text = text.Trim();
+        this.Content = content;
     }
 
     /// <summary>
@@ -42,17 +30,14 @@ public class CommentEntity : BaseEntity
     /// </summary>
     /// <param name="taskId">The ID of the task to which this comment belongs.</param>
     /// <param name="userId">The ID of the user who created the comment.</param>
-    /// <param name="text">The text content of the comment. Cannot be null or empty.</param>
+    /// <param name="content">The text content of the comment. Cannot be null or empty.</param>
     /// <param name="user">The <see cref="UserEntity"/> representing the user who created the comment.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="text"/> is null, empty, or consists only of white-space characters.
-    /// </exception>
-    public CommentEntity(Guid taskId, Guid userId, string text, UserEntity user)
-    : this(taskId, userId, text)
+    public CommentEntity(Guid taskId, Guid userId, CommentContent content, UserEntity user)
+    : this(taskId, userId, content)
     {
         if (user.Id != userId)
         {
-            throw new DomainException("User ID mismatch.");
+            throw new DomainException(UserPolicy.IdMismatchMessage);
         }
 
         this.User = user;
@@ -63,50 +48,46 @@ public class CommentEntity : BaseEntity
     /// <summary>
     /// Gets the text content of the comment.
     /// </summary>
-    [Column("text")]
-    public string Text { get; private set; } = null!;
+    public CommentContent Content { get; private set; } = null!;
 
     /// <summary>
     /// Gets the ID of the task that this comment belongs to.
     /// </summary>
-    [Column("task_id")]
-    public Guid TaskId { get; }
+    public Guid TaskId { get; private init; }
 
     /// <summary>
     /// Gets the ID of the user who created the comment.
     /// </summary>
-    [Column("user_id")]
-    public Guid UserId { get; }
+    public Guid UserId { get; private init; }
 
     /// <summary>
     /// Gets the user who created the comment.
     /// </summary>
-    public virtual UserEntity User { get; } = null!;
+    public virtual UserEntity User { get; private init; } = null!;
 
     /// <summary>
     /// Gets the task to which this comment belongs.
     /// </summary>
-    public virtual TaskEntity Task { get; } = null!;
+    public virtual TaskEntity Task { get; private init; } = null!;
 
     /// <summary>
     /// Updates the text content of the comment.
     /// </summary>
-    /// <param name="text">The new text content of the comment.</param>
-    /// <exception cref="DomainException">
-    /// Thrown when <paramref name="text"/> is null, empty, or consists only of white-space characters or exceed 1000 characters.
-    /// </exception>
-    public void Update(string text)
+    /// <param name="content">The new text content of the comment.</param>
+    /// <returns>
+    /// A <see cref="Result{Boolean}"/> indicating success (true) if the content was updated,
+    /// or a failure if the new content is the same as the current one.
+    /// </returns>
+    public Result<bool> Update(CommentContent content)
     {
-        if (string.IsNullOrWhiteSpace(text))
+        if (this.Content == content)
         {
-            throw new DomainException("Comment text cannot be empty.");
+            return Result<bool>.Failure(
+                TinyResult.Enums.ErrorCode.InvalidOperation,
+                CommentPolicy.NoChangesDetectedMessage);
         }
 
-        if (text.Length > 1000)
-        {
-            throw new DomainException("Comment text cannot exceed 1000 characters.");
-        }
-
-        this.Text = text.Trim();
+        this.Content = content;
+        return Result<bool>.Success(true);
     }
 }

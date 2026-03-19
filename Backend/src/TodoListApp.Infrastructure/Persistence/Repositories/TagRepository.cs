@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.ValueObjects;
 using TodoListApp.Infrastructure.Extensions;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
 
@@ -21,7 +22,7 @@ public class TagRepository(TodoListAppDbContext context)
     /// <param name="userId">The ID of the user who owns the tag.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns><c>true</c> if a tag with the specified name exists for the user; otherwise, <c>false</c>.</returns>
-    public Task<bool> ExistsByNameAsync(string name, Guid userId, CancellationToken cancellationToken = default)
+    public Task<bool> ExistsByNameAsync(TagName name, Guid userId, CancellationToken cancellationToken = default)
         => this.DbSet.AsNoTracking().AnyAsync(x => x.UserId == userId && x.Name == name, cancellationToken);
 
     /// <summary>

@@ -3,6 +3,7 @@ using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.Users.Commands.UpdateUserProfile;
@@ -25,7 +26,7 @@ public class UpdateUserProfileCommandHandler(IUnitOfWork unitOfWork)
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "User not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         var isChanged = false;
@@ -42,7 +43,7 @@ public class UpdateUserProfileCommandHandler(IUnitOfWork unitOfWork)
 
         if (!isChanged)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "No changes detected. Names are the same as current.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserPolicy.NoChangesDetectedMessage);
         }
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);

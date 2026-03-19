@@ -4,6 +4,8 @@ using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Application.Abstractions.Messaging;
+using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.ValueObjects;
 
 namespace TodoListApp.Application.TaskList.Commands.UpdateTaskList;
 
@@ -13,7 +15,7 @@ namespace TodoListApp.Application.TaskList.Commands.UpdateTaskList;
 /// </summary>
 public class UpdateTaskListCommandHandler(
     IUnitOfWork unitOfWork,
-    IUniqueNameService uniqueNameService)
+    IUniqueValueService uniqueNameService)
     : HandlerBase(unitOfWork), IRequestHandler<UpdateTaskListCommand, Result<bool>>
 {
     /// <summary>
@@ -32,20 +34,21 @@ public class UpdateTaskListCommandHandler(
 
         if (taskList is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, "Task list not found.");
+            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
-        if (taskList.Title == command.NewTitle)
+        if (taskList.Title.Value == command.NewTitle)
         {
             return await Result<bool>.SuccessAsync(true);
         }
 
-        string uniqueTitle = await uniqueNameService.GetUniqueNameAsync(
-            command.NewTitle!,
-            (name, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(name, command.UserId, ct),
+        var title = await uniqueNameService.GetUniqueValueAsync(
+            command.NewTitle,
+            name => TaskListTitle.Create(name),
+            (vo, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(vo, command.UserId, ct),
             cancellationToken);
 
-        taskList.UpdateTitle(uniqueTitle);
+        taskList.UpdateTitle(title);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);
