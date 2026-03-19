@@ -1,5 +1,3 @@
-﻿using System;
-
 namespace TodoListApp.Api.Requests.Task;
 
 /// <summary>

@@ -1,8 +1,6 @@
-﻿using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using MediatR;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TinyResult;
 using TinyResult.Enums;

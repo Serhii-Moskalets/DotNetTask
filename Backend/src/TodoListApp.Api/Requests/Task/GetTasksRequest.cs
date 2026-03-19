@@ -1,5 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
 using TodoListApp.Domain.Enums;
 
 namespace TodoListApp.Api.Requests.Task;
