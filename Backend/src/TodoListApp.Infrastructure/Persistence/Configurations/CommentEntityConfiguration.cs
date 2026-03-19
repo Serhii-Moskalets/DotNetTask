@@ -9,20 +9,16 @@ namespace TodoListApp.Infrastructure.Persistence.Configurations;
 /// Configures the <see cref="CommentEntity"/> entity.
 /// Sets primary key, property constraints, and relationships.
 /// </summary>
-public class CommentEntityConfiguration : IEntityTypeConfiguration<CommentEntity>
+public class CommentEntityConfiguration : BaseEntityConfiguration<CommentEntity>
 {
     /// <summary>
     /// Configures the <see cref="CommentEntity"/> entity type.
     /// </summary>
     /// <param name="builder">The builder used to configure the entity.</param>
-    public void Configure(EntityTypeBuilder<CommentEntity> builder)
+    public override void Configure(EntityTypeBuilder<CommentEntity> builder)
     {
+        base.Configure(builder);
         builder.ToTable("comments");
-
-        builder.HasKey(c => c.Id);
-        builder.Property(c => c.Id)
-            .HasColumnType("uuid")
-            .ValueGeneratedNever();
 
         builder.Property(c => c.UserId)
             .HasColumnName("user_id")

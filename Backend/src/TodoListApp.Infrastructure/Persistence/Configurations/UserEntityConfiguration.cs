@@ -9,20 +9,16 @@ namespace TodoListApp.Infrastructure.Persistence.Configurations;
 /// Configures the <see cref="UserEntity"/> entity.
 /// Sets primary key, property constraints, and unique indexes.
 /// </summary>
-public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
+public class UserEntityConfiguration : BaseEntityConfiguration<UserEntity>
 {
     /// <summary>
     /// Configures the <see cref="UserEntity"/> entity type.
     /// </summary>
     /// <param name="builder">The builder used to configure the entity.</param>
-    public void Configure(EntityTypeBuilder<UserEntity> builder)
+    public override void Configure(EntityTypeBuilder<UserEntity> builder)
     {
+        base.Configure(builder);
         builder.ToTable("users");
-
-        builder.HasKey(u => u.Id);
-        builder.Property(u => u.Id)
-            .HasColumnType("uuid")
-            .ValueGeneratedNever();
 
         builder.Property(u => u.FirstName)
             .HasConversion(n => n.Value, v => FirstName.Create(v))
@@ -33,7 +29,7 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
         builder.Property(u => u.LastName)
             .HasConversion(
                 n => n != null ? n.Value : null,
-                v => LastName.Create(v))
+                v => LastName.CreateOptional(v))
             .HasColumnName("last_name")
             .HasMaxLength(30)
             .IsRequired(false);
@@ -112,6 +108,21 @@ public class UserEntityConfiguration : IEntityTypeConfiguration<UserEntity>
         });
 
         builder.Navigation(u => u.RevertToken).IsRequired(false);
+
+        builder.Navigation(u => u.Comments)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(u => u.Tags)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(u => u.TaskLists)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(u => u.OwnedTasks)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(u => u.UserAccesses)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
 
         builder.HasIndex(u => u.Email).IsUnique();
         builder.HasIndex(u => u.UserName).IsUnique();

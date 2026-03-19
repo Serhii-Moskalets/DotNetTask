@@ -9,20 +9,16 @@ namespace TodoListApp.Infrastructure.Persistence.Configurations;
 /// Configures the <see cref="TagEntity"/> entity.
 /// Sets primary key, property constraints, and relationships.
 /// </summary>
-public class TagEntityConfiguration : IEntityTypeConfiguration<TagEntity>
+public class TagEntityConfiguration : BaseEntityConfiguration<TagEntity>
 {
     /// <summary>
     /// Configures the <see cref="TagEntity"/> entity type.
     /// </summary>
     /// <param name="builder">The builder used to configure the entity.</param>
-    public void Configure(EntityTypeBuilder<TagEntity> builder)
+    public override void Configure(EntityTypeBuilder<TagEntity> builder)
     {
+        base.Configure(builder);
         builder.ToTable("tags");
-
-        builder.HasKey(t => t.Id);
-        builder.Property(t => t.Id)
-            .HasColumnType("uuid")
-            .ValueGeneratedNever();
 
         builder.Property(t => t.Name)
             .HasConversion(t => t.Value, v => TagName.Create(v))
@@ -38,5 +34,8 @@ public class TagEntityConfiguration : IEntityTypeConfiguration<TagEntity>
             .WithMany(t => t.Tags)
             .HasForeignKey(t => t.UserId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(t => t.Tasks)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

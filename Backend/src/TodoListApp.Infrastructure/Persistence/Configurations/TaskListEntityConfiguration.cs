@@ -9,20 +9,16 @@ namespace TodoListApp.Infrastructure.Persistence.Configurations;
 /// Configures the <see cref="TaskListEntity"/> entity.
 /// Sets primary key, property constraints, and relationship with User.
 /// </summary>
-public class TaskListEntityConfiguration : IEntityTypeConfiguration<TaskListEntity>
+public class TaskListEntityConfiguration : BaseEntityConfiguration<TaskListEntity>
 {
     /// <summary>
     /// Configures the <see cref="TaskListEntity"/> entity type.
     /// </summary>
     /// <param name="builder">The builder used to configure the entity.</param>
-    public void Configure(EntityTypeBuilder<TaskListEntity> builder)
+    public override void Configure(EntityTypeBuilder<TaskListEntity> builder)
     {
+        base.Configure(builder);
         builder.ToTable("task_lists");
-
-        builder.HasKey(tl => tl.Id);
-        builder.Property(tl => tl.Id)
-            .HasColumnType("uuid")
-            .ValueGeneratedNever();
 
         builder.Property(tl => tl.OwnerId)
             .HasColumnName("owner_id")
@@ -39,5 +35,8 @@ public class TaskListEntityConfiguration : IEntityTypeConfiguration<TaskListEnti
             .WithMany(o => o.TaskLists)
             .HasForeignKey(tl => tl.OwnerId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        builder.Navigation(tl => tl.Tasks)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }

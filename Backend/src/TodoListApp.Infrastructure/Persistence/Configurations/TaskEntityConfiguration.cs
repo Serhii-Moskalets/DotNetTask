@@ -9,20 +9,15 @@ namespace TodoListApp.Infrastructure.Persistence.Configurations;
 /// Configures the <see cref="TaskEntity"/> entity.
 /// Sets primary key, property constraints, and relationships with User, TaskList, and Tag.
 /// </summary>
-public class TaskEntityConfiguration : IEntityTypeConfiguration<TaskEntity>
+public class TaskEntityConfiguration : BaseEntityConfiguration<TaskEntity>
 {
     /// <summary>
     /// Configures the <see cref="TaskEntity"/> entity type.
     /// </summary>
     /// <param name="builder">The builder used to configure the entity.</param>
-    public void Configure(EntityTypeBuilder<TaskEntity> builder)
+    public override void Configure(EntityTypeBuilder<TaskEntity> builder)
     {
         builder.ToTable("tasks");
-
-        builder.HasKey(t => t.Id);
-        builder.Property(t => t.Id)
-            .HasColumnType("uuid")
-            .ValueGeneratedNever();
 
         builder.Property(t => t.Title)
             .HasConversion(t => t.Value, v => TaskTitle.Create(v))
@@ -33,7 +28,7 @@ public class TaskEntityConfiguration : IEntityTypeConfiguration<TaskEntity>
         builder.Property(t => t.Description)
             .HasConversion(
                 d => d != null ? d.Value : null,
-                v => TaskDescription.Create(v))
+                v => TaskDescription.CreateOptional(v))
             .HasColumnName("description")
             .HasMaxLength(TaskDescription.MaxLength);
 
@@ -72,5 +67,11 @@ public class TaskEntityConfiguration : IEntityTypeConfiguration<TaskEntity>
             .WithMany(t => t.Tasks)
             .HasForeignKey(t => t.TagId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        builder.Navigation(t => t.Comments)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+
+        builder.Navigation(t => t.UserAccesses)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
     }
 }
