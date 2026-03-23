@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -8,6 +9,7 @@ using Serilog.Sinks.PostgreSQL;
 using TodoListApp.Api.Middleware;
 using TodoListApp.Application.Common.Extensions;
 using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Constants.Settings;
 using TodoListApp.Domain.Exceptions;
 using TodoListApp.Infrastructure.Extensions;
 
@@ -42,6 +44,11 @@ builder.Host.UseSerilog();
 
 // DI
 builder.Services.AddProblemDetails();
+
+builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection("Auth"));
+
+builder.Services.AddSingleton(resolver =>
+   resolver.GetRequiredService<IOptions<AuthSettings>>().Value);
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 

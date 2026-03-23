@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
+using TodoListApp.Domain.Constants;
 using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Api.Middleware;
@@ -33,35 +34,29 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
         Exception exception,
         CancellationToken cancellationToken)
     {
-        var (statusCode, title) = exception switch
+        var (statusCode, title, detail) = exception switch
         {
-            PasswordChangeRequiredException => (StatusCodes.Status403Forbidden, "Password Change Required"),
-            DomainException => (StatusCodes.Status400BadRequest, "Business Rule Violation"),
-            KeyNotFoundException => (StatusCodes.Status404NotFound, "Resource Not Found"),
-            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, "Unauthorized"),
-            _ => (StatusCodes.Status500InternalServerError, "Server Error")
+            PasswordChangeRequiredException => (StatusCodes.Status403Forbidden, UserPolicy.MustChangePasswordMessage, exception.Message),
+            DomainException => (StatusCodes.Status400BadRequest, DomainPolicy.BusinessRuleViolationMessage, exception.Message),
+            KeyNotFoundException => (StatusCodes.Status404NotFound, DomainPolicy.ResourceNotFoundMessage, null),
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, UserPolicy.SessionExpiredMessage, exception.Message),
+            _ => (StatusCodes.Status500InternalServerError, DomainPolicy.ServerErrorMessage, DomainPolicy.UnexpectedErrorMessage)
         };
 
         if (statusCode >= 500)
         {
-            logger.LogError(exception, "Unhandled exception");
+            logger.LogError(exception, DomainPolicy.UnexpectedErrorMessage);
         }
         else if (exception is KeyNotFoundException)
         {
-            logger.LogWarning(exception, "Resource not found");
+            logger.LogWarning(exception, DomainPolicy.ResourceNotFoundMessage);
         }
 
         var problemDetails = new ProblemDetails
         {
             Status = statusCode,
             Title = title,
-            Detail = exception switch
-            {
-                PasswordChangeRequiredException => exception.Message,
-                DomainException => exception.Message,
-                UnauthorizedAccessException => exception.Message,
-                _ => "An unexpected error occurred."
-            },
+            Detail = detail ?? exception.Message,
             Instance = httpContext.TraceIdentifier,
         };
 

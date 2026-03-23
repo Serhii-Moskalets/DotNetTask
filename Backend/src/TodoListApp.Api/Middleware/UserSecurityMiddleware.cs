@@ -1,8 +1,9 @@
-﻿using System.IdentityModel.Tokens.Jwt;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
 using TodoListApp.Application.Abstractions.Interfaces.UnitOfWork;
 using TodoListApp.Domain.Constants;
+using TodoListApp.Domain.Constants.Settings;
 using TodoListApp.Domain.Exceptions;
 
 namespace TodoListApp.Api.Middleware;
@@ -16,7 +17,8 @@ namespace TodoListApp.Api.Middleware;
 /// to non-auth resources when the <c>MustChangePassword</c> flag is set.
 /// </remarks>
 /// <param name="next">The next delegate in the HTTP request pipeline.</param>
-public class UserSecurityMiddleware(RequestDelegate next)
+/// <param name="authSettings">The authorization settings.</param>
+public class UserSecurityMiddleware(RequestDelegate next, AuthSettings authSettings)
 {
     /// <summary>
     /// Invokes the security verification logic for the current request.
@@ -50,7 +52,7 @@ public class UserSecurityMiddleware(RequestDelegate next)
 
             if (mustChangePassword)
             {
-                bool isChangePasswordEndpoint = context.Request.Path.StartsWithSegments("/auth/reset-password", StringComparison.OrdinalIgnoreCase);
+                bool isChangePasswordEndpoint = context.Request.Path.StartsWithSegments(authSettings.ResetPasswordEndpoint, StringComparison.OrdinalIgnoreCase);
 
                 if (!isChangePasswordEndpoint)
                 {
