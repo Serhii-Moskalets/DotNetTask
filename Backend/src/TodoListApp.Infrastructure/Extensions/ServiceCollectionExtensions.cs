@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TodoListApp.Application.Abstractions.Interfaces.Common;
@@ -11,6 +11,7 @@ using TodoListApp.Domain.Constants;
 using TodoListApp.Infrastructure.Notifications.Services;
 using TodoListApp.Infrastructure.Notifications.Settings;
 using TodoListApp.Infrastructure.Persistence.DatabaseContext;
+using TodoListApp.Infrastructure.Persistence.Options;
 using TodoListApp.Infrastructure.Persistence.Repositories;
 using TodoListApp.Infrastructure.Persistence.UnitOfWork;
 using TodoListApp.Infrastructure.Security;
@@ -33,11 +34,21 @@ public static class ServiceCollectionExtensions
     /// <returns>The updated <see cref="IServiceCollection"/>.</returns>
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration config)
     {
-        var connectionString = config.GetConnectionString(CommonPolicy.DataBaseConnectionString)
-                ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
+        var dbOptions = config.GetSection(DatabaseOptions.SectionName).Get<DatabaseOptions>()
+            ?? new DatabaseOptions();
 
         services.AddDbContext<TodoListAppDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        options.UseNpgsql(
+            config.GetConnectionString(CommonPolicy.DataBaseConnectionString),
+            npgsqlOptions =>
+        {
+            npgsqlOptions.EnableRetryOnFailure(
+                maxRetryCount: dbOptions.MaxRetryCount,
+                maxRetryDelay: TimeSpan.FromSeconds(dbOptions.MaxRetryDelaySeconds),
+                errorCodesToAdd: null);
+
+            npgsqlOptions.CommandTimeout(dbOptions.CommandTimeout);
+        }));
 
         services.AddScoped<ITodoListAppDbContext>(provider =>
             provider.GetRequiredService<TodoListAppDbContext>());
