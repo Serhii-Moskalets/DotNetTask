@@ -1,4 +1,4 @@
-﻿namespace TodoListApp.Domain.Constants;
+namespace TodoListApp.Domain.Constants;
 
 /// <summary>
 /// Provides constants for common validation policies like pagination.
@@ -28,7 +28,7 @@ public static class CommonPolicy
     /// <summary>
     /// The error message when user id is invalid.
     /// </summary>
-    public const string InvalidUserIdentityMessage = "Invalid user identity."; 
+    public const string InvalidUserIdentityMessage = "Invalid user identity.";
 
     /// <summary>
     /// The error message when search text is too long.
