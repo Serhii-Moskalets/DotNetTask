@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Moq;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
@@ -16,6 +16,7 @@ namespace TodoListApp.Application.Tests.Users.Commands.LoginUser;
 /// </summary>
 public class LoginUserCommandHandlerTests
 {
+    private const string GeneratedToken = "valid_jwt_token";
     private static readonly DateTime CurrentTime = DateTime.UtcNow;
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
@@ -51,8 +52,6 @@ public class LoginUserCommandHandlerTests
 
         ConfirmEmail(user);
 
-        const string generatedToken = "valid_jwt_token";
-
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
@@ -60,14 +59,14 @@ public class LoginUserCommandHandlerTests
             .Returns(true);
 
         this._jwtTokenGeneratorMock.Setup(x => x.GenerateToken(user))
-            .Returns(generatedToken);
+            .Returns(GeneratedToken);
 
         // Act
         var result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.Token.Should().Be(generatedToken);
+        result.Value!.Token.Should().Be(GeneratedToken);
         result.Value.Email.Should().Be(command.Email);
 
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(user), Times.Once);
@@ -155,7 +154,9 @@ public class LoginUserCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value!.MustChangePassword.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.IsEmailConfirmed.Should().BeTrue();
+        result.Value.MustChangePassword.Should().BeTrue();
         result.Value.Token.Should().BeNull();
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
     }
@@ -166,7 +167,7 @@ public class LoginUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenEmailIsNotConfirmed()
+    public async Task Handle_ShouldReturnSuccessWithUnconfirmedEmail_WhenEmailIsNotConfirmed()
     {
         // Arrange
         var command = new LoginUserCommand("john@test.com", "Password123!");
@@ -177,12 +178,19 @@ public class LoginUserCommandHandlerTests
         this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
             .Returns(true);
 
+        this._jwtTokenGeneratorMock.Setup(x => x.GenerateToken(user)).Returns(GeneratedToken);
+
         // Act
         var result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
-        result.IsFailure.Should().BeTrue();
-        result.Error!.Message.Should().Be(EmailPolicy.NotConfirmedMessage);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.MustChangePassword.Should().BeFalse();
+        result.Value.IsEmailConfirmed.Should().BeFalse();
+        result.Value.Token.Should().NotBeNull();
+
+        this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Once);
     }
 
     private static void ConfirmEmail(UserEntity user)

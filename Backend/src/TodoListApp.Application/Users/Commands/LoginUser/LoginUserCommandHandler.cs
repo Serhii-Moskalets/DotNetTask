@@ -1,4 +1,4 @@
-﻿using MediatR;
+using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Application.Abstractions.Interfaces.Security;
@@ -41,12 +41,6 @@ public class LoginUserCommandHandler(
                 ErrorCode.ValidationError, UserPolicy.InvalidCredentialsMessage);
         }
 
-        if (!user.EmailConfirmed)
-        {
-            return await Result<LoginResponse>.FailureAsync(
-                ErrorCode.ValidationError, EmailPolicy.NotConfirmedMessage);
-        }
-
         if (user.MustChangePassword)
         {
             return Result<LoginResponse>.Success(new LoginResponse(
@@ -59,11 +53,20 @@ public class LoginUserCommandHandler(
 
         var token = this._jwtTokenGenerator.GenerateToken(user);
 
+        if (!user.EmailConfirmed)
+        {
+            return Result<LoginResponse>.Success(new LoginResponse(
+                user.Id,
+                user.UserName.Value,
+                user.Email.Value,
+                Token: token,
+                IsEmailConfirmed: false));
+        }
+
         return Result<LoginResponse>.Success(new LoginResponse(
             user.Id,
             user.UserName.Value,
             user.Email.Value,
-            token,
-            MustChangePassword: false));
+            token));
     }
 }
