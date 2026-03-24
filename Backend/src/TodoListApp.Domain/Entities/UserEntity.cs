@@ -1,4 +1,4 @@
-﻿using TinyResult;
+using TinyResult;
 using TinyResult.Enums;
 using TodoListApp.Domain.Common;
 using TodoListApp.Domain.Constants;
@@ -143,6 +143,30 @@ public class UserEntity : BaseEntity
     }
 
     /// <summary>
+    /// Resends the email verification request by generating a new token.
+    /// </summary>
+    /// <remarks>
+    /// This method should be used when the user hasn't received the previous email or the token has expired.
+    /// It will only proceed if the email is not already confirmed.
+    /// </remarks>
+    /// <param name="token">The new token value.</param>
+    /// <param name="duration">How long the new token is valid.</param>
+    /// <param name="currentTime">The current UTC time.</param>
+    /// <returns>A <see cref="Result{T}"/> indicating whether the request was successfully re-initiated.</returns>
+    public Result<bool> ResendEmailVerification(string token, TimeSpan duration, DateTime currentTime)
+    {
+        if (this.EmailConfirmed)
+        {
+            return Result<bool>.Failure(ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage);
+        }
+
+        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification, currentTime);
+        this.AddDomainEvent(new VerificationEmailResentEvent(this, this.CurrentToken));
+
+        return Result<bool>.Success(true);
+    }
+
+    /// <summary>
     /// Confirms the email verification using the provided token.
     /// </summary>
     /// <param name="token">The verification token.</param>
@@ -186,7 +210,7 @@ public class UserEntity : BaseEntity
     {
         if (this.EmailConfirmed)
         {
-            throw new DomainException(UserPolicy.EmailAlreadyConfirmed);
+            throw new DomainException(UserPolicy.EmailAlreadyConfirmedMessage);
         }
 
         this.FirstName = firstName;
