@@ -40,6 +40,7 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
             DomainException => (StatusCodes.Status400BadRequest, DomainPolicy.BusinessRuleViolationMessage, exception.Message),
             KeyNotFoundException => (StatusCodes.Status404NotFound, DomainPolicy.ResourceNotFoundMessage, null),
             UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, UserPolicy.SessionExpiredMessage, exception.Message),
+            EmailResendVerificationException => (StatusCodes.Status403Forbidden, UserPolicy.EmailIsNotConfirmedMessage, exception.Message),
             _ => (StatusCodes.Status500InternalServerError, DomainPolicy.ServerErrorMessage, DomainPolicy.UnexpectedErrorMessage)
         };
 

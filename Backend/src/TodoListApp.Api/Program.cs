@@ -50,6 +50,16 @@ builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection("Auth"
 builder.Services.AddSingleton(resolver =>
    resolver.GetRequiredService<IOptions<AuthSettings>>().Value);
 
+builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
+
+builder.Services.AddSingleton(resolver =>
+   resolver.GetRequiredService<IOptions<TokenSettings>>().Value);
+
+builder.Services.Configure<UserSettings>(builder.Configuration.GetSection("Users"));
+
+builder.Services.AddSingleton(resolver =>
+    resolver.GetRequiredService<IOptions<UserSettings>>().Value);
+
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 builder.Services.AddInfrastructure(builder.Configuration);

@@ -19,6 +19,7 @@ public class UserSecurityMiddlewareTests
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<RequestDelegate> _nextMock;
     private readonly AuthSettings _authSettings;
+    private readonly UserSettings _userSettings;
     private readonly UserSecurityMiddleware _middleware;
 
     /// <summary>
@@ -29,7 +30,11 @@ public class UserSecurityMiddlewareTests
         this._uowMock = new Mock<IUnitOfWork>();
         this._nextMock = new Mock<RequestDelegate>();
         this._authSettings = new AuthSettings();
-        this._middleware = new UserSecurityMiddleware(this._nextMock.Object, this._authSettings);
+        this._userSettings = new UserSettings();
+        this._middleware = new UserSecurityMiddleware(
+            this._nextMock.Object,
+            this._authSettings,
+            this._userSettings);
     }
 
     /// <summary>
@@ -80,7 +85,7 @@ public class UserSecurityMiddlewareTests
         var context = CreateAuthenticatedContext(userId.ToString(), "some-stamp");
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(((string, bool)?)null);
+            .ReturnsAsync(((string, bool, bool)?)null);
 
         // Act & Assert
         var act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -102,7 +107,7 @@ public class UserSecurityMiddlewareTests
         var context = CreateAuthenticatedContext(userId.ToString(), tokenStamp);
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((dbStamp, false));
+            .ReturnsAsync((dbStamp, false, true));
 
         // Act & Assert
         var act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -124,7 +129,7 @@ public class UserSecurityMiddlewareTests
         context.Request.Path = "/api/todo/items";
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((stamp, true));
+            .ReturnsAsync((stamp, true, true));
 
         // Act & Assert
         var act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -145,7 +150,43 @@ public class UserSecurityMiddlewareTests
         context.Request.Path = this._authSettings.ResetPasswordEndpoint;
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((stamp, true));
+            .ReturnsAsync((stamp, true, true));
+
+        // Act
+        await this._middleware.InvokeAsync(context, this._uowMock.Object);
+
+        // Assert
+        this._nextMock.Verify(next => next(context), Times.Once);
+    }
+
+    [Fact]
+    public async Task InvokeAsync_ThrowResendEmailChangeVerification_When_EmailConfirmedIdFalse_And_NotResendEmailVerificationEndpoint()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var stamp = "valid-stamp";
+        var context = CreateAuthenticatedContext(userId.ToString(), stamp);
+        context.Request.Path = "/api/todo/items";
+
+        this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((stamp, true, false));
+
+        // Act & Assert
+        var act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
+        await act.Should().ThrowAsync<EmailResendVerificationException>();
+    }
+
+    [Fact]
+    public async Task InvokeAsync_Should_CallNext_When_EmailConfirmedIdFalse_But_IsResendEmailVerificationEndpoint()
+    {
+        // Arrange
+        var userId = Guid.NewGuid();
+        var stamp = "valid-stamp";
+        var context = CreateAuthenticatedContext(userId.ToString(), stamp);
+        context.Request.Path = this._userSettings.ResendEmailVerificationEndpoint;
+
+        this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((stamp, false, false));
 
         // Act
         await this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -167,7 +208,7 @@ public class UserSecurityMiddlewareTests
         var context = CreateAuthenticatedContext(userId.ToString(), stamp);
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((stamp, false));
+            .ReturnsAsync((stamp, false, true));
 
         // Act
         await this._middleware.InvokeAsync(context, this._uowMock.Object);

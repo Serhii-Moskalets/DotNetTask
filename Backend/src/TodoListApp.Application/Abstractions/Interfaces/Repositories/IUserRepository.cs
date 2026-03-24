@@ -1,4 +1,4 @@
-﻿using TodoListApp.Domain.Entities;
+using TodoListApp.Domain.Entities;
 using TodoListApp.Domain.Enums;
 using TodoListApp.Domain.ValueObjects;
 
@@ -63,7 +63,7 @@ public interface IUserRepository : IRepository<UserEntity>
     /// This method is optimized for high-frequency security checks (e.g., in middleware)
     /// by using a projection to fetch only the necessary columns instead of the entire user entity.
     /// </remarks>
-    Task<(string SecurityStamp, bool MustChangePassword)?> GetUsersSecurityInfoAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<(string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)?> GetUsersSecurityInfoAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a user entity that matches the specified security token and token type.

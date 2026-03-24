@@ -18,7 +18,8 @@ namespace TodoListApp.Api.Middleware;
 /// </remarks>
 /// <param name="next">The next delegate in the HTTP request pipeline.</param>
 /// <param name="authSettings">The authorization settings.</param>
-public class UserSecurityMiddleware(RequestDelegate next, AuthSettings authSettings)
+/// <param name="userSettings">The users settings.</param>
+public class UserSecurityMiddleware(RequestDelegate next, AuthSettings authSettings, UserSettings userSettings)
 {
     /// <summary>
     /// Invokes the security verification logic for the current request.
@@ -30,6 +31,12 @@ public class UserSecurityMiddleware(RequestDelegate next, AuthSettings authSetti
     /// <exception cref="PasswordChangeRequiredException">Thrown when a password change is required but the user attempts to access other resources.</exception>
     public async Task InvokeAsync(HttpContext context, IUnitOfWork unitOfWork)
     {
+        if (context.Request.Path.StartsWithSegments("/api/auth", StringComparison.OrdinalIgnoreCase))
+        {
+            await next(context);
+            return;
+        }
+
         if (context.User.Identity?.IsAuthenticated is true)
         {
             var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier)
@@ -42,12 +49,22 @@ public class UserSecurityMiddleware(RequestDelegate next, AuthSettings authSetti
                 throw new UnauthorizedAccessException(TokenPolicy.InvalidUserIdentityMessage);
             }
 
-            var (securityStamp, mustChangePassword) = await unitOfWork.Users.GetUsersSecurityInfoAsync(userId, context.RequestAborted)
+            var (securityStamp, mustChangePassword, isEmailConfirmed) = await unitOfWork.Users.GetUsersSecurityInfoAsync(userId, context.RequestAborted)
                 ?? throw new UnauthorizedAccessException(UserPolicy.AccountNotFoundMessage);
 
             if (securityStamp != tokenStamp)
             {
                 throw new UnauthorizedAccessException(UserPolicy.SessionExpiredMessage);
+            }
+
+            if (!isEmailConfirmed)
+            {
+                bool isResendEmailEndpoint = context.Request.Path.StartsWithSegments(userSettings.ResendEmailVerificationEndpoint, StringComparison.OrdinalIgnoreCase);
+
+                if (!isResendEmailEndpoint)
+                {
+                    throw new EmailResendVerificationException();
+                }
             }
 
             if (mustChangePassword)

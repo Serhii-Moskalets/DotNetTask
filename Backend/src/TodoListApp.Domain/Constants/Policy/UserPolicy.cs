@@ -1,4 +1,4 @@
-﻿namespace TodoListApp.Domain.Constants;
+namespace TodoListApp.Domain.Constants;
 
 /// <summary>
 /// Provides constants for general user-related policy messages and constraints.
@@ -23,7 +23,12 @@ public static class UserPolicy
     /// <summary>
     /// The error message when email confirmation is attempted after the email has already been confirmed.
     /// </summary>
-    public const string EmailAlreadyConfirmed = "Cannot update registration details after email is confirmed.";
+    public const string EmailAlreadyConfirmedMessage = "Cannot update registration details after email is confirmed.";
+
+    /// <summary>
+    /// The error message when email confirmation is required but hasn't been completed.
+    /// </summary>
+    public const string EmailIsNotConfirmedMessage = "Email isn't confirmed.";
 
     /// <summary>
     /// The error message when the account not found or deleted during a general search.

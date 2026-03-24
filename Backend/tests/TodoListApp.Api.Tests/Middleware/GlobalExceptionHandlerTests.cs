@@ -14,6 +14,19 @@ namespace TodoListApp.Api.Tests.Middleware;
 /// </summary>
 public class GlobalExceptionHandlerTests
 {
+    private readonly Mock<ILogger<GlobalExceptionHandler>> _loggerMock;
+    private readonly GlobalExceptionHandler _handler;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="GlobalExceptionHandlerTests"/> class.
+    /// </summary>
+    public GlobalExceptionHandlerTests()
+    {
+        this._loggerMock = new Mock<ILogger<GlobalExceptionHandler>>();
+        this._handler = new GlobalExceptionHandler(this._loggerMock.Object);
+
+    }
+
     /// <summary>
     /// Verifies that <see cref="DomainException"/> results in a 400 Bad Request response.
     /// </summary>
@@ -21,15 +34,12 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_400_For_DomainException()
     {
-        var loggerMock = new Mock<ILogger<GlobalExceptionHandler>>();
-        var handler = new GlobalExceptionHandler(loggerMock.Object);
-
         using var testContext = Setup.CreateHttpContext();
         var context = testContext.Context;
 
         var exception = new DomainException("Domain error");
 
-        await handler.TryHandleAsync(context, exception, CancellationToken.None);
+        await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
         var response = await context.ReadProblemDetailsAsync();
 
@@ -45,15 +55,12 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_403_For_PasswordChangeRequiredException()
     {
-        var loggerMock = new Mock<ILogger<GlobalExceptionHandler>>();
-        var handler = new GlobalExceptionHandler(loggerMock.Object);
-
         using var testContext = Setup.CreateHttpContext();
         var context = testContext.Context;
 
         var exception = new PasswordChangeRequiredException("Change password");
 
-        await handler.TryHandleAsync(context, exception, CancellationToken.None);
+        await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
         var response = await context.ReadProblemDetailsAsync();
 
@@ -63,28 +70,46 @@ public class GlobalExceptionHandlerTests
     }
 
     /// <summary>
+    /// Verifies that <see cref="EmailResendVerificationException"/> results in a 403 Forbidden response.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Should_Return_403_For_EmailResendVerificationException()
+    {
+        using var testContext = Setup.CreateHttpContext();
+        var context = testContext.Context;
+
+        var exception = new EmailResendVerificationException();
+
+        await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
+
+        var response = await context.ReadProblemDetailsAsync();
+
+        context.Response.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        response.Title.Should().Be(UserPolicy.EmailIsNotConfirmedMessage);
+        response.Detail.Should().Be(UserPolicy.EmailIsNotConfirmedMessage);
+    }
+
+    /// <summary>
     /// Verifies that <see cref="KeyNotFoundException"/> results in a 404 Not Found response and logs a warning.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
     public async Task Should_Return_404_And_LogWarning_For_KeyNotFoundException()
     {
-        var loggerMock = new Mock<ILogger<GlobalExceptionHandler>>();
-        var handler = new GlobalExceptionHandler(loggerMock.Object);
-
         using var testContext = Setup.CreateHttpContext();
         var context = testContext.Context;
 
         var exception = new KeyNotFoundException();
 
-        await handler.TryHandleAsync(context, exception, CancellationToken.None);
+        await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
         var response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status404NotFound);
         response.Title.Should().Be(DomainPolicy.ResourceNotFoundMessage);
 
-        loggerMock.Verify(
+        this._loggerMock.Verify(
             x => x.Log(
                 LogLevel.Warning,
                 It.IsAny<EventId>(),
@@ -101,15 +126,12 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_500_And_LogError_For_UnknownException()
     {
-        var loggerMock = new Mock<ILogger<GlobalExceptionHandler>>();
-        var handler = new GlobalExceptionHandler(loggerMock.Object);
-
         using var testContext = Setup.CreateHttpContext();
         var context = testContext.Context;
 
         var exception = new Exception("boom");
 
-        await handler.TryHandleAsync(context, exception, CancellationToken.None);
+        await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
         var response = await context.ReadProblemDetailsAsync();
 
@@ -117,7 +139,7 @@ public class GlobalExceptionHandlerTests
         response.Title.Should().Be(DomainPolicy.ServerErrorMessage);
         response.Detail.Should().Be(DomainPolicy.UnexpectedErrorMessage);
 
-        loggerMock.Verify(
+        this._loggerMock.Verify(
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
@@ -134,15 +156,12 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_401_For_UnauthorizedAccessException()
     {
-        var loggerMock = new Mock<ILogger<GlobalExceptionHandler>>();
-        var handler = new GlobalExceptionHandler(loggerMock.Object);
-
         using var testContext = Setup.CreateHttpContext();
         var context = testContext.Context;
 
         var exception = new UnauthorizedAccessException("Unauthorized");
 
-        await handler.TryHandleAsync(context, exception, CancellationToken.None);
+        await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
         var response = await context.ReadProblemDetailsAsync();
 

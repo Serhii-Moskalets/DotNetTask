@@ -1,7 +1,6 @@
-﻿using FluentValidation;
+using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
 using TodoListApp.Application.Abstractions.Behaviors;
-using TodoListApp.Application.Abstractions.Interfaces.Common;
 using TodoListApp.Application.Abstractions.Interfaces.Services;
 using TodoListApp.Application.Common.Services;
 

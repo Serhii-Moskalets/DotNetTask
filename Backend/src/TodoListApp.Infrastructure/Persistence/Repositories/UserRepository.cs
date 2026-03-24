@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using TinyResult;
 using TodoListApp.Application.Abstractions.Interfaces.Repositories;
 using TodoListApp.Domain.Entities;
@@ -111,13 +111,13 @@ public class UserRepository(TodoListAppDbContext context)
     /// <remarks>
     /// Optimized with projection to avoid fetching the entire entity.
     /// </remarks>
-    public async Task<(string SecurityStamp, bool MustChangePassword)?> GetUsersSecurityInfoAsync(
+    public async Task<(string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)?> GetUsersSecurityInfoAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
         var user = await this.DbSet
             .Where(u => u.Id == userId)
-            .Select(u => new { u.SecurityStamp.Value, u.MustChangePassword })
+            .Select(u => new { u.SecurityStamp.Value, u.MustChangePassword, u.EmailConfirmed })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)
@@ -125,6 +125,6 @@ public class UserRepository(TodoListAppDbContext context)
             return null;
         }
 
-        return (user.Value, user.MustChangePassword);
+        return (user.Value, user.MustChangePassword, user.EmailConfirmed);
     }
 }

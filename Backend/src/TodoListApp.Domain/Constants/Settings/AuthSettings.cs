@@ -8,5 +8,5 @@ public class AuthSettings
     /// <summary>
     /// Gets or sets endpoint for resetting the password.
     /// </summary>
-    public string ResetPasswordEndpoint { get; set; } = "/auth/reset-password";
+    public string ResetPasswordEndpoint { get; set; } = "/api/auth/reset-password";
 }
