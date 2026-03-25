@@ -162,7 +162,7 @@ public class UserEntity : BaseEntity
         }
 
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification, currentTime);
-        this.AddDomainEvent(new VerificationEmailResentEvent(this, this.CurrentToken));
+        this.AddDomainEvent(new VerificationEmailResendEvent(this, this.CurrentToken));
 
         return Result<bool>.Success(true);
     }
