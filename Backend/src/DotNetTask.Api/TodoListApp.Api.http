@@ -1,0 +1,177 @@
+@DotNetTask.Api_HostAddress = https://localhost:7000
+@taskListId = c9cc4875-242e-420f-98dd-dbd182fb43c0
+@taskId = 8ee6f9f2-1500-40da-bb4d-002b27c2f5cb
+@tagId = 2adaa24a-af26-4a42-8e75-27fb1024baad
+@commentId = 7e337064-5737-4204-a657-680040e0b204
+@sharedUserId = b3d5f0a1-6c3b-4a2e-9f1c-123456789abd
+
+### TaskList
+
+### 1. Get all task lists (GetTaskLists)
+GET {{DotNetTask.Api_HostAddress}}/api/TaskLists?page=1&pageSize=10
+Accept: application/json
+
+###
+
+### 2. Create new task list (CreateTaskList)
+POST {{DotNetTask.Api_HostAddress}}/api/TaskLists
+Content-Type: application/json
+
+{
+  "title": "My new task list"
+}
+
+###
+
+### 3. Update task list title (UpdateTaskList)
+PUT {{DotNetTask.Api_HostAddress}}/api/TaskLists/{{taskListId}}
+Content-Type: application/json
+
+{
+  "title":  "New title"
+}
+
+###
+
+### 4. Delete task list (DeleteTaskList)
+DELETE {{DotNetTask.Api_HostAddress}}/api/TaskLists/{{taskListId}}
+
+### Task
+
+### 1. Create a new task (CreateTask)
+POST {{DotNetTask.Api_HostAddress}}/api/Tasks/task-lists/{{taskListId}}
+Content-Type: application/json
+
+{
+  "title": "My second task",
+  "dueDate": "2026-01-24T20:35:59Z"
+}
+
+###
+
+### 2. Get tasks with filters (GetTasks)
+# Check filtering and pagination
+GET {{DotNetTask.Api_HostAddress}}/api/Tasks?TaskListId={{taskListId}}&page=1&pageSize=10&ascending=true
+Accept: application/json
+
+###
+
+### 3. Get task by ID (GetTaskById)
+GET {{DotNetTask.Api_HostAddress}}/api/Tasks/{{taskId}}
+Accept: application/json
+
+###
+
+### 4. Search tasks by title (GetTasksByTitle)
+GET {{DotNetTask.Api_HostAddress}}/api/Tasks/by-title?title=second
+
+###
+
+### 5. Update task details (UpdateTask)
+PUT {{DotNetTask.Api_HostAddress}}/api/Tasks/{{taskId}}
+Content-Type: application/json
+
+{
+  "title": "Updated task title",
+  "description": "Added some description",
+  "dueDate": "2027-01-01T12:00:00Z"
+}
+
+###
+
+### 6. Change task status (ChangeTaskStatus)
+# status: 0 - NotStarted, 1 - InProgress, 2 - Done
+PUT {{DotNetTask.Api_HostAddress}}/api/Tasks/{{taskId}}/status/1
+Accept: application/json
+
+###
+
+### 7. Add tag to task (AddTagToTask)
+PUT {{DotNetTask.Api_HostAddress}}/api/Tasks/{{taskId}}/tags/{{tagId}}
+###
+
+### 8. Remove tag from task (RemoveTagFromTask)
+DELETE {{DotNetTask.Api_HostAddress}}/api/Tasks/{{taskId}}/tag
+
+###
+
+### 9. Delete task (DeleteTask)
+DELETE {{DotNetTask.Api_HostAddress}}/api/Tasks/{{taskId}}
+Accept: application/json
+
+### 10. Delete all overdue tasks in a specific task list
+DELETE {{DotNetTask.Api_HostAddress}}/api/task-lists/{{taskListId}}/tasks/overdue
+Accept: application/json
+
+### Tag
+
+### Get all tags for the current user
+GET {{DotNetTask.Api_HostAddress}}/api/tags?page=1&pageSize=10
+Accept: application/json
+
+### Create a new tag for a specific task
+POST {{DotNetTask.Api_HostAddress}}/api/tags/{{taskId}}
+Content-Type: application/json
+
+{
+  "name": "Work"
+}
+
+### Delete a tag by ID
+DELETE {{DotNetTask.Api_HostAddress}}/api/tags/{{tagId}}
+
+### Comment
+
+### Get comments for a specific task
+GET {{DotNetTask.Api_HostAddress}}/api/tasks/{{taskId}}/comments?page=1&pageSize=10
+Accept: application/json
+
+### Create a new comment for a task
+POST {{DotNetTask.Api_HostAddress}}/api/tasks/{{taskId}}/comments
+Content-Type: application/json
+
+{
+  "text": "This is a new comment for the task."
+}
+
+### Update an existing comment
+PUT {{DotNetTask.Api_HostAddress}}/api/comments/{{commentId}}
+Content-Type: application/json
+
+{
+  "text": "This is an updated version of the comment."
+}
+
+### Delete a comment
+DELETE {{DotNetTask.Api_HostAddress}}/api/comments/{{commentId}}
+
+### UserTaskAccess
+### 1. Get a specific shared task by ID
+GET {{DotNetTask.Api_HostAddress}}/api/access/tasks/{{taskId}}/shared
+Accept: application/json
+
+### 2. Get all tasks shared with the current user
+GET {{DotNetTask.Api_HostAddress}}/api/access?page=1&pageSize=10
+Accept: application/json
+
+### 3. Get all users who have access to a specific task
+GET {{DotNetTask.Api_HostAddress}}/api/access/tasks/{{taskId}}/users?page=1&pageSize=10
+Accept: application/json
+
+### 4. Share a task with a user (by Email)
+POST {{DotNetTask.Api_HostAddress}}/api/access/tasks/{{taskId}}/share-task
+Content-Type: application/json
+ 
+{
+  "email": "user@user.com"
+}
+
+### 5. Remove user access by Email
+DELETE {{DotNetTask.Api_HostAddress}}/api/access/tasks/{{taskId}}/by-email?email=user@user.com
+
+### 6. Remove user access by User ID
+DELETE {{DotNetTask.Api_HostAddress}}/api/access/tasks/{{taskId}}/users/{{sharedUserId}}
+
+### 7. Remove all access entries
+DELETE {{DotNetTask.Api_HostAddress}}/api/access/users/my
+
