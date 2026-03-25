@@ -1,16 +1,34 @@
-# React + Vite
+# DotNetTask - Frontend (Work in Progress)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository will contain the client-side application for the DotNetTask ecosystem. The frontend is planned to be a high-performance Single Page Application (SPA) built with **React** and **Vite**.
 
-Currently, two official plugins are available:
+## Planned Tech Stack
+* **Library:** React 18+
+* **Build Tool:** Vite
+* **State Management:** React Hooks / Context API
+* **Styling:** SCSS (Sass)
+* **HTTP Client:** Axios with Interceptors for JWT management
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Roadmap & Status
+* <small>**Current Status:** *Initial Planning Phase*</small>
 
-## React Compiler
+* [ ] Initialize Vite + React project template.
+* [ ] Setup Axios services and API integration.
+* [ ] Implement Login and Registration pages.
+* [ ] Build Main Dashboard for task management.
+* [ ] Integrate real-time notifications.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+##  Getting Started
+<small>Note: Development has not started yet. These instructions will be updated once the project is initialized.</small>
 
-## Expanding the ESLint configuration
+1. **Install Dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Launch Development Server:**
+   ```bash
+   npm run dev
+   ```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+##
+***Developed by Serhii Moskalets. Planned release: Q1 2026.***
