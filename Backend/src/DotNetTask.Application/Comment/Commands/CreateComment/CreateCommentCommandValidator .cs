@@ -1,0 +1,32 @@
+using DotNetTask.Domain.Constants;
+using DotNetTask.Domain.ValueObjects;
+
+using FluentValidation;
+
+namespace DotNetTask.Application.Comment.Commands.CreateComment;
+
+/// <summary>
+/// Validator for <see cref="CreateCommentCommand"/>.
+/// </summary>
+public class CreateCommentCommandValidator : AbstractValidator<CreateCommentCommand>
+{
+    /// <summary>
+    /// Initializes a new instance of the <see cref="CreateCommentCommandValidator"/> class.
+    /// </summary>
+    public CreateCommentCommandValidator()
+    {
+        this.RuleFor(x => x.UserId)
+            .NotEmpty()
+            .WithMessage(UserPolicy.IdRequiredMessage);
+
+        this.RuleFor(x => x.TaskId)
+            .NotEmpty()
+                .WithMessage(TaskPolicy.IdRequiredMessage);
+
+        this.RuleFor(c => c.Content)
+            .NotEmpty()
+                .WithMessage(CommentPolicy.EmptyMessage)
+            .MaximumLength(CommentContent.MaxLength)
+                .WithMessage(CommentPolicy.TooLongMessage);
+    }
+}

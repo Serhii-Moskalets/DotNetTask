@@ -56,7 +56,7 @@ docker-compose up -d
 ```
 **2. Apply Migrations:**
 ```bash
-cd src/TodoListApp.Api
+cd src/DotNetTask.Api
 dotnet ef database update
 ```
 **3. Run the Api:**

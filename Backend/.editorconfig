@@ -19,6 +19,9 @@ trim_trailing_whitespace = true
 # C# files
 [*.cs]
 
+dotnet_sort_system_usings_first = true
+dotnet_separate_import_directive_groups = false
+
 #### Core EditorConfig Options ####
 indent_size = 4
 indent_style = space
