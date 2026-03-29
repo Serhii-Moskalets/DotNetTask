@@ -3,10 +3,11 @@ using DotNetTask.Api.Middleware;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Domain.Constants;
-using DotNetTask.Domain.Constants.Settings;
 using DotNetTask.Domain.Exceptions;
+using DotNetTask.Infrastructure.Web.Options;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace DotNetTask.Api.Tests.Middleware;
@@ -18,8 +19,7 @@ public class UserSecurityMiddlewareTests
 {
     private readonly Mock<IUnitOfWork> _uowMock;
     private readonly Mock<RequestDelegate> _nextMock;
-    private readonly AuthSettings _authSettings;
-    private readonly UserSettings _userSettings;
+    private readonly ApiEndpointOptions _endpointSettings;
     private readonly UserSecurityMiddleware _middleware;
 
     /// <summary>
@@ -29,12 +29,20 @@ public class UserSecurityMiddlewareTests
     {
         this._uowMock = new Mock<IUnitOfWork>();
         this._nextMock = new Mock<RequestDelegate>();
-        this._authSettings = new AuthSettings();
-        this._userSettings = new UserSettings();
+
+        ApiEndpointOptions apiEndpointOptions = new()
+        {
+            ResendEmailVerificationEndpoint = "/api/users/resend-email-verification",
+            ResetPasswordEndpoint = "/api/auth/reset-password",
+        };
+
+        IOptions<ApiEndpointOptions> endpointOptions = Options.Create(apiEndpointOptions);
+
+        this._endpointSettings = endpointOptions.Value;
+
         this._middleware = new UserSecurityMiddleware(
             this._nextMock.Object,
-            this._authSettings,
-            this._userSettings);
+            endpointOptions);
     }
 
     /// <summary>
@@ -147,7 +155,7 @@ public class UserSecurityMiddlewareTests
         Guid userId = Guid.NewGuid();
         string stamp = "valid-stamp";
         DefaultHttpContext context = CreateAuthenticatedContext(userId.ToString(), stamp);
-        context.Request.Path = this._authSettings.ResetPasswordEndpoint;
+        context.Request.Path = this._endpointSettings.ResetPasswordEndpoint;
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((stamp, true, true));
@@ -191,7 +199,7 @@ public class UserSecurityMiddlewareTests
         Guid userId = Guid.NewGuid();
         string stamp = "valid-stamp";
         DefaultHttpContext context = CreateAuthenticatedContext(userId.ToString(), stamp);
-        context.Request.Path = this._userSettings.ResendEmailVerificationEndpoint;
+        context.Request.Path = this._endpointSettings.ResendEmailVerificationEndpoint;
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((stamp, false, false));

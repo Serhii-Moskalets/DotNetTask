@@ -4,6 +4,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Notifications;
 using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
+using DotNetTask.Application.Common.Settings;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Infrastructure.Notifications.Services;
 using DotNetTask.Infrastructure.Notifications.Settings;
@@ -14,10 +15,11 @@ using DotNetTask.Infrastructure.Persistence.UnitOfWork;
 using DotNetTask.Infrastructure.Security;
 using DotNetTask.Infrastructure.Security.Settings;
 using DotNetTask.Infrastructure.Services;
-
+using DotNetTask.Infrastructure.Web.Options;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 
 namespace DotNetTask.Infrastructure.Extensions;
 
@@ -94,6 +96,13 @@ public static class ServiceCollectionExtensions
         .ValidateOnStart();
 
         services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+
+        // --- Add ApiEndpointOptions ---
+        services.Configure<ApiEndpointOptions>(config.GetSection(ApiEndpointOptions.SectionName));
+
+        // -- Add TokenOptions ---
+        services.Configure<TokenOptions>(config.GetSection(TokenOptions.SectionName));
+        services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<TokenOptions>>().Value);
 
         return services;
     }

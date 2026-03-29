@@ -6,9 +6,19 @@ namespace DotNetTask.Domain.Constants;
 public static class CommonPolicy
 {
     /// <summary>
-    /// The name of the default database connection string in the configuration.
+    /// The name of the database connection string in the configuration.
     /// </summary>
-    public const string DataBaseConnectionString = "DefaultConnection";
+    public const string DataBaseConnectionString = "DotNetTask";
+
+    /// <summary>
+    /// The name of the logging database connection string in the configuration.
+    /// </summary>
+    public const string LoggingDatabaseConnectionString = "DotNetTaskLogging";
+
+    /// <summary>
+    /// The name of the redis connection string in the configuration.
+    /// </summary>
+    public const string RedisConnectionString = "DotNetTaskRedis";
 
     /// <summary>
     /// The error message when the requested page number is less than one.

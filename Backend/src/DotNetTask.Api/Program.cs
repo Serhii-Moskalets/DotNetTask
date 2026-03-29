@@ -2,20 +2,23 @@ using System.Text;
 using DotNetTask.Api.Middleware;
 using DotNetTask.Application.Common.Extensions;
 using DotNetTask.Domain.Constants;
-using DotNetTask.Domain.Constants.Settings;
 using DotNetTask.Domain.Exceptions;
 using DotNetTask.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Sinks.PostgreSQL;
 
+Serilog.Debugging.SelfLog.Enable(Console.Error);
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 string connectionString = builder.Configuration.GetConnectionString(CommonPolicy.DataBaseConnectionString)
+    ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
+
+string loggingConnectionString = builder.Configuration.GetConnectionString(CommonPolicy.LoggingDatabaseConnectionString)
     ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
 
 Dictionary<string, ColumnWriterBase> columnWriters = new()
@@ -32,7 +35,7 @@ Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .WriteTo.Console()
     .WriteTo.PostgreSQL(
-        connectionString: connectionString,
+        connectionString: loggingConnectionString,
         tableName: "Logs",
         columnOptions: columnWriters,
         needAutoCreateTable: true)
@@ -44,21 +47,6 @@ builder.Host.UseSerilog();
 
 // DI
 builder.Services.AddProblemDetails();
-
-builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection("Auth"));
-
-builder.Services.AddSingleton(resolver =>
-   resolver.GetRequiredService<IOptions<AuthSettings>>().Value);
-
-builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
-
-builder.Services.AddSingleton(resolver =>
-   resolver.GetRequiredService<IOptions<TokenSettings>>().Value);
-
-builder.Services.Configure<UserSettings>(builder.Configuration.GetSection("Users"));
-
-builder.Services.AddSingleton(resolver =>
-    resolver.GetRequiredService<IOptions<UserSettings>>().Value);
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 

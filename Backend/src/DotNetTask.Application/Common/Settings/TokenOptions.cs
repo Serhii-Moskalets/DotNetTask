@@ -1,9 +1,9 @@
-namespace DotNetTask.Domain.Constants.Settings;
+namespace DotNetTask.Application.Common.Settings;
 
 /// <summary>
 /// Represents configuration settings for security tokens.
 /// </summary>
-public class TokenSettings
+public class TokenOptions
 {
     /// <summary>
     /// The name of the configuration section.
