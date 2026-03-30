@@ -23,6 +23,9 @@ public static class ServiceCollectionExtensions
         services.AddMediatR(config =>
         {
             config.RegisterServicesFromAssembly(assembly);
+
+            config.AddOpenBehavior(typeof(ThrottlingBehavior<,>));
+
             config.AddOpenBehavior(typeof(ValidationBehavior<,>));
         });
 

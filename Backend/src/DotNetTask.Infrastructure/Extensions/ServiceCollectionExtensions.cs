@@ -3,7 +3,9 @@ using DotNetTask.Application.Abstractions.Interfaces.DotNetTaskDbContext;
 using DotNetTask.Application.Abstractions.Interfaces.Notifications;
 using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
+using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
+using DotNetTask.Application.Abstractions.Options;
 using DotNetTask.Application.Common.Settings;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Infrastructure.Notifications.Services;
@@ -20,6 +22,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using StackExchange.Redis;
 
 namespace DotNetTask.Infrastructure.Extensions;
 
@@ -56,6 +59,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IDotNetTaskDbContext>(provider =>
             provider.GetRequiredService<DotNetTaskDbContext>());
 
+        services.AddStackExchangeRedisCache(options => options.Configuration = config.GetConnectionString(CommonPolicy.RedisConnectionString));
+
         // --- Add System time ---
         services.AddSingleton<IClock, SystemClock>();
 
@@ -82,6 +87,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITokenGenerator, TokenGenerator>();
 
+        // --- Add Flood services ---
+        services.AddSingleton<IConnectionMultiplexer>(_ =>
+            ConnectionMultiplexer.Connect(config.GetConnectionString(CommonPolicy.RedisConnectionString)!));
+
+        services.AddScoped<IFloodProtectionService, RedisFloodProtectionService>();
+
         // --- Add Jwt Token service ---
         services.AddOptions<JwtSettings>()
             .Bind(config.GetSection(JwtSettings.SectionName))
@@ -100,9 +111,12 @@ public static class ServiceCollectionExtensions
         // --- Add ApiEndpointOptions ---
         services.Configure<ApiEndpointOptions>(config.GetSection(ApiEndpointOptions.SectionName));
 
-        // -- Add TokenOptions ---
+        // --- Add TokenOptions ---
         services.Configure<TokenOptions>(config.GetSection(TokenOptions.SectionName));
         services.AddSingleton(resolver => resolver.GetRequiredService<IOptions<TokenOptions>>().Value);
+
+        // --- Add Throttling Settings ---
+        services.Configure<ThrottlingSettings>(config.GetSection(ThrottlingSettings.SectionName));
 
         return services;
     }
