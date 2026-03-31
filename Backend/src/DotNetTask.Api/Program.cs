@@ -1,10 +1,12 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using DotNetTask.Api.Middleware;
 using DotNetTask.Application.Common.Extensions;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Exceptions;
 using DotNetTask.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -30,15 +32,14 @@ Dictionary<string, ColumnWriterBase> columnWriters = new()
     { "Context", new PropertiesColumnWriter(NpgsqlTypes.NpgsqlDbType.Text, null) },
 };
 
-// Serilog
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .WriteTo.Console()
-    .WriteTo.PostgreSQL(
+    .WriteTo.Async(w => w.PostgreSQL(
         connectionString: loggingConnectionString,
         tableName: "Logs",
         columnOptions: columnWriters,
-        needAutoCreateTable: true)
+        needAutoCreateTable: true))
     .CreateLogger();
 
 builder.Logging.ClearProviders();
