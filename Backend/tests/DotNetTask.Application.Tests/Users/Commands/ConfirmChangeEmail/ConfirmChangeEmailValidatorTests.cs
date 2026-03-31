@@ -10,6 +10,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.ConfirmChangeEmail;
 /// </summary>
 public class ConfirmChangeEmailValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly ConfirmEmailChangeCommandValidator _validator = new();
 
     /// <summary>
@@ -19,7 +20,7 @@ public class ConfirmChangeEmailValidatorTests
     public void Should_HaveError_When_TokenIsEmpty()
     {
         // Arrange
-        ConfirmEmailChangeCommand command = new ConfirmEmailChangeCommand(string.Empty);
+        ConfirmEmailChangeCommand command = new(string.Empty, IpAddress);
 
         // Act
         TestValidationResult<ConfirmEmailChangeCommand> result = this._validator.TestValidate(command);
@@ -39,7 +40,7 @@ public class ConfirmChangeEmailValidatorTests
     public void Should_Have_Error_When_Token_Is_Empty(string? token)
     {
         // Arrange
-        ConfirmEmailChangeCommand command = new ConfirmEmailChangeCommand(token!);
+        ConfirmEmailChangeCommand command = new(token!, IpAddress);
 
         // Act
         TestValidationResult<ConfirmEmailChangeCommand> result = this._validator.TestValidate(command);

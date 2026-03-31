@@ -10,6 +10,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.RevertEmail;
 /// </summary>
 public class RevertEmailChangeCommandValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly RevertEmailChangeCommandValidator _validator = new();
 
     /// <summary>
@@ -20,7 +21,7 @@ public class RevertEmailChangeCommandValidatorTests
     public void Should_NotHaveError_When_CommandIsValid()
     {
         // Arrange
-        RevertEmailChangeCommand command = new RevertEmailChangeCommand("valid-token");
+        RevertEmailChangeCommand command = new("valid-token", IpAddress);
 
         // Act
         TestValidationResult<RevertEmailChangeCommand> result = this._validator.TestValidate(command);
@@ -39,7 +40,7 @@ public class RevertEmailChangeCommandValidatorTests
     public void Should_HaveError_When_TokenIsNullOrEmpty(string? token)
     {
         // Arrange
-        RevertEmailChangeCommand command = new RevertEmailChangeCommand(token!);
+        RevertEmailChangeCommand command = new(token!, IpAddress);
 
         // Act
         TestValidationResult<RevertEmailChangeCommand> result = this._validator.TestValidate(command);

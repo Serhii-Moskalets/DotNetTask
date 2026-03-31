@@ -22,6 +22,7 @@ public class ConfirmEmailChangeCommandHandlerTests
     private const string PendingEmail = "new@example.com";
     private const string ConfirmToken = "confirm-token";
     private const string RevertToken = "revert-token";
+    private const string IpAddress = "192.168.0.1";
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IClock> _clock;
@@ -45,7 +46,7 @@ public class ConfirmEmailChangeCommandHandlerTests
     public async Task Handle_Should_ReturnFail_When_UserNotFound()
     {
         // Arrange
-        ConfirmEmailChangeCommand command = new ConfirmEmailChangeCommand("non-existent-token");
+        ConfirmEmailChangeCommand command = new("non-existent-token", IpAddress);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(
             It.IsAny<string>(),
@@ -72,7 +73,7 @@ public class ConfirmEmailChangeCommandHandlerTests
     public async Task Handle_Should_ReturnFailure_When_TokenIsInvalidForFoundUser()
     {
         // Arrange
-        ConfirmEmailChangeCommand command = new ConfirmEmailChangeCommand("wrong-token");
+        ConfirmEmailChangeCommand command = new("wrong-token", IpAddress);
         UserEntity user = UserEntityFactory.Create();
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), DateTime.UtcNow);

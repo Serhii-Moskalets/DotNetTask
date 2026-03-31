@@ -19,6 +19,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.ResetPassword;
 /// </summary>
 public class ResetPasswordCommandHandlerTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ITokenGenerator> _tokenGeneratorMock;
     private readonly ResetPasswordCommandHandler _sut;
@@ -48,7 +49,7 @@ public class ResetPasswordCommandHandlerTests
     public async Task Handle_Should_GenerateTokenAndSave_When_UserExists()
     {
         // Arrange
-        ResetPasswordCommand command = new ResetPasswordCommand("existing@test.com");
+        ResetPasswordCommand command = new("existing@test.com", IpAddress);
         UserEntity user = UserEntityFactory.Create();
         const string secureToken = "secure-token-123";
 
@@ -79,7 +80,7 @@ public class ResetPasswordCommandHandlerTests
     public async Task Handle_Should_ReturnSuccessButDoNothing_When_UserDoesNotExist()
     {
         // Arrange
-        ResetPasswordCommand command = new ResetPasswordCommand("nonexistent@test.com");
+        ResetPasswordCommand command = new("nonexistent@test.com", IpAddress);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);

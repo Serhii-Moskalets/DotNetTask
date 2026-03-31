@@ -1,3 +1,4 @@
+using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Messaging;
 
 namespace DotNetTask.Application.Comment.Commands.UpdateComment;
@@ -10,7 +11,13 @@ namespace DotNetTask.Application.Comment.Commands.UpdateComment;
 /// <param name="NewContent">
 /// The new raw text content for the comment. This value will be validated and converted into a <see cref="Domain.ValueObjects.CommentContent"/> object.
 /// </param>
-public record UpdateCommentCommand(
-    Guid CommentId,
-    Guid UserId,
-    string NewContent) : ICommand;
+public record UpdateCommentCommand(Guid CommentId, Guid UserId, string NewContent)
+    : ICommand, IThrottledRequest
+{
+    /// <inheritdoc/>
+    /// <value>Always returns "UpdateComment".</value>
+    public string ActionName => "UpdateComment";
+
+    /// <inheritdoc/>
+    public string GetIdentity() => this.UserId.ToString();
+}

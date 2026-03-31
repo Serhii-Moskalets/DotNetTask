@@ -11,15 +11,13 @@ namespace DotNetTask.Application.Tests.Users.Commands.RegisterUser;
 /// </summary>
 public class RegisterUserCommandValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly RegisterUserCommandValidator _validator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="RegisterUserCommandValidatorTests"/> class.
     /// </summary>
-    public RegisterUserCommandValidatorTests()
-    {
-        this._validator = new RegisterUserCommandValidator();
-    }
+    public RegisterUserCommandValidatorTests() => this._validator = new RegisterUserCommandValidator();
 
     /// <summary>
     /// Provides invalid password samples and their corresponding expected error messages from <see cref="PasswordPolicy"/>.
@@ -44,7 +42,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("John", "Doe", "johndoe", "john@test.com", "Password123!");
+        RegisterUserCommand command = new("John", "Doe", "johndoe", "john@test.com", "Password123!", IpAddress);
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -63,7 +61,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Errors_When_Fields_Are_Empty(string firstName, string userName, string email, string password)
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand(firstName, "Doe", userName, email, password);
+        RegisterUserCommand command = new(firstName, "Doe", userName, email, password, IpAddress);
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -80,9 +78,9 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Errors_When_Names_Exceed_Maximum_Length()
     {
         // Arrange
-        string longFirstName = new string('a', FirstName.MaxLength + 1);
-        string longLastName = new string('a', LastName.MaxLength + 1);
-        RegisterUserCommand command = new RegisterUserCommand(longFirstName, longLastName, "UserName", "email@example.com", "paSsword!2");
+        string longFirstName = new('a', FirstName.MaxLength + 1);
+        string longLastName = new('a', LastName.MaxLength + 1);
+        RegisterUserCommand command = new(longFirstName, longLastName, "UserName", "email@example.com", "paSsword!2", IpAddress);
 
         // Act
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -102,7 +100,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Error_When_UserName_Length_Is_Invalid(string userName)
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("John", "Doe", userName, "john@test.com", "Password123!");
+        RegisterUserCommand command = new("John", "Doe", userName, "john@test.com", "Password123!", IpAddress);
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -117,7 +115,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Error_When_UserName_Format_Is_Invalid()
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("John", "Doe", "user@name!", "john@test.com", "Password123!");
+        RegisterUserCommand command = new("John", "Doe", "user@name!", "john@test.com", "Password123!", IpAddress);
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -135,7 +133,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Error_When_Password_Complexity_Is_Not_Met(string password, string expectedErrorMessage)
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("John", "Doe", "johndoe", "john@test.com", password);
+        RegisterUserCommand command = new("John", "Doe", "johndoe", "john@test.com", password, IpAddress);
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);

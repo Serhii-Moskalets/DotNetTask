@@ -10,6 +10,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.ResetPassword;
 /// </summary>
 public class ResetPasswordCommandValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly ResetPasswordCommandValidator _validator = new();
 
     /// <summary>
@@ -19,7 +20,7 @@ public class ResetPasswordCommandValidatorTests
     public void Should_NotHaveError_When_EmailIsValid()
     {
         // Arrange
-        ResetPasswordCommand command = new ResetPasswordCommand("test@example.com");
+        ResetPasswordCommand command = new("test@example.com", IpAddress);
 
         // Act
         TestValidationResult<ResetPasswordCommand> result = this._validator.TestValidate(command);
@@ -39,7 +40,7 @@ public class ResetPasswordCommandValidatorTests
     public void Should_HaveError_When_EmailIsEmpty(string? email)
     {
         // Arrange
-        ResetPasswordCommand command = new ResetPasswordCommand(email!);
+        ResetPasswordCommand command = new(email!, IpAddress);
 
         // Act
         TestValidationResult<ResetPasswordCommand> result = this._validator.TestValidate(command);
@@ -61,7 +62,7 @@ public class ResetPasswordCommandValidatorTests
     public void Should_HaveError_When_EmailFormatIsInvalid(string invalidEmail)
     {
         // Arrange
-        ResetPasswordCommand command = new ResetPasswordCommand(invalidEmail);
+        ResetPasswordCommand command = new(invalidEmail, IpAddress);
 
         // Act
         TestValidationResult<ResetPasswordCommand> result = this._validator.TestValidate(command);

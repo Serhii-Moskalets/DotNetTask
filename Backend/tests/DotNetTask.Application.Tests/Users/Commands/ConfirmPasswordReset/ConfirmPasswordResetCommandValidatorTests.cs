@@ -10,15 +10,13 @@ namespace DotNetTask.Application.Tests.Users.Commands.ConfirmPasswordReset;
 /// </summary>
 public class ConfirmPasswordResetCommandValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly ConfirmPasswordResetCommandValidator _validator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="ConfirmPasswordResetCommandValidatorTests"/> class.
     /// </summary>
-    public ConfirmPasswordResetCommandValidatorTests()
-    {
-        this._validator = new ConfirmPasswordResetCommandValidator();
-    }
+    public ConfirmPasswordResetCommandValidatorTests() => this._validator = new ConfirmPasswordResetCommandValidator();
 
     /// <summary>
     /// Verifies that valid data passes validation without errors.
@@ -27,9 +25,10 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand(
+        ConfirmPasswordResetCommand command = new(
             "SecurePass123!",
-            "ValidToken123");
+            "ValidToken123",
+            IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -43,7 +42,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Token_Is_Empty()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("SecurePass123!", string.Empty);
+        ConfirmPasswordResetCommand command = new("SecurePass123!", string.Empty, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -58,7 +57,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Is_Too_Short()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("token", "Short1!");
+        ConfirmPasswordResetCommand command = new("token", "Short1!", IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -73,7 +72,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Uppercase()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("lowercase123!", "token");
+        ConfirmPasswordResetCommand command = new("lowercase123!", "token", IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -88,7 +87,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Lowercase()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("UPPERCASE123!", "token");
+        ConfirmPasswordResetCommand command = new("UPPERCASE123!", "token", IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -103,7 +102,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Number()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("NoNumbers!", "token");
+        ConfirmPasswordResetCommand command = new("NoNumbers!", "token", IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -121,7 +120,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Allowed_Special_Character(string password)
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("token", password);
+        ConfirmPasswordResetCommand command = new("token", password, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);

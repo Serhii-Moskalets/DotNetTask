@@ -21,6 +21,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.ConfirmPasswordReset;
 /// </summary>
 public class ConfirmPasswordResetCommandHandlerTests
 {
+    private const string IpAddress = "192.168.0.1";
     private static readonly DateTime CurrentTime = DateTime.UtcNow;
     private static readonly string NewPasswordHashString = new('b', 64);
 
@@ -53,7 +54,7 @@ public class ConfirmPasswordResetCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("NewPassword123!", "valid-token");
+        ConfirmPasswordResetCommand command = new("NewPassword123!", "valid-token", IpAddress);
 
         user.RequestPasswordReset("valid-token", TimeSpan.FromHours(1), CurrentTime);
 
@@ -83,7 +84,7 @@ public class ConfirmPasswordResetCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("NewPass123!", "wrong-token");
+        ConfirmPasswordResetCommand command = new("NewPass123!", "wrong-token", IpAddress);
 
         user.RequestPasswordReset("correct-token", TimeSpan.FromHours(1), CurrentTime);
 
@@ -110,7 +111,7 @@ public class ConfirmPasswordResetCommandHandlerTests
     public async Task Handle_Should_ReturnNotFound_When_TokenDoesNotExist()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new ConfirmPasswordResetCommand("NewPass123!", "unknown-token");
+        ConfirmPasswordResetCommand command = new("NewPass123!", "unknown-token", IpAddress);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(
                 command.Token,

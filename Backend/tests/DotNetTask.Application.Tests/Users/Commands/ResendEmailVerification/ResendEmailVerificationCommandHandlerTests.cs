@@ -19,6 +19,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.ResendEmailVerification;
 /// </summary>
 public class ResendEmailVerificationCommandHandlerTests
 {
+    private const string IpAddress = "192.168.0.1";
     private const string GeneratedToken = "secure-test-token";
     private static readonly DateTime CurrentTime = DateTime.UtcNow;
 
@@ -57,7 +58,7 @@ public class ResendEmailVerificationCommandHandlerTests
     public async Task Handle_Should_ReturnFailure_When_UserDoesNotExist()
     {
         // Arrange
-        ResendEmailVerificationCommand command = new(Guid.NewGuid());
+        ResendEmailVerificationCommand command = new(Guid.NewGuid(), IpAddress);
         this._uowMock.Setup(u => u.Users.GetByIdAsync(It.IsAny<Guid>(), false, default))
             .ReturnsAsync((UserEntity)null!);
 
@@ -80,7 +81,7 @@ public class ResendEmailVerificationCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        ResendEmailVerificationCommand command = new(user.Id);
+        ResendEmailVerificationCommand command = new(user.Id, IpAddress);
 
         user.RequestEmailVerification(GeneratedToken, TimeSpan.FromHours(1), CurrentTime);
         user.ConfirmEmailVerification(GeneratedToken, CurrentTime.AddMinutes(15));
@@ -107,7 +108,7 @@ public class ResendEmailVerificationCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        ResendEmailVerificationCommand command = new(user.Id);
+        ResendEmailVerificationCommand command = new(user.Id, IpAddress);
 
         this._uowMock.Setup(u => u.Users.GetByIdAsync(user.Id, false, default))
             .ReturnsAsync(user);

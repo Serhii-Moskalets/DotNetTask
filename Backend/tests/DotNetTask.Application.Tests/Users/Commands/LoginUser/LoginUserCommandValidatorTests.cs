@@ -10,15 +10,13 @@ namespace DotNetTask.Application.Tests.Users.Commands.LoginUser;
 /// </summary>
 public class LoginUserCommandValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly LoginUserCommandValidator _validator;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="LoginUserCommandValidatorTests"/> class.
     /// </summary>
-    public LoginUserCommandValidatorTests()
-    {
-        this._validator = new LoginUserCommandValidator();
-    }
+    public LoginUserCommandValidatorTests() => this._validator = new LoginUserCommandValidator();
 
     /// <summary>
     /// Verifies that valid data passes validation without errors.
@@ -27,7 +25,7 @@ public class LoginUserCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand("test@example.com", "Password123!");
+        LoginUserCommand command = new("test@example.com", "Password123!", IpAddress);
 
         // Act & Assert
         TestValidationResult<LoginUserCommand> result = this._validator.TestValidate(command);
@@ -44,7 +42,7 @@ public class LoginUserCommandValidatorTests
     public void Should_Have_Error_When_Email_Is_Empty(string? email)
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand(email!, "Password123!");
+        LoginUserCommand command = new(email!, "Password123!", IpAddress);
 
         // Act & Assert
         TestValidationResult<LoginUserCommand> result = this._validator.TestValidate(command);
@@ -64,7 +62,7 @@ public class LoginUserCommandValidatorTests
     public void Should_Have_Error_When_Email_Format_Is_Incorrect(string email)
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand(email, "Password123!");
+        LoginUserCommand command = new(email, "Password123!", IpAddress);
 
         // Act & Assert
         TestValidationResult<LoginUserCommand> result = this._validator.TestValidate(command);
@@ -79,7 +77,7 @@ public class LoginUserCommandValidatorTests
     public void Should_Have_Error_When_Password_Is_Empty()
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand("test@example.com", string.Empty);
+        LoginUserCommand command = new("test@example.com", string.Empty, IpAddress);
 
         // Act & Assert
         TestValidationResult<LoginUserCommand> result = this._validator.TestValidate(command);

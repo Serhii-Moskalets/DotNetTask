@@ -20,6 +20,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.LoginUser;
 /// </summary>
 public class LoginUserCommandHandlerTests
 {
+    private const string IpAddress = "192.168.0.1";
     private const string GeneratedToken = "valid_jwt_token";
     private static readonly DateTime CurrentTime = DateTime.UtcNow;
 
@@ -51,7 +52,7 @@ public class LoginUserCommandHandlerTests
     public async Task Handle_ShouldReturnSuccess_WhenCredentialsAreValid()
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand("john@test.com", "CorrectPassword123!");
+        LoginUserCommand command = new("john@test.com", "CorrectPassword123!", IpAddress);
         UserEntity user = UserEntityFactory.Create(email: command.Email);
 
         ConfirmEmail(user);
@@ -84,7 +85,7 @@ public class LoginUserCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenUserDoesNotExist()
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand("nonexistent@test.com", "any_password");
+        LoginUserCommand command = new("nonexistent@test.com", "any_password", IpAddress);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
@@ -108,7 +109,7 @@ public class LoginUserCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenPasswordIsIncorrect()
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand("john@test.com", "WrongPassword!");
+        LoginUserCommand command = new("john@test.com", "WrongPassword!", IpAddress);
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
@@ -138,7 +139,7 @@ public class LoginUserCommandHandlerTests
     public async Task Handle_ShouldReturnMustChangePassword_WhenFlagIsTrue()
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand("john@test.com", "Password123!");
+        LoginUserCommand command = new("john@test.com", "Password123!", IpAddress);
         UserEntity user = UserEntityFactory.Create();
 
         ConfirmEmail(user);
@@ -174,7 +175,7 @@ public class LoginUserCommandHandlerTests
     public async Task Handle_ShouldReturnSuccessWithUnconfirmedEmail_WhenEmailIsNotConfirmed()
     {
         // Arrange
-        LoginUserCommand command = new LoginUserCommand("john@test.com", "Password123!");
+        LoginUserCommand command = new("john@test.com", "Password123!", IpAddress);
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))

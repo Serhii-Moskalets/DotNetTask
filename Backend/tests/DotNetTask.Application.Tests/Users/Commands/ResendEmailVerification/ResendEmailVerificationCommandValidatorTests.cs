@@ -10,6 +10,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.ResendEmailVerification;
 /// </summary>
 public class ResendEmailVerificationCommandValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly ResendEmailVerificationCommandValidator _validator = new();
 
     /// <summary>
@@ -19,7 +20,7 @@ public class ResendEmailVerificationCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrage
-        ResendEmailVerificationCommand command = new ResendEmailVerificationCommand(Guid.NewGuid());
+        ResendEmailVerificationCommand command = new(Guid.NewGuid(), IpAddress);
 
         // Act & Assert
         TestValidationResult<ResendEmailVerificationCommand> result = this._validator.TestValidate(command);
@@ -33,7 +34,7 @@ public class ResendEmailVerificationCommandValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        ResendEmailVerificationCommand command = new ResendEmailVerificationCommand(Guid.Empty);
+        ResendEmailVerificationCommand command = new(Guid.Empty, IpAddress);
 
         // Act & Assert
         TestValidationResult<ResendEmailVerificationCommand> result = this._validator.TestValidate(command);

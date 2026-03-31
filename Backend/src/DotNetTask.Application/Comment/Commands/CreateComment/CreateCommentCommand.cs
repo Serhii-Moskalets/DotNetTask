@@ -1,3 +1,4 @@
+using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Messaging;
 
 namespace DotNetTask.Application.Comment.Commands.CreateComment;
@@ -14,4 +15,12 @@ namespace DotNetTask.Application.Comment.Commands.CreateComment;
 public record CreateCommentCommand(
     Guid TaskId,
     Guid UserId,
-    string Content) : ICommand<Guid>;
+    string Content) : ICommand<Guid>, IThrottledRequest
+{
+    /// <inheritdoc/>
+    /// <value>Always returns "CreateComment".</value>
+    public string ActionName => "CreateComment";
+
+    /// <inheritdoc/>
+    public string GetIdentity() => this.UserId.ToString();
+}
