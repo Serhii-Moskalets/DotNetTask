@@ -21,8 +21,5 @@ public class TokenGenerator : ITokenGenerator
     /// The generated token is suitable for use in URLs and should be
     /// practically impossible to guess or brute-force.
     /// </remarks>
-    public string GenerateSecureToken()
-    {
-        return Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
-    }
+    public string GenerateSecureToken() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 }

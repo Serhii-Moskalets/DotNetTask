@@ -22,10 +22,7 @@ public sealed partial record UserName
 
     private UserName() { }
 
-    private UserName(string value)
-    {
-        this.Value = value;
-    }
+    private UserName(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the string value of the user name.
@@ -64,10 +61,7 @@ public sealed partial record UserName
     /// Returns the string representation of the user name.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 
     [GeneratedRegex(UserNamePolicy.FormatRegex)]
     private static partial Regex UserNameRegex();

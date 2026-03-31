@@ -33,10 +33,7 @@ public class EmailSendException : Exception
     /// <param name="message">The error message that explains the reason for the exception.</param>
     /// <param name="innerException">The exception that is the cause of the current exception.</param>
     public EmailSendException(string recipientEmail, string message, Exception innerException)
-        : base(message, innerException)
-    {
-        this.RecipientEmail = recipientEmail;
-    }
+        : base(message, innerException) => this.RecipientEmail = recipientEmail;
 
     /// <summary>
     /// Gets email address of the recipient for which sending failed.

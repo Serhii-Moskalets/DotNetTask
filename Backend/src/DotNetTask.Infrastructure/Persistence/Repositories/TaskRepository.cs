@@ -199,8 +199,5 @@ public class TaskRepository(DotNetTaskDbContext context)
     /// <returns>
     /// A task that returns <c>true</c> if the user is the owner of the task; otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> IsTaskOwnerAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default)
-    {
-        return await this.DbSet.AsNoTracking().AnyAsync(x => x.Id == taskId && x.OwnerId == userId, cancellationToken);
-    }
+    public async Task<bool> IsTaskOwnerAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default) => await this.DbSet.AsNoTracking().AnyAsync(x => x.Id == taskId && x.OwnerId == userId, cancellationToken);
 }

@@ -41,6 +41,11 @@ public static class CommonPolicy
     public const string InvalidUserIdentityMessage = "Invalid user identity.";
 
     /// <summary>
+    /// The error message when the provided IP address is not in a valid format.
+    /// </summary>
+    public const string InvalidIpAddressMessage = "Invalid IP address format.";
+
+    /// <summary>
     /// The error message when search text is too long.
     /// </summary>
     public static readonly string SearchTextTooLongMessage = $"Search text cannot exceed {MaxSearchTextLength} characters.";

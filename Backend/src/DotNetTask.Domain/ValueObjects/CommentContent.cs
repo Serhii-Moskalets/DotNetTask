@@ -17,10 +17,7 @@ public record CommentContent
 
     private CommentContent() { }
 
-    private CommentContent(string value)
-    {
-        this.Value = value;
-    }
+    private CommentContent(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the underlying string value of the comment content.
@@ -63,8 +60,5 @@ public record CommentContent
     /// Returns the string representation of the comment content.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 }

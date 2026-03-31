@@ -16,10 +16,7 @@ public sealed record FirstName
 
     private FirstName() { }
 
-    private FirstName(string value)
-    {
-        this.Value = value;
-    }
+    private FirstName(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the string value of the person's first name.
@@ -55,8 +52,5 @@ public sealed record FirstName
     /// Returns the string representation of the first name.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 }

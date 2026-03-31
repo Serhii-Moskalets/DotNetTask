@@ -9,8 +9,5 @@ internal static class Setup
     /// Creates a new instance of <see cref="TestHttpContext"/> for unit testing.
     /// </summary>
     /// <returns>A new <see cref="TestHttpContext"/> instance.</returns>
-    public static TestHttpContext CreateHttpContext()
-    {
-        return new();
-    }
+    public static TestHttpContext CreateHttpContext() => new();
 }

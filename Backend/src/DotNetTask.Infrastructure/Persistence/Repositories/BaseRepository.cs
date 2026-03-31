@@ -96,8 +96,5 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity>
     /// <param name="id">The unique identifier of the entity.</param>
     /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
     /// <returns>A task that returns <c>true</c> if the entity exists; otherwise, <c>false</c>.</returns>
-    public virtual async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        return await this.DbSet.AsNoTracking().AnyAsync(e => e.Id == id, cancellationToken);
-    }
+    public virtual async Task<bool> ExistsAsync(Guid id, CancellationToken cancellationToken = default) => await this.DbSet.AsNoTracking().AnyAsync(e => e.Id == id, cancellationToken);
 }

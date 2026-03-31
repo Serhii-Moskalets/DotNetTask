@@ -421,8 +421,5 @@ public class UserEntity : BaseEntity
     /// <summary>
     /// Sets the new security stamp.
     /// </summary>
-    private void UpdateSecurityStamp()
-    {
-        this.SecurityStamp = SecurityStamp.New();
-    }
+    private void UpdateSecurityStamp() => this.SecurityStamp = SecurityStamp.New();
 }

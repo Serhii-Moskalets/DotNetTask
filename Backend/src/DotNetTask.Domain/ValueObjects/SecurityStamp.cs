@@ -31,18 +31,12 @@ public record SecurityStamp
     /// Generates a new unique security stamp using a GUID.
     /// </summary>
     /// <returns>A new <see cref="SecurityStamp"/> instance.</returns>
-    public static SecurityStamp New()
-    {
-        return new(Guid.NewGuid().ToString());
-    }
+    public static SecurityStamp New() => new(Guid.NewGuid().ToString());
 
     /// <summary>
     /// Creates a security stamp from an existing string value.
     /// </summary>
     /// <param name="value">The security stamp string.</param>
     /// <returns>A <see cref="SecurityStamp"/> instance representing the provided value.</returns>
-    public static SecurityStamp Create(string value)
-    {
-        return new(value);
-    }
+    public static SecurityStamp Create(string value) => new(value);
 }

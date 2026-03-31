@@ -17,10 +17,7 @@ public sealed record TaskListTitle
 
     private TaskListTitle() { }
 
-    private TaskListTitle(string value)
-    {
-        this.Value = value;
-    }
+    private TaskListTitle(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the underlying string value of the task list title.
@@ -63,8 +60,5 @@ public sealed record TaskListTitle
     /// Returns a string representation of the task list title.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 }

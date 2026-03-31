@@ -113,14 +113,14 @@ csharp_preferred_modifier_order = public, private, protected, internal, static, 
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:silent
 
 # Expression‑bodied members
-csharp_style_expression_bodied_methods = false:silent
+csharp_style_expression_bodied_methods = when_on_single_line:suggestion
 csharp_style_expression_bodied_properties = true:silent
 csharp_style_expression_bodied_indexers = true:silent
 csharp_style_expression_bodied_accessors = true:silent
-csharp_style_expression_bodied_operators = false:silent
-csharp_style_expression_bodied_constructors = false:silent
+csharp_style_expression_bodied_operators = when_on_single_line:suggestion
+csharp_style_expression_bodied_constructors = when_on_single_line:suggestion
 csharp_style_expression_bodied_lambdas = true:silent
-csharp_style_expression_bodied_local_functions = false:silent
+csharp_style_expression_bodied_local_functions = when_on_single_line:suggestion
 
 # Pattern matching
 csharp_style_pattern_matching_over_is_with_cast_check = true:suggestion

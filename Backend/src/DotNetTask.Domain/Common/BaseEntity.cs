@@ -31,17 +31,11 @@ public abstract class BaseEntity
     /// Adds a domain event to the entity's internal event collection.
     /// </summary>
     /// <param name="domainEvent">The domain event to be recorded.</param>
-    public void AddDomainEvent(IDomainEvent domainEvent)
-    {
-        this._domainEvents.Add(domainEvent);
-    }
+    public void AddDomainEvent(IDomainEvent domainEvent) => this._domainEvents.Add(domainEvent);
 
     /// <summary>
     /// Clears all recorded domain events from the entity.
     /// Typically called after events have been successfully dispatched.
     /// </summary>
-    public void ClearDomainEvents()
-    {
-        this._domainEvents.Clear();
-    }
+    public void ClearDomainEvents() => this._domainEvents.Clear();
 }
