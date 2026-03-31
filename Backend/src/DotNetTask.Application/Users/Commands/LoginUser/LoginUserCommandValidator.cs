@@ -1,3 +1,4 @@
+using System.Net;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.ValueObjects;
 
@@ -28,5 +29,14 @@ public class LoginUserCommandValidator : AbstractValidator<LoginUserCommand>
 
         this.RuleFor(x => x.Password)
             .NotEmpty().WithMessage(PasswordPolicy.EmptyMessage);
+
+        this.RuleFor(x => x.IpAddress)
+            .NotEmpty().WithMessage(CommonPolicy.InvalidIpAddressMessage)
+            .Must(ip =>
+            {
+                bool isHexOrFourPart = ip.Contains(':') || ip.Split('.').Length == 4;
+                return isHexOrFourPart && IPAddress.TryParse(ip, out _);
+            })
+            .WithMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

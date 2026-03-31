@@ -1,6 +1,5 @@
 using DotNetTask.Application.Users.Commands.ConfirmPasswordReset;
 using DotNetTask.Domain.Constants;
-
 using FluentValidation.TestHelper;
 
 namespace DotNetTask.Application.Tests.Users.Commands.ConfirmPasswordReset;
@@ -11,6 +10,8 @@ namespace DotNetTask.Application.Tests.Users.Commands.ConfirmPasswordReset;
 public class ConfirmPasswordResetCommandValidatorTests
 {
     private const string IpAddress = "192.168.0.1";
+    private const string ValidPassword = "SecurePass123!";
+    private const string ValidToken = "ValidToken";
     private readonly ConfirmPasswordResetCommandValidator _validator;
 
     /// <summary>
@@ -25,10 +26,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new(
-            "SecurePass123!",
-            "ValidToken123",
-            IpAddress);
+        ConfirmPasswordResetCommand command = new(ValidPassword, ValidToken, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -42,7 +40,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Token_Is_Empty()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new("SecurePass123!", string.Empty, IpAddress);
+        ConfirmPasswordResetCommand command = new(ValidPassword, string.Empty, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -57,7 +55,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Is_Too_Short()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new("token", "Short1!", IpAddress);
+        ConfirmPasswordResetCommand command = new("Short1!", ValidToken, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -72,7 +70,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Uppercase()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new("lowercase123!", "token", IpAddress);
+        ConfirmPasswordResetCommand command = new("lowercase123!", ValidToken, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -87,7 +85,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Lowercase()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new("UPPERCASE123!", "token", IpAddress);
+        ConfirmPasswordResetCommand command = new("UPPERCASE123!", ValidToken, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -102,7 +100,7 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Number()
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new("NoNumbers!", "token", IpAddress);
+        ConfirmPasswordResetCommand command = new("NoNumbers!", ValidToken, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
@@ -120,11 +118,50 @@ public class ConfirmPasswordResetCommandValidatorTests
     public void Should_Have_Error_When_Password_Missing_Allowed_Special_Character(string password)
     {
         // Arrange
-        ConfirmPasswordResetCommand command = new("token", password, IpAddress);
+        ConfirmPasswordResetCommand command = new(password, ValidToken, IpAddress);
 
         // Act & Assert
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
               .WithErrorMessage(PasswordPolicy.SpecialCharMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an invalid IP address format triggers a validation error.
+    /// </summary>
+    /// <param name="invalidIp">The malformed IP address string.</param>
+    [Theory]
+    [InlineData("not-an-ip")]
+    [InlineData("256.256.256.256")]
+    [InlineData("192.168.1")]
+    [InlineData("...")]
+    public void Should_Have_Error_When_IpAddress_Is_Invalid(string invalidIp)
+    {
+        // Arrange
+        ConfirmPasswordResetCommand command = new(ValidPassword, ValidToken, invalidIp);
+
+        // Act
+        TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an empty IP address triggers a validation error.
+    /// </summary>
+    [Fact]
+    public void Should_Have_Error_When_IpAddress_Is_Empty()
+    {
+        // Arrange
+        ConfirmPasswordResetCommand command = new(ValidPassword, ValidToken, string.Empty);
+
+        // Act
+        TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

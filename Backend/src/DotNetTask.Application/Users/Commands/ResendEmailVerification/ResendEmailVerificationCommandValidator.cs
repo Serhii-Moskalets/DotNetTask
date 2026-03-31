@@ -1,3 +1,4 @@
+using System.Net;
 using DotNetTask.Domain.Constants;
 
 using FluentValidation;
@@ -18,5 +19,14 @@ public class ResendEmailVerificationCommandValidator : AbstractValidator<ResendE
         this.RuleFor(x => x.UserId)
             .NotEmpty()
                 .WithMessage(UserPolicy.IdRequiredMessage);
+
+        this.RuleFor(x => x.IpAddress)
+            .NotEmpty().WithMessage(CommonPolicy.InvalidIpAddressMessage)
+            .Must(ip =>
+            {
+                bool isHexOrFourPart = ip.Contains(':') || ip.Split('.').Length == 4;
+                return isHexOrFourPart && IPAddress.TryParse(ip, out _);
+            })
+            .WithMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

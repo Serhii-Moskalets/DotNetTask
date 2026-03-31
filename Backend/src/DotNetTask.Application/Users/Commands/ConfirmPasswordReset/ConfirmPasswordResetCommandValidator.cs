@@ -1,3 +1,4 @@
+using System.Net;
 using DotNetTask.Domain.Constants;
 
 using FluentValidation;
@@ -30,5 +31,14 @@ public class ConfirmPasswordResetCommandValidator : AbstractValidator<ConfirmPas
                 .WithMessage(PasswordPolicy.NumberMessage)
             .Matches(PasswordPolicy.SpecialCharRegex)
                 .WithMessage(PasswordPolicy.SpecialCharMessage);
+
+        this.RuleFor(x => x.IpAddress)
+            .NotEmpty().WithMessage(CommonPolicy.InvalidIpAddressMessage)
+            .Must(ip =>
+            {
+                bool isHexOrFourPart = ip.Contains(':') || ip.Split('.').Length == 4;
+                return isHexOrFourPart && IPAddress.TryParse(ip, out _);
+            })
+            .WithMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

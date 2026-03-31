@@ -49,4 +49,43 @@ public class ConfirmChangeEmailValidatorTests
         result.ShouldHaveValidationErrorFor(x => x.Token)
               .WithErrorMessage(TokenPolicy.RequiredMessage);
     }
+
+    /// <summary>
+    /// Verifies that an invalid IP address format triggers a validation error.
+    /// </summary>
+    /// <param name="invalidIp">The malformed IP address string.</param>
+    [Theory]
+    [InlineData("not-an-ip")]
+    [InlineData("256.256.256.256")]
+    [InlineData("192.168.1")]
+    [InlineData("...")]
+    public void Should_Have_Error_When_IpAddress_Is_Invalid(string invalidIp)
+    {
+        // Arrange
+        ConfirmEmailChangeCommand command = new("valid-token", invalidIp);
+
+        // Act
+        TestValidationResult<ConfirmEmailChangeCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an empty IP address triggers a validation error.
+    /// </summary>
+    [Fact]
+    public void Should_Have_Error_When_IpAddress_Is_Empty()
+    {
+        // Arrange
+        ConfirmEmailChangeCommand command = new("valid-token", string.Empty);
+
+        // Act
+        TestValidationResult<ConfirmEmailChangeCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
+    }
 }

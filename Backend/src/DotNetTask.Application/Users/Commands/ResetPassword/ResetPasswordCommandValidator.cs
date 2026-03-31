@@ -1,3 +1,4 @@
+using System.Net;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.ValueObjects;
 
@@ -23,5 +24,14 @@ public class ResetPasswordCommandValidator : AbstractValidator<ResetPasswordComm
                 .WithMessage(EmailPolicy.TooLongMessage)
             .Matches(EmailPolicy.FormatRegex)
                 .WithMessage(EmailPolicy.InvalidFormatMessage);
+
+        this.RuleFor(x => x.IpAddress)
+            .NotEmpty().WithMessage(CommonPolicy.InvalidIpAddressMessage)
+            .Must(ip =>
+            {
+                bool isHexOrFourPart = ip.Contains(':') || ip.Split('.').Length == 4;
+                return isHexOrFourPart && IPAddress.TryParse(ip, out _);
+            })
+            .WithMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

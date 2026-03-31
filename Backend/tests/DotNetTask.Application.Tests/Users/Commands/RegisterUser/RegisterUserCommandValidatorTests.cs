@@ -1,7 +1,5 @@
 using DotNetTask.Application.Users.Commands.RegisterUser;
 using DotNetTask.Domain.Constants;
-using DotNetTask.Domain.ValueObjects;
-
 using FluentValidation.TestHelper;
 
 namespace DotNetTask.Application.Tests.Users.Commands.RegisterUser;
@@ -11,6 +9,11 @@ namespace DotNetTask.Application.Tests.Users.Commands.RegisterUser;
 /// </summary>
 public class RegisterUserCommandValidatorTests
 {
+    private const string FirstName = "John";
+    private const string LastName = "Doe";
+    private const string Email = "john@test.com";
+    private const string UserName = "johndoe";
+    private const string Password = "Password123!";
     private const string IpAddress = "192.168.0.1";
     private readonly RegisterUserCommandValidator _validator;
 
@@ -42,7 +45,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        RegisterUserCommand command = new("John", "Doe", "johndoe", "john@test.com", "Password123!", IpAddress);
+        RegisterUserCommand command = CreateCommend();
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -61,7 +64,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Errors_When_Fields_Are_Empty(string firstName, string userName, string email, string password)
     {
         // Arrange
-        RegisterUserCommand command = new(firstName, "Doe", userName, email, password, IpAddress);
+        RegisterUserCommand command = new(firstName, LastName, userName, email, password, IpAddress);
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -78,9 +81,9 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Errors_When_Names_Exceed_Maximum_Length()
     {
         // Arrange
-        string longFirstName = new('a', FirstName.MaxLength + 1);
-        string longLastName = new('a', LastName.MaxLength + 1);
-        RegisterUserCommand command = new(longFirstName, longLastName, "UserName", "email@example.com", "paSsword!2", IpAddress);
+        string longFirstName = new('a', Domain.ValueObjects.FirstName.MaxLength + 1);
+        string longLastName = new('a', Domain.ValueObjects.LastName.MaxLength + 1);
+        RegisterUserCommand command = CreateCommend(firstName: longFirstName, lastName: longLastName);
 
         // Act
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -100,7 +103,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Error_When_UserName_Length_Is_Invalid(string userName)
     {
         // Arrange
-        RegisterUserCommand command = new("John", "Doe", userName, "john@test.com", "Password123!", IpAddress);
+        RegisterUserCommand command = CreateCommend(userName: userName);
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -115,7 +118,7 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Error_When_UserName_Format_Is_Invalid()
     {
         // Arrange
-        RegisterUserCommand command = new("John", "Doe", "user@name!", "john@test.com", "Password123!", IpAddress);
+        RegisterUserCommand command = CreateCommend(userName: "user@name!");
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
@@ -133,11 +136,67 @@ public class RegisterUserCommandValidatorTests
     public void Should_Have_Error_When_Password_Complexity_Is_Not_Met(string password, string expectedErrorMessage)
     {
         // Arrange
-        RegisterUserCommand command = new("John", "Doe", "johndoe", "john@test.com", password, IpAddress);
+        RegisterUserCommand command = CreateCommend(password: password);
 
         // Act & Assert
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.Password)
               .WithErrorMessage(expectedErrorMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an invalid IP address format triggers a validation error.
+    /// </summary>
+    /// <param name="invalidIp">The malformed IP address string.</param>
+    [Theory]
+    [InlineData("not-an-ip")]
+    [InlineData("256.256.256.256")]
+    [InlineData("192.168.1")]
+    [InlineData("...")]
+    public void Should_Have_Error_When_IpAddress_Is_Invalid(string invalidIp)
+    {
+        // Arrange
+        RegisterUserCommand command = CreateCommend(ipAddress: invalidIp);
+
+        // Act
+        TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an empty IP address triggers a validation error.
+    /// </summary>
+    [Fact]
+    public void Should_Have_Error_When_IpAddress_Is_Empty()
+    {
+        // Arrange
+        RegisterUserCommand command = CreateCommend(ipAddress: string.Empty);
+
+        // Act
+        TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
+    }
+
+    private static RegisterUserCommand CreateCommend(
+        string? firstName = null,
+        string? lastName = null,
+        string? userName = null,
+        string? email = null,
+        string? password = null,
+        string? ipAddress = null)
+    {
+        return new RegisterUserCommand(
+            firstName ?? FirstName,
+            lastName ?? LastName,
+            userName ?? UserName,
+            email ?? Email,
+            password ?? Password,
+            ipAddress ?? IpAddress);
     }
 }
