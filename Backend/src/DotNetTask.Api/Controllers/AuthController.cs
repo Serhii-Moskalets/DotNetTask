@@ -39,7 +39,8 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
             request.LastName,
             request.UserName,
             request.Email,
-            request.Password);
+            request.Password,
+            this.GetThrottlingIdentity());
         Result<Guid> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -56,7 +57,7 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
     {
-        ConfirmEmailCommand command = new(token);
+        ConfirmEmailCommand command = new(token, this.GetThrottlingIdentity());
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -73,7 +74,7 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        LoginUserCommand command = new(request.Email, request.Password);
+        LoginUserCommand command = new(request.Email, request.Password, this.GetThrottlingIdentity());
         Result<LoginResponse> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -88,7 +89,7 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
-        ResetPasswordCommand command = new(request.Email);
+        ResetPasswordCommand command = new(request.Email, this.GetThrottlingIdentity());
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -105,7 +106,7 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResetPassword([FromBody] ConfirmPasswordResetRequest request)
     {
-        ConfirmPasswordResetCommand command = new(request.NewPassword, request.Token);
+        ConfirmPasswordResetCommand command = new(request.NewPassword, request.Token, this.GetThrottlingIdentity());
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

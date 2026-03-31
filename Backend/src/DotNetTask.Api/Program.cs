@@ -45,7 +45,35 @@ builder.Logging.ClearProviders();
 
 builder.Host.UseSerilog();
 
-// DI
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownProxies.Clear();
+    options.KnownIPNetworks.Clear();
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        string partitionKey = httpContext.User.Identity?.Name
+                             ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                             ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+              partitionKey: partitionKey,
+              factory: _ => new FixedWindowRateLimiterOptions
+              {
+                  AutoReplenishment = true,
+                  PermitLimit = 150,
+                  Window = TimeSpan.FromMinutes(1),
+                  QueueLimit = 3,
+              });
+    });
+});
+
 builder.Services.AddProblemDetails();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
@@ -110,6 +138,8 @@ builder.Services.AddSwaggerGen(options =>
 
 WebApplication app = builder.Build();
 
+app.UseForwardedHeaders();
+
 app.UseExceptionHandler();
 
 app.UseSerilogRequestLogging(options =>
@@ -125,7 +155,6 @@ app.UseSerilogRequestLogging(options =>
     };
 });
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -135,6 +164,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
+app.UseRateLimiter();
 
 app.UseAuthorization();
 
