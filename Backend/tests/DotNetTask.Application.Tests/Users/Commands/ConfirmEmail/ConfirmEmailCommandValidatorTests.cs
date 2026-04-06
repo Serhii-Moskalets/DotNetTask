@@ -10,6 +10,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.ConfirmEmail;
 /// </summary>
 public class ConfirmEmailCommandValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
     private readonly ConfirmEmailCommandValidator _validator = new();
 
     /// <summary>
@@ -19,7 +20,7 @@ public class ConfirmEmailCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        ConfirmEmailCommand command = new ConfirmEmailCommand("secure-verification-token");
+        ConfirmEmailCommand command = new("secure-verification-token", IpAddress);
 
         // Act
         TestValidationResult<ConfirmEmailCommand> result = this._validator.TestValidate(command);
@@ -38,7 +39,7 @@ public class ConfirmEmailCommandValidatorTests
     public void Should_Have_Error_When_Token_Is_Empty(string? token)
     {
         // Arrange
-        ConfirmEmailCommand command = new ConfirmEmailCommand(token!);
+        ConfirmEmailCommand command = new(token!, IpAddress);
 
         // Act
         TestValidationResult<ConfirmEmailCommand> result = this._validator.TestValidate(command);
@@ -46,5 +47,44 @@ public class ConfirmEmailCommandValidatorTests
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Token)
               .WithErrorMessage(TokenPolicy.RequiredMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an invalid IP address format triggers a validation error.
+    /// </summary>
+    /// <param name="invalidIp">The malformed IP address string.</param>
+    [Theory]
+    [InlineData("not-an-ip")]
+    [InlineData("256.256.256.256")]
+    [InlineData("192.168.1")]
+    [InlineData("...")]
+    public void Should_Have_Error_When_IpAddress_Is_Invalid(string invalidIp)
+    {
+        // Arrange
+        ConfirmEmailCommand command = new("valid-token", invalidIp);
+
+        // Act
+        TestValidationResult<ConfirmEmailCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an empty IP address triggers a validation error.
+    /// </summary>
+    [Fact]
+    public void Should_Have_Error_When_IpAddress_Is_Empty()
+    {
+        // Arrange
+        ConfirmEmailCommand command = new("valid-token", string.Empty);
+
+        // Act
+        TestValidationResult<ConfirmEmailCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

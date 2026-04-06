@@ -1,3 +1,4 @@
+using System.Net;
 using DotNetTask.Domain.Constants;
 
 using FluentValidation;
@@ -16,5 +17,14 @@ public class ConfirmEmailChangeCommandValidator : AbstractValidator<ConfirmEmail
     {
         this.RuleFor(x => x.Token)
             .NotEmpty().WithMessage(TokenPolicy.RequiredMessage);
+
+        this.RuleFor(x => x.IpAddress)
+            .NotEmpty().WithMessage(CommonPolicy.InvalidIpAddressMessage)
+            .Must(ip =>
+            {
+                bool isHexOrFourPart = ip.Contains(':') || ip.Split('.').Length == 4;
+                return isHexOrFourPart && IPAddress.TryParse(ip, out _);
+            })
+            .WithMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

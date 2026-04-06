@@ -25,7 +25,7 @@ public class EmailService
         string confirmLink,
         CancellationToken cancellationToken = default)
     {
-        Dictionary<string, string> placeholders = new Dictionary<string, string>
+        Dictionary<string, string> placeholders = new()
         {
             { "USER_NAME", userName },
             { "VERIFY_LINK", confirmLink },
@@ -53,7 +53,7 @@ public class EmailService
         string changeLink,
         CancellationToken cancellationToken = default)
     {
-        Dictionary<string, string> placeholders = new Dictionary<string, string>
+        Dictionary<string, string> placeholders = new()
         {
             { "USER_NAME", userName },
             { "CHANGE_LINK", changeLink },
@@ -83,7 +83,7 @@ public class EmailService
         string revertLink,
         CancellationToken cancellationToken = default)
     {
-        Dictionary<string, string> placeholders = new Dictionary<string, string>
+        Dictionary<string, string> placeholders = new()
         {
             { "USER_NAME", userName },
             { "NEW_EMAIL", newEmail },
@@ -112,7 +112,7 @@ public class EmailService
         string resetLink,
         CancellationToken cancellationToken = default)
     {
-        Dictionary<string, string> placeholders = new Dictionary<string, string>
+        Dictionary<string, string> placeholders = new()
         {
             { "USER_NAME", userName },
             { "RESET_LINK", resetLink },

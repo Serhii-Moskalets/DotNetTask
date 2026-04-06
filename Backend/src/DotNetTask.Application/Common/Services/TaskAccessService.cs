@@ -15,10 +15,7 @@ public class TaskAccessService : ITaskAccessService
     /// Initializes a new instance of the <see cref="TaskAccessService"/> class.
     /// </summary>
     /// <param name="unitOfWork">The unit of work used to access repositories.</param>
-    public TaskAccessService(IUnitOfWork unitOfWork)
-    {
-        this._unitOfWork = unitOfWork;
-    }
+    public TaskAccessService(IUnitOfWork unitOfWork) => this._unitOfWork = unitOfWork;
 
     /// <summary>
     /// Determines whether a specific user has access to a given task.

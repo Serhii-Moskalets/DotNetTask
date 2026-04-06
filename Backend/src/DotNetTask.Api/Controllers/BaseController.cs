@@ -1,4 +1,5 @@
 using System.IdentityModel.Tokens.Jwt;
+using System.Net;
 using System.Security.Claims;
 using DotNetTask.Domain.Constants;
 using MediatR;
@@ -17,15 +18,13 @@ namespace DotNetTask.Api.Controllers;
 public abstract class BaseController : ControllerBase
 {
     private Guid? _currentUserId;
+    private IPAddress? _clientIpAddress;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseController"/> class.
     /// </summary>
     /// <param name="mediator">The Mediatr sender for dispatching commands and queries.</param>
-    protected BaseController(ISender mediator)
-    {
-        this.Mediator = mediator;
-    }
+    protected BaseController(ISender mediator) => this.Mediator = mediator;
 
     /// <summary>
     /// Gets the Mediatr sender for dispatching commands and queries.
@@ -40,6 +39,41 @@ public abstract class BaseController : ControllerBase
     /// for the duration of the current request.
     /// </remarks>
     protected Guid CurrentUserId => this._currentUserId ??= this.GetCurrentUserId();
+
+    /// <summary>
+    /// Gets the current user's unique identifier if authenticated, otherwise null.
+    /// </summary>
+    /// <remarks>
+    /// This property safely attempts to retrieve the user ID without throwing an exception.
+    /// </remarks>
+    protected Guid? CurrentUserIdOrNull
+    {
+        get
+        {
+            try
+            {
+                return this.CurrentUserId;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the IP address of the client making the current request.
+    /// </summary>
+    /// <remarks>
+    /// This property uses lazy initialization to retrieve and cache the client IP for the duration
+    /// of the current request.
+    /// </remarks>
+    protected IPAddress ClientIpAddress => this._clientIpAddress ??= this.GetClientIpOrUnknown();
+
+    /// <summary>
+    /// Gets the client's IP address as a string.
+    /// </summary>
+    protected string ClientIp => this.ClientIpAddress.ToString();
 
     /// <summary>
     /// Retrieves the unique identifier of the currently authenticated user from the JWT claims.
@@ -91,6 +125,12 @@ public abstract class BaseController : ControllerBase
 
         return this.CreateProblemDetails(result.Error!);
     }
+
+    /// <summary>
+    /// Retrieves the client's IP address from the current connection, or returns <see cref="IPAddress.None"/> if unavailable.
+    /// </summary>
+    /// <returns>The <see cref="IPAddress"/> of the client, or <see cref="IPAddress.None"/> if it cannot be determined.</returns>
+    protected IPAddress GetClientIpOrUnknown() => this.HttpContext.Connection.RemoteIpAddress ?? IPAddress.None;
 
     /// <summary>
     /// Creates a standardized <see cref="ProblemDetails"/> response based on the provided error.

@@ -39,10 +39,7 @@ public static partial class TaskAccessForUserMapper
     /// </summary>
     /// <param name="uta">The user-task access entity.</param>
     /// <returns>A <see cref="TaskDto"/> representing the shared task.</returns>
-    public static TaskDto Map(UserTaskAccessEntity uta)
-    {
-        return Map(uta.Task);
-    }
+    public static TaskDto Map(UserTaskAccessEntity uta) => Map(uta.Task);
 
     /// <summary>
     /// Maps a collection of <see cref="UserTaskAccessEntity"/> instances
@@ -50,8 +47,5 @@ public static partial class TaskAccessForUserMapper
     /// </summary>
     /// <param name="utaList">The collection of user-task access entities.</param>
     /// <returns>A list of <see cref="TaskDto"/> objects.</returns>
-    public static IReadOnlyCollection<TaskDto> Map(IReadOnlyCollection<UserTaskAccessEntity> utaList)
-    {
-        return utaList.Select(Map).ToList();
-    }
+    public static IReadOnlyCollection<TaskDto> Map(IReadOnlyCollection<UserTaskAccessEntity> utaList) => utaList.Select(Map).ToList();
 }

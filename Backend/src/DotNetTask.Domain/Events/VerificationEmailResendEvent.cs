@@ -9,7 +9,7 @@ namespace DotNetTask.Domain.Events;
 /// </summary>
 /// <param name="User">The user entity associated with the verification request.</param>
 /// <param name="ResendVerificationToken">The newly generated security token for email confirmation.</param>
-public record VerificationEmailResentEvent(
+public record VerificationEmailResendEvent(
     UserEntity User,
     SecurityToken ResendVerificationToken)
     : IDomainEvent;

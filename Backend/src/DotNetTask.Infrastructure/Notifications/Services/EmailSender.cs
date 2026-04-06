@@ -47,13 +47,13 @@ public class EmailSender(IOptions<EmailSettings> settings) : IEmailSender
 
         try
         {
-            MimeMessage message = new MimeMessage();
+            MimeMessage message = new();
             message.From.Add(new MailboxAddress(this._settings.FromName, this._settings.FromEmail));
             message.To.Add(MailboxAddress.Parse(toEmail));
             message.Subject = subject;
             message.Body = new BodyBuilder { HtmlBody = body }.ToMessageBody();
 
-            using SmtpClient client = new SmtpClient();
+            using SmtpClient client = new();
 
             client.Timeout = 10000;
 

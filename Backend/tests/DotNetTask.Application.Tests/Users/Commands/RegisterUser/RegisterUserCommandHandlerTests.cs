@@ -21,6 +21,8 @@ namespace DotNetTask.Application.Tests.Users.Commands.RegisterUser;
 /// </summary>
 public class RegisterUserCommandHandlerTests
 {
+    private const string IpAddress = "192.168.0.1";
+
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<ITokenGenerator> _tokenGeneratorMock;
@@ -54,7 +56,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_ShouldCreateNewUser_WhenUserDoesNotExist()
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("John", "Doe", "johndoe", "new@test.com", "Password123!");
+        RegisterUserCommand command = new("John", "Doe", "johndoe", "new@test.com", "Password123!", IpAddress);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
@@ -82,7 +84,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenEmailIsAlreadyExistAndConfirmed()
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("John", "Doe", "johndoe", "existing@test.com", "Password123!");
+        RegisterUserCommand command = new("John", "Doe", "johndoe", "existing@test.com", "Password123!", IpAddress);
         UserEntity user = UserEntityFactory.Create();
 
         typeof(UserEntity).GetProperty(nameof(UserEntity.EmailConfirmed))!.SetValue(user, true);
@@ -110,7 +112,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenUserNameTakenByAnotherUser()
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("John", "Doe", "existing_user", "john@test.com", "Password123!");
+        RegisterUserCommand command = new("John", "Doe", "existing_user", "john@test.com", "Password123!", IpAddress);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
@@ -137,7 +139,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_ShouldUpdateExistingUser_WhenEmailNotConfirmed()
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("NewName", LastName: null, "NewUsername", "newemail@exam0ple.com", this._passwordHash);
+        RegisterUserCommand command = new("NewName", LastName: null, "NewUsername", "newemail@exam0ple.com", this._passwordHash, IpAddress);
         UserEntity existingUser = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))
@@ -171,7 +173,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenEmailExistsUnconfirmedButUsernameTakenByAnotherUser()
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("John", null, "taken_by_other", "existing@test.com", "Password123!");
+        RegisterUserCommand command = new("John", null, "taken_by_other", "existing@test.com", "Password123!", IpAddress);
         UserEntity existingUser = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), false, It.IsAny<CancellationToken>()))
@@ -198,7 +200,7 @@ public class RegisterUserCommandHandlerTests
     public async Task Handle_ShouldUpdateUser_WhenEmailExistsUnconfirmedAndUsernameIsSame()
     {
         // Arrange
-        RegisterUserCommand command = new RegisterUserCommand("NewName", null, "olduser", "existing@test.com", "Password123!");
+        RegisterUserCommand command = new("NewName", null, "olduser", "existing@test.com", "Password123!", IpAddress);
         UserEntity existingUser = UserEntityFactory.Create("OldName", "olduser", "existing@test.com");
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), false, It.IsAny<CancellationToken>()))
@@ -207,7 +209,7 @@ public class RegisterUserCommandHandlerTests
         this._unitOfWorkMock.Setup(x => x.Users.ExistsByUserNameAsync(UserName.Create("olduser"), It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        string newPasswordHash = new string('b', 64);
+        string newPasswordHash = new('b', 64);
         this._passwordHasherMock.Setup(x => x.HashPassword(It.IsAny<string>())).Returns(newPasswordHash);
         this._tokenGeneratorMock.Setup(x => x.GenerateSecureToken()).Returns("new_token");
 

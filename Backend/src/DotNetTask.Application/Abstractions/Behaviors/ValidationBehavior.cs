@@ -55,6 +55,9 @@ public class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TReq
     /// <param name="errorMessage">The error message to include in the result.</param>
     /// <returns>A failure result of type <typeparamref name="TResponse"/>.</returns>
     /// <exception cref="InvalidOperationException">Thrown if the Failure method cannot be found.</exception>
+    // Reflection is intentional here.
+    // TinyResult does not expose a non-generic base class or interface,
+    // so Result<T>.Failure(...) cannot be called without knowing T at compile time.
     private static TResponse CreateFailureResult(string errorMessage)
     {
         Type resultType = typeof(TResponse).GetGenericArguments()[0];

@@ -11,10 +11,7 @@ public sealed record PasswordHash
 {
     private PasswordHash() { }
 
-    private PasswordHash(string value)
-    {
-        this.Value = value;
-    }
+    private PasswordHash(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the string value of the password hash.
@@ -43,8 +40,5 @@ public sealed record PasswordHash
     /// Returns the string representation of the password hash.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 }

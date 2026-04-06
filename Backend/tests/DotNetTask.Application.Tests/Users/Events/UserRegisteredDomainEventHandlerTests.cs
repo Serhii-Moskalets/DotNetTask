@@ -45,7 +45,7 @@ public class UserRegisteredDomainEventHandlerTests
         // Arrange
         UserEntity user = UserEntityFactory.Create();
         SecurityToken token = SecurityToken.Create("test-token", TimeSpan.FromDays(1), UserTokenType.EmailVerification, CurrentTime);
-        UserRegisteredDomainEvent notification = new UserRegisteredDomainEvent(user, token);
+        UserRegisteredDomainEvent notification = new(user, token);
         string expectedLink = "https://test.com/confirm?token=test-token";
 
         this._urlProviderMock

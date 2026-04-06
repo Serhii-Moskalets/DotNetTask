@@ -6,9 +6,19 @@ namespace DotNetTask.Domain.Constants;
 public static class CommonPolicy
 {
     /// <summary>
-    /// The name of the default database connection string in the configuration.
+    /// The name of the database connection string in the configuration.
     /// </summary>
-    public const string DataBaseConnectionString = "DefaultConnection";
+    public const string DataBaseConnectionString = "DotNetTask";
+
+    /// <summary>
+    /// The name of the logging database connection string in the configuration.
+    /// </summary>
+    public const string LoggingDatabaseConnectionString = "DotNetTaskLogging";
+
+    /// <summary>
+    /// The name of the redis connection string in the configuration.
+    /// </summary>
+    public const string RedisConnectionString = "DotNetTaskRedis";
 
     /// <summary>
     /// The error message when the requested page number is less than one.
@@ -29,6 +39,11 @@ public static class CommonPolicy
     /// The error message when user id is invalid.
     /// </summary>
     public const string InvalidUserIdentityMessage = "Invalid user identity.";
+
+    /// <summary>
+    /// The error message when the provided IP address is not in a valid format.
+    /// </summary>
+    public const string InvalidIpAddressMessage = "Invalid IP address format.";
 
     /// <summary>
     /// The error message when search text is too long.

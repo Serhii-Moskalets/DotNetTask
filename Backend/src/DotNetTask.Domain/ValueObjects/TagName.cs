@@ -18,10 +18,7 @@ public record TagName
 
     private TagName() { }
 
-    private TagName(string value)
-    {
-        this.Value = value;
-    }
+    private TagName(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the underlying string value of the tag name.
@@ -64,8 +61,5 @@ public record TagName
     /// Returns the string representation of the tag name.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 }

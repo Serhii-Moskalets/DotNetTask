@@ -2,8 +2,8 @@ using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Abstractions.Messaging;
+using DotNetTask.Application.Common.Settings;
 using DotNetTask.Domain.Constants;
-using DotNetTask.Domain.Constants.Settings;
 using DotNetTask.Domain.Entities;
 
 using MediatR;
@@ -26,11 +26,11 @@ namespace DotNetTask.Application.Users.Commands.ResendEmailVerification;
 public class ResendEmailVerificationCommandHandler(
     IUnitOfWork unitOfWork,
     ITokenGenerator tokenGenerator,
-    TokenSettings tokenSettings,
+    TokenOptions tokenSettings,
     IClock clock) : HandlerBase(unitOfWork), IRequestHandler<ResendEmailVerificationCommand, Result<bool>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
-    private readonly TokenSettings _tokenSettings = tokenSettings;
+    private readonly TokenOptions _tokenSettings = tokenSettings;
     private readonly IClock _clock = clock;
 
     /// <summary>

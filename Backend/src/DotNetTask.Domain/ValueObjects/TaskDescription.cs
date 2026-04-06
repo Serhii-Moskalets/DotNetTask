@@ -16,10 +16,7 @@ public record TaskDescription
 
     private TaskDescription() { }
 
-    private TaskDescription(string value)
-    {
-        this.Value = value;
-    }
+    private TaskDescription(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the string value of the task description.
@@ -66,17 +63,11 @@ public record TaskDescription
     /// A <see cref="TaskDescription"/> instance containing the trimmed value,
     /// or <c>null</c> if <paramref name="value"/> is null, empty, or whitespace.
     /// </returns>
-    public static TaskDescription? CreateOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : Create(value);
-    }
+    public static TaskDescription? CreateOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : Create(value);
 
     /// <summary>
     /// Returns the string representation of the task descriptions.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 }

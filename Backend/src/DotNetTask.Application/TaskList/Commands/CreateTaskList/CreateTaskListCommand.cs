@@ -1,3 +1,4 @@
+using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Messaging;
 
 namespace DotNetTask.Application.TaskList.Commands.CreateTaskList;
@@ -12,6 +13,13 @@ namespace DotNetTask.Application.TaskList.Commands.CreateTaskList;
 /// The raw title of the task list.
 /// This value will be validated and converted into a <see cref="Domain.ValueObjects.TaskListTitle"/> value object.
 /// </param>
-public record CreateTaskListCommand(
-    Guid UserId,
-    string Title) : ICommand<Guid>;
+public record CreateTaskListCommand(Guid UserId, string Title)
+    : ICommand<Guid>, IThrottledRequest
+{
+    /// <inheritdoc/>
+    /// <value>Always returns "CreateTaskList".</value>
+    public string ActionName => "CreateTaskList";
+
+    /// <inheritdoc/>
+    public string GetIdentity() => this.UserId.ToString();
+}

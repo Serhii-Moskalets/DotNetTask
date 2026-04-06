@@ -40,7 +40,7 @@ public class TaskListsController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetTaskLists([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        GetTaskListsQuery query = new GetTaskListsQuery(this.CurrentUserId, page, pageSize);
+        GetTaskListsQuery query = new(this.CurrentUserId, page, pageSize);
         Result<PagedResultDto<TaskListDto>> result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -57,7 +57,7 @@ public class TaskListsController : BaseController
     [HttpPost]
     public async Task<IActionResult> CreateTaskList([FromBody] TaskListTitleRequest request)
     {
-        CreateTaskListCommand command = new CreateTaskListCommand(this.CurrentUserId, request.Title);
+        CreateTaskListCommand command = new(this.CurrentUserId, request.Title);
         Result<Guid> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
 
         if (result.IsSuccess)
@@ -79,7 +79,7 @@ public class TaskListsController : BaseController
     [HttpDelete("{taskListId:guid}")]
     public async Task<IActionResult> DeleteTaskList([FromRoute] Guid taskListId)
     {
-        DeleteTaskListCommand command = new DeleteTaskListCommand(taskListId, this.CurrentUserId);
+        DeleteTaskListCommand command = new(taskListId, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -96,7 +96,7 @@ public class TaskListsController : BaseController
     [HttpPut("{taskListId:guid}")]
     public async Task<IActionResult> UpdateTaskList([FromRoute] Guid taskListId, [FromBody] TaskListTitleRequest request)
     {
-        UpdateTaskListCommand command = new UpdateTaskListCommand(taskListId, this.CurrentUserId, request.Title);
+        UpdateTaskListCommand command = new(taskListId, this.CurrentUserId, request.Title);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
