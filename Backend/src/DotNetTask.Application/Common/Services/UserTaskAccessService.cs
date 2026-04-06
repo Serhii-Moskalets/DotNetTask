@@ -18,10 +18,7 @@ public class UserTaskAccessService : IUserTaskAccessService
     /// Initializes a new instance of the <see cref="UserTaskAccessService"/> class.
     /// </summary>
     /// <param name="unitOfWork">The unit of work used to access repositories.</param>
-    public UserTaskAccessService(IUnitOfWork unitOfWork)
-    {
-        this._unitOfWork = unitOfWork;
-    }
+    public UserTaskAccessService(IUnitOfWork unitOfWork) => this._unitOfWork = unitOfWork;
 
     /// <summary>
     /// Validates the user and task access rules before creating a new access entry.
@@ -72,8 +69,5 @@ public class UserTaskAccessService : IUserTaskAccessService
     /// <param name="userId">The user ID.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe.</param>
     /// <returns><c>true</c> if the user already has access; otherwise, <c>false</c>.</returns>
-    public async Task<bool> HasAccessAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default)
-    {
-        return await this._unitOfWork.UserTaskAccesses.ExistsAsync(taskId, userId, cancellationToken);
-    }
+    public async Task<bool> HasAccessAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default) => await this._unitOfWork.UserTaskAccesses.ExistsAsync(taskId, userId, cancellationToken);
 }

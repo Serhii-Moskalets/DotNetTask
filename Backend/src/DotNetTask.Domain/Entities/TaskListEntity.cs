@@ -47,8 +47,5 @@ public class TaskListEntity : BaseEntity
     /// Updates the taskList title.
     /// </summary>
     /// <param name="title">The new title of the taskList.</param>
-    public void UpdateTitle(TaskListTitle title)
-    {
-        this.Title = title;
-    }
+    public void UpdateTitle(TaskListTitle title) => this.Title = title;
 }

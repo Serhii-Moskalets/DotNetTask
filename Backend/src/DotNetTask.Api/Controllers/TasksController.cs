@@ -48,7 +48,7 @@ public class TasksController : BaseController
     [HttpGet("{taskId:guid}")]
     public async Task<IActionResult> GetTaskById([FromRoute] Guid taskId)
     {
-        GetTaskByIdQuery query = new GetTaskByIdQuery(this.CurrentUserId, taskId);
+        GetTaskByIdQuery query = new(this.CurrentUserId, taskId);
         Result<TaskDto> result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -61,7 +61,7 @@ public class TasksController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetTasks([FromQuery] GetTasksRequest request)
     {
-        GetTasksQuery query = new GetTasksQuery(
+        GetTasksQuery query = new(
             this.CurrentUserId,
             request.TaskListId,
             request.Page,
@@ -84,7 +84,7 @@ public class TasksController : BaseController
     [HttpGet("by-title")]
     public async Task<IActionResult> GetTasksByTitle([FromQuery] GetTaskByTitleRequest request)
     {
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(this.CurrentUserId, request.Title);
+        GetTaskByTitleQuery query = new(this.CurrentUserId, request.Title);
         Result<PagedResultDto<TaskBriefDto>> result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -102,7 +102,7 @@ public class TasksController : BaseController
     [HttpPost("task-lists/{taskListId:guid}")]
     public async Task<IActionResult> CreateTask([FromRoute] Guid taskListId, [FromBody] CreateTaskDtoRequest request)
     {
-        CreateTaskCommand command = new CreateTaskCommand(
+        CreateTaskCommand command = new(
             new CreateTaskDto
             {
                 Title = request.Title,
@@ -135,7 +135,7 @@ public class TasksController : BaseController
     [HttpPut("{taskId:guid}")]
     public async Task<IActionResult> UpdateTask([FromRoute] Guid taskId, [FromBody] UpdateTaskDtoRequest request)
     {
-        UpdateTaskCommand command = new UpdateTaskCommand(
+        UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
                 TaskId = taskId,
@@ -159,7 +159,7 @@ public class TasksController : BaseController
     [HttpDelete("{taskId:guid}")]
     public async Task<IActionResult> DeleteTask([FromRoute] Guid taskId)
     {
-        DeleteTaskCommand command = new DeleteTaskCommand(taskId, this.CurrentUserId);
+        DeleteTaskCommand command = new(taskId, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -176,7 +176,7 @@ public class TasksController : BaseController
     [HttpPut("{taskId:guid}/tags/{tagId:guid}")]
     public async Task<IActionResult> AddTagToTask([FromRoute] Guid taskId, [FromRoute] Guid tagId)
     {
-        AddTagToTaskCommand command = new AddTagToTaskCommand(taskId, this.CurrentUserId, tagId);
+        AddTagToTaskCommand command = new(taskId, this.CurrentUserId, tagId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -193,7 +193,7 @@ public class TasksController : BaseController
     [HttpDelete("{taskId:guid}/tag")]
     public async Task<IActionResult> RemoveTagFromTask([FromRoute] Guid taskId)
     {
-        RemoveTagFromTaskCommand command = new RemoveTagFromTaskCommand(taskId, this.CurrentUserId);
+        RemoveTagFromTaskCommand command = new(taskId, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -210,7 +210,7 @@ public class TasksController : BaseController
     [HttpPut("{taskId:guid}/status/{status:int}")]
     public async Task<IActionResult> ChangeTaskStatus([FromRoute] Guid taskId, [FromRoute] StatusTask status)
     {
-        ChangeTaskStatusCommand command = new ChangeTaskStatusCommand(taskId, this.CurrentUserId, status);
+        ChangeTaskStatusCommand command = new(taskId, this.CurrentUserId, status);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

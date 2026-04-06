@@ -21,6 +21,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.RevertEmail;
 /// </summary>
 public class RevertEmailChangeCommandHandlerTests
 {
+    private const string IpAddress = "192.168.0.1";
     private const string PendingEmail = "new@example.com";
     private const string RevertToken = "revert-token";
     private const string ConfirmToken = "confirm-token";
@@ -56,7 +57,7 @@ public class RevertEmailChangeCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        RevertEmailChangeCommand command = new RevertEmailChangeCommand(RevertToken);
+        RevertEmailChangeCommand command = new(RevertToken, IpAddress);
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), CurrentTime);
 
@@ -87,7 +88,7 @@ public class RevertEmailChangeCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        RevertEmailChangeCommand command = new RevertEmailChangeCommand("wrong-token");
+        RevertEmailChangeCommand command = new("wrong-token", IpAddress);
 
         user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), CurrentTime);
 
@@ -113,7 +114,7 @@ public class RevertEmailChangeCommandHandlerTests
     public async Task Handle_Should_ReturnNotFound_When_TokenDoesNotExist()
     {
         // Arrange
-        RevertEmailChangeCommand command = new RevertEmailChangeCommand("unknown-token");
+        RevertEmailChangeCommand command = new("unknown-token", IpAddress);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);

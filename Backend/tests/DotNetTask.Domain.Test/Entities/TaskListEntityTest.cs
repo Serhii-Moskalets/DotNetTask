@@ -63,8 +63,5 @@ public class TaskListEntityTest
         taskList.Title.Should().Be(newTitle);
     }
 
-    private static TaskListEntity CreateTaskListEntity(Guid? owner_id, string title = "My Task List")
-    {
-        return new(owner_id ?? Guid.NewGuid(), TaskListTitle.Create(title));
-    }
+    private static TaskListEntity CreateTaskListEntity(Guid? owner_id, string title = "My Task List") => new(owner_id ?? Guid.NewGuid(), TaskListTitle.Create(title));
 }

@@ -1,3 +1,4 @@
+using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Messaging;
 
 namespace DotNetTask.Application.Tag.Commands.CreateTag;
@@ -11,7 +12,13 @@ namespace DotNetTask.Application.Tag.Commands.CreateTag;
 /// The raw name of the tag.
 /// This value will be validated and converted into a <see cref="Domain.ValueObjects.TagName"/> object.
 /// </param>
-public record CreateTagCommand(
-    Guid UserId,
-    Guid TaskId,
-    string Name) : ICommand<Guid>;
+public record CreateTagCommand(Guid UserId, Guid TaskId, string Name)
+    : ICommand<Guid>, IThrottledRequest
+{
+    /// <inheritdoc/>
+    /// <value>Always returns "CreateTag".</value>
+    public string ActionName => "CreateTag";
+
+    /// <inheritdoc/>
+    public string GetIdentity() => this.UserId.ToString();
+}

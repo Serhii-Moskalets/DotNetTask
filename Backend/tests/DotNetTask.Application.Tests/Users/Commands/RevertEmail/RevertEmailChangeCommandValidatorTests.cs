@@ -10,6 +10,8 @@ namespace DotNetTask.Application.Tests.Users.Commands.RevertEmail;
 /// </summary>
 public class RevertEmailChangeCommandValidatorTests
 {
+    private const string IpAddress = "192.168.0.1";
+    private const string Token = "valid-token";
     private readonly RevertEmailChangeCommandValidator _validator = new();
 
     /// <summary>
@@ -20,7 +22,7 @@ public class RevertEmailChangeCommandValidatorTests
     public void Should_NotHaveError_When_CommandIsValid()
     {
         // Arrange
-        RevertEmailChangeCommand command = new RevertEmailChangeCommand("valid-token");
+        RevertEmailChangeCommand command = new(Token, IpAddress);
 
         // Act
         TestValidationResult<RevertEmailChangeCommand> result = this._validator.TestValidate(command);
@@ -39,7 +41,7 @@ public class RevertEmailChangeCommandValidatorTests
     public void Should_HaveError_When_TokenIsNullOrEmpty(string? token)
     {
         // Arrange
-        RevertEmailChangeCommand command = new RevertEmailChangeCommand(token!);
+        RevertEmailChangeCommand command = new(token!, IpAddress);
 
         // Act
         TestValidationResult<RevertEmailChangeCommand> result = this._validator.TestValidate(command);
@@ -47,5 +49,44 @@ public class RevertEmailChangeCommandValidatorTests
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Token)
               .WithErrorMessage(TokenPolicy.RequiredMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an invalid IP address format triggers a validation error.
+    /// </summary>
+    /// <param name="invalidIp">The malformed IP address string.</param>
+    [Theory]
+    [InlineData("not-an-ip")]
+    [InlineData("256.256.256.256")]
+    [InlineData("192.168.1")]
+    [InlineData("...")]
+    public void Should_Have_Error_When_IpAddress_Is_Invalid(string invalidIp)
+    {
+        // Arrange
+        RevertEmailChangeCommand command = new(Token, invalidIp);
+
+        // Act
+        TestValidationResult<RevertEmailChangeCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
+    }
+
+    /// <summary>
+    /// Verifies that an empty IP address triggers a validation error.
+    /// </summary>
+    [Fact]
+    public void Should_Have_Error_When_IpAddress_Is_Empty()
+    {
+        // Arrange
+        RevertEmailChangeCommand command = new(Token, string.Empty);
+
+        // Act
+        TestValidationResult<RevertEmailChangeCommand> result = this._validator.TestValidate(command);
+
+        // Assert
+        result.ShouldHaveValidationErrorFor(x => x.IpAddress)
+              .WithErrorMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

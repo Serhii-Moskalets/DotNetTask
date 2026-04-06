@@ -58,7 +58,7 @@ public class EmailChangeRequestedDomainEventHandlerTests
         SecurityToken confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime, newEmail);
         SecurityToken revertToken = SecurityToken.Create("revert-123", TimeSpan.FromHours(1), UserTokenType.EmailChangeRevert, CurrentTime, oldEmail);
 
-        EmailChangeRequestedDomainEvent domainEvent = new EmailChangeRequestedDomainEvent(user, confirmToken, revertToken);
+        EmailChangeRequestedDomainEvent domainEvent = new(user, confirmToken, revertToken);
 
         this._urlProviderMock.Setup(x => x.GetEmailChangeLink(It.IsAny<string>()))
             .Returns("http://confirm-link.com");
@@ -105,10 +105,58 @@ public class EmailChangeRequestedDomainEventHandlerTests
         SecurityToken confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
         SecurityToken revertToken = SecurityToken.Create("revert-123", TimeSpan.FromHours(1), UserTokenType.EmailChangeRevert, CurrentTime, metadata: null);
 
-        EmailChangeRequestedDomainEvent domainEvent = new EmailChangeRequestedDomainEvent(user, confirmToken, revertToken);
+        EmailChangeRequestedDomainEvent domainEvent = new(user, confirmToken, revertToken);
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(() =>
             this._sut.Handle(domainEvent, CancellationToken.None));
+    }
+
+    /// <summary>
+    /// Verifies that the handler throws an <see cref="ArgumentNullException"/>
+    /// when the notification event is <see langword="null"/>.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test operation.</returns>
+    [Fact]
+    public async Task Handle_ShouldThrowArgumentNullException_WhenNotificationIsNull()
+    {
+        // Act & Assert
+        Func<Task> act = () => this._sut.Handle(null!, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    /// <summary>
+    /// Verifies that the <see cref="CancellationToken"/> provided to the handler
+    /// is correctly propagated to the <see cref="IEmailService"/>.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test operation.</returns>
+    [Fact]
+    public async Task Handle_ShouldPassCancellationTokenToEmailService()
+    {
+        // Arrange
+        CancellationTokenSource cts = new();
+        string newEmail = "new@email.com";
+        string oldEmail = "old@email.com";
+
+        UserEntity user = UserEntityFactory.Create(email: oldEmail);
+
+        SecurityToken confirmToken = SecurityToken.Create("confirm-123", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime, newEmail);
+        SecurityToken revertToken = SecurityToken.Create("revert-123", TimeSpan.FromHours(1), UserTokenType.EmailChangeRevert, CurrentTime, oldEmail);
+
+        EmailChangeRequestedDomainEvent domainEvent = new(user, confirmToken, revertToken);
+
+        // Act
+        await this._sut.Handle(domainEvent, cts.Token);
+
+        // Assert
+        this._emailServiceMock.Verify(
+            x => x.SendEmailChangeSecurityAlertAsync(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            cts.Token), Times.Once);
     }
 }

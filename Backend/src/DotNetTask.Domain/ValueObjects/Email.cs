@@ -16,10 +16,7 @@ public sealed partial record Email
 
     private Email() { }
 
-    private Email(string value)
-    {
-        this.Value = value;
-    }
+    private Email(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the string representation of the email address.
@@ -60,10 +57,7 @@ public sealed partial record Email
     /// Returns the string representation of the email address.
     /// </summary>
     /// <returns>The email address string.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 
     [GeneratedRegex(EmailPolicy.FormatRegex, RegexOptions.IgnoreCase)]
     private static partial Regex EmailRegex();

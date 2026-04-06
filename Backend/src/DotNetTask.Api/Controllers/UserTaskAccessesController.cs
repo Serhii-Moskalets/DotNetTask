@@ -45,7 +45,7 @@ public class UserTaskAccessesController : BaseController
     [HttpGet("tasks/{taskId:guid}/shared")]
     public async Task<IActionResult> GetSharedTaskById([FromRoute] Guid taskId)
     {
-        GetSharedTaskByIdQuery query = new GetSharedTaskByIdQuery(taskId, this.CurrentUserId);
+        GetSharedTaskByIdQuery query = new(taskId, this.CurrentUserId);
         Result<TaskDto> result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -59,7 +59,7 @@ public class UserTaskAccessesController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetSharedTasksByUserId([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        GetSharedTasksByUserIdQuery query = new GetSharedTasksByUserIdQuery(this.CurrentUserId, page, pageSize);
+        GetSharedTasksByUserIdQuery query = new(this.CurrentUserId, page, pageSize);
         Result<PagedResultDto<TaskDto>> result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -74,7 +74,7 @@ public class UserTaskAccessesController : BaseController
     [HttpGet("tasks/{taskId:guid}/users")]
     public async Task<IActionResult> GetUsersWithTaskAccess([FromRoute] Guid taskId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        GetUsersWithTaskAccessQuery query = new GetUsersWithTaskAccessQuery(taskId, this.CurrentUserId, page, pageSize);
+        GetUsersWithTaskAccessQuery query = new(taskId, this.CurrentUserId, page, pageSize);
         Result<TaskAccessListDto> result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -88,7 +88,7 @@ public class UserTaskAccessesController : BaseController
     [HttpPost("tasks/{taskId:guid}/share-task")]
     public async Task<IActionResult> CreateUserTaskAccess([FromRoute] Guid taskId, [FromBody] AccessEmailRequest request)
     {
-        CreateUserTaskAccessCommand command = new CreateUserTaskAccessCommand(taskId, this.CurrentUserId, request.Email ?? string.Empty);
+        CreateUserTaskAccessCommand command = new(taskId, this.CurrentUserId, request.Email ?? string.Empty);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -102,7 +102,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("tasks/{taskId:guid}/by-email")]
     public async Task<IActionResult> DeleteTaskAccessByEmail([FromRoute] Guid taskId, [FromQuery] string? email)
     {
-        DeleteTaskAccessByUserEmailCommand command = new DeleteTaskAccessByUserEmailCommand(taskId, this.CurrentUserId, email ?? string.Empty);
+        DeleteTaskAccessByUserEmailCommand command = new(taskId, this.CurrentUserId, email ?? string.Empty);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -116,7 +116,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("tasks/{taskId:guid}/users/{userId:guid}")]
     public async Task<IActionResult> DeleteTaskAccessById([FromRoute] Guid taskId, [FromRoute] Guid userId)
     {
-        DeleteTaskAccessByIdCommand command = new DeleteTaskAccessByIdCommand(taskId, userId, this.CurrentUserId);
+        DeleteTaskAccessByIdCommand command = new(taskId, userId, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -129,7 +129,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("tasks/{taskId:guid}")]
     public async Task<IActionResult> DeleteTaskAccessesByTask([FromRoute] Guid taskId)
     {
-        DeleteTaskAccessesByTaskCommand command = new DeleteTaskAccessesByTaskCommand(taskId, this.CurrentUserId);
+        DeleteTaskAccessesByTaskCommand command = new(taskId, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -141,7 +141,7 @@ public class UserTaskAccessesController : BaseController
     [HttpDelete("users/my")]
     public async Task<IActionResult> DeleteTasksAccessesByUser()
     {
-        DeleteTaskAccessesByUserCommand command = new DeleteTaskAccessesByUserCommand(this.CurrentUserId);
+        DeleteTaskAccessesByUserCommand command = new(this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

@@ -3,8 +3,9 @@ using System.Security.Claims;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Domain.Constants;
-using DotNetTask.Domain.Constants.Settings;
 using DotNetTask.Domain.Exceptions;
+using DotNetTask.Infrastructure.Web.Options;
+using Microsoft.Extensions.Options;
 
 namespace DotNetTask.Api.Middleware;
 
@@ -17,10 +18,11 @@ namespace DotNetTask.Api.Middleware;
 /// to non-auth resources when the <c>MustChangePassword</c> flag is set.
 /// </remarks>
 /// <param name="next">The next delegate in the HTTP request pipeline.</param>
-/// <param name="authSettings">The authorization settings.</param>
-/// <param name="userSettings">The users settings.</param>
-public class UserSecurityMiddleware(RequestDelegate next, AuthSettings authSettings, UserSettings userSettings)
+/// <param name="endpointOptions">The configuration options containing allowed bypass endpoints.</param>
+public class UserSecurityMiddleware(RequestDelegate next, IOptions<ApiEndpointOptions> endpointOptions)
 {
+    private readonly ApiEndpointOptions _endpointOptions = endpointOptions.Value;
+
     /// <summary>
     /// Invokes the security verification logic for the current request.
     /// </summary>
@@ -59,7 +61,7 @@ public class UserSecurityMiddleware(RequestDelegate next, AuthSettings authSetti
 
             if (!isEmailConfirmed)
             {
-                bool isResendEmailEndpoint = context.Request.Path.StartsWithSegments(userSettings.ResendEmailVerificationEndpoint, StringComparison.OrdinalIgnoreCase);
+                bool isResendEmailEndpoint = context.Request.Path.StartsWithSegments(this._endpointOptions.ResendEmailVerificationEndpoint, StringComparison.OrdinalIgnoreCase);
 
                 if (!isResendEmailEndpoint)
                 {
@@ -69,7 +71,7 @@ public class UserSecurityMiddleware(RequestDelegate next, AuthSettings authSetti
 
             if (mustChangePassword)
             {
-                bool isChangePasswordEndpoint = context.Request.Path.StartsWithSegments(authSettings.ResetPasswordEndpoint, StringComparison.OrdinalIgnoreCase);
+                bool isChangePasswordEndpoint = context.Request.Path.StartsWithSegments(this._endpointOptions.ResetPasswordEndpoint, StringComparison.OrdinalIgnoreCase);
 
                 if (!isChangePasswordEndpoint)
                 {

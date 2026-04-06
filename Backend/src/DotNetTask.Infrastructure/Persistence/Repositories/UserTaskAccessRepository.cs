@@ -21,10 +21,7 @@ public class UserTaskAccessRepository : IUserTaskAccessRepository
     /// with the specified database context.
     /// </summary>
     /// <param name="context">The database context used for data operations.</param>
-    public UserTaskAccessRepository(DotNetTaskDbContext context)
-    {
-        this._dbSet = context.UserTaskAccesses;
-    }
+    public UserTaskAccessRepository(DotNetTaskDbContext context) => this._dbSet = context.UserTaskAccesses;
 
     /// <summary>
     /// Adds a new user-task access entry.

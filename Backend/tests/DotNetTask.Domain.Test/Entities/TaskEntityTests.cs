@@ -407,8 +407,5 @@ public class TaskEntityTests
         task.TagId.Should().Be(tagId);
     }
 
-    private static TaskEntity CreateTask(DateTime? dueDate = null, TaskDescription? description = null)
-    {
-        return new(UserId, TaskListId, Title, dueDate, description);
-    }
+    private static TaskEntity CreateTask(DateTime? dueDate = null, TaskDescription? description = null) => new(UserId, TaskListId, Title, dueDate, description);
 }

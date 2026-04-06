@@ -16,10 +16,7 @@ public sealed record LastName
 
     private LastName() { }
 
-    private LastName(string value)
-    {
-        this.Value = value;
-    }
+    private LastName(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the string value of the person's last name.
@@ -59,17 +56,11 @@ public sealed record LastName
     /// <param name="value">The string value representing the last name. If the value is null or consists only of white-space characters,
     /// the method returns null.</param>
     /// <returns>An instance of LastName if the value is valid; otherwise, null.</returns>
-    public static LastName? CreateOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : Create(value);
-    }
+    public static LastName? CreateOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : Create(value);
 
     /// <summary>
     /// Returns the string representation of the last name.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 }

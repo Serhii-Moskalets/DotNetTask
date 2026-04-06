@@ -23,10 +23,7 @@ public class TagRepository(DotNetTaskDbContext context)
     /// <param name="userId">The ID of the user who owns the tag.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns><c>true</c> if a tag with the specified name exists for the user; otherwise, <c>false</c>.</returns>
-    public Task<bool> ExistsByNameAsync(TagName name, Guid userId, CancellationToken cancellationToken = default)
-    {
-        return this.DbSet.AsNoTracking().AnyAsync(x => x.UserId == userId && x.Name == name, cancellationToken);
-    }
+    public Task<bool> ExistsByNameAsync(TagName name, Guid userId, CancellationToken cancellationToken = default) => this.DbSet.AsNoTracking().AnyAsync(x => x.UserId == userId && x.Name == name, cancellationToken);
 
     /// <summary>
     /// Retrieves all tags associated with a specific user.
@@ -86,8 +83,5 @@ public class TagRepository(DotNetTaskDbContext context)
     /// <param name="userId">The ID of the user.</param>
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns><c>true</c> if the user is the owner of the tag; otherwise, <c>false</c>.</returns>
-    public async Task<bool> IsTagOwnerAsync(Guid tagId, Guid userId, CancellationToken cancellationToken = default)
-    {
-        return await this.DbSet.AsNoTracking().AnyAsync(x => x.Id == tagId && x.UserId == userId, cancellationToken);
-    }
+    public async Task<bool> IsTagOwnerAsync(Guid tagId, Guid userId, CancellationToken cancellationToken = default) => await this.DbSet.AsNoTracking().AnyAsync(x => x.Id == tagId && x.UserId == userId, cancellationToken);
 }

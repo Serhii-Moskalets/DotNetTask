@@ -40,7 +40,7 @@ public class TaskListTasksController : BaseController
     [HttpDelete("overdue")]
     public async Task<IActionResult> DeleteOverdueTasks([FromRoute] Guid taskListId)
     {
-        DeleteOverdueTasksCommand command = new DeleteOverdueTasksCommand(taskListId, this.CurrentUserId);
+        DeleteOverdueTasksCommand command = new(taskListId, this.CurrentUserId);
         Result<int> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }

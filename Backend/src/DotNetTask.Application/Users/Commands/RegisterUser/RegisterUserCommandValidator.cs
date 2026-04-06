@@ -1,3 +1,4 @@
+using System.Net;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.ValueObjects;
 
@@ -57,5 +58,14 @@ public class RegisterUserCommandValidator : AbstractValidator<RegisterUserComman
                 .WithMessage(PasswordPolicy.NumberMessage)
             .Matches(PasswordPolicy.SpecialCharRegex)
                 .WithMessage(PasswordPolicy.SpecialCharMessage);
+
+        this.RuleFor(x => x.IpAddress)
+            .NotEmpty().WithMessage(CommonPolicy.InvalidIpAddressMessage)
+            .Must(ip =>
+            {
+                bool isHexOrFourPart = ip.Contains(':') || ip.Split('.').Length == 4;
+                return isHexOrFourPart && IPAddress.TryParse(ip, out _);
+            })
+            .WithMessage(CommonPolicy.InvalidIpAddressMessage);
     }
 }

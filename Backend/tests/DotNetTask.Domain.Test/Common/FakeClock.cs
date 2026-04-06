@@ -11,10 +11,7 @@ public class FakeClock : IClock
     /// Initializes a new instance of the <see cref="FakeClock"/> class with a specific starting time.
     /// </summary>
     /// <param name="initialTime">The starting time for the test scenario.</param>
-    public FakeClock(DateTime initialTime)
-    {
-        this.UtcNow = initialTime;
-    }
+    public FakeClock(DateTime initialTime) => this.UtcNow = initialTime;
 
     /// <summary>
     /// Gets the current mock UTC time.
@@ -25,8 +22,5 @@ public class FakeClock : IClock
     /// Manually advances the clock by a specified duration.
     /// </summary>
     /// <param name="timeSpan">The amount of time to move forward.</param>
-    public void Advance(TimeSpan timeSpan)
-    {
-        this.UtcNow = this.UtcNow.Add(timeSpan);
-    }
+    public void Advance(TimeSpan timeSpan) => this.UtcNow = this.UtcNow.Add(timeSpan);
 }

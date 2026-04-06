@@ -46,7 +46,7 @@ public class PasswordResetRequestedDomainEventHandlerTests
         UserEntity user = UserEntityFactory.Create();
 
         SecurityToken token = SecurityToken.Create("reset-token", TimeSpan.FromHours(1), Domain.Enums.UserTokenType.PasswordReset, CurrentTime);
-        PasswordResetRequestedDomainEvent notification = new PasswordResetRequestedDomainEvent(user, token);
+        PasswordResetRequestedDomainEvent notification = new(user, token);
         const string expectedLink = "https://todolist.com/reset-password?userId=...&token=...";
 
         this._urlProviderMock
@@ -77,5 +77,31 @@ public class PasswordResetRequestedDomainEventHandlerTests
 
         // Assert
         await act.Should().ThrowAsync<ArgumentNullException>();
+    }
+
+    /// <summary>
+    /// Verifies that the <see cref="CancellationToken"/> provided to the handler
+    /// is correctly propagated to the <see cref="IEmailService"/>.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test operation.</returns>
+    [Fact]
+    public async Task Handle_ShouldPassCancellationTokenToEmailService()
+    {
+        // Arrange
+        CancellationTokenSource cts = new();
+        UserEntity user = UserEntityFactory.Create();
+        SecurityToken token = SecurityToken.Create("reset-token", TimeSpan.FromHours(1), Domain.Enums.UserTokenType.PasswordReset, CurrentTime);
+        PasswordResetRequestedDomainEvent notification = new(user, token);
+
+        // Act
+        await this._sut.Handle(notification, cts.Token);
+
+        // Assert
+        this._emailServiceMock.Verify(
+            x => x.SendPasswordResetEmailAsync(
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            It.IsAny<string>(),
+            cts.Token), Times.Once);
     }
 }

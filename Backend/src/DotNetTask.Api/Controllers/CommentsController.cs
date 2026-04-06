@@ -40,7 +40,7 @@ public class CommentsController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetComments([FromRoute] Guid taskId, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        GetCommentsQuery query = new GetCommentsQuery(taskId, this.CurrentUserId, page, pageSize);
+        GetCommentsQuery query = new(taskId, this.CurrentUserId, page, pageSize);
         Result<PagedResultDto<CommentDto>> result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -58,7 +58,7 @@ public class CommentsController : BaseController
     [HttpPost]
     public async Task<IActionResult> CreateComment([FromRoute] Guid taskId, [FromBody] CommentTextRequest request)
     {
-        CreateCommentCommand command = new CreateCommentCommand(taskId, this.CurrentUserId, request.Content);
+        CreateCommentCommand command = new(taskId, this.CurrentUserId, request.Content);
         Result<Guid> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
 
         if (result.IsSuccess)
@@ -80,7 +80,7 @@ public class CommentsController : BaseController
     [HttpDelete("~/api/comments/{commentId:guid}")]
     public async Task<IActionResult> DeleteComment([FromRoute] Guid commentId)
     {
-        DeleteCommentCommand command = new DeleteCommentCommand(commentId, this.CurrentUserId);
+        DeleteCommentCommand command = new(commentId, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -97,7 +97,7 @@ public class CommentsController : BaseController
     [HttpPut("~/api/comments/{commentId:guid}")]
     public async Task<IActionResult> UpdateComment([FromRoute] Guid commentId, [FromBody] CommentTextRequest request)
     {
-        UpdateCommentCommand command = new UpdateCommentCommand(commentId, this.CurrentUserId, request.Content);
+        UpdateCommentCommand command = new(commentId, this.CurrentUserId, request.Content);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

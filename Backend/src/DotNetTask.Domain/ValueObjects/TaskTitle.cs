@@ -17,10 +17,7 @@ public sealed record TaskTitle
 
     private TaskTitle() { }
 
-    private TaskTitle(string value)
-    {
-        this.Value = value;
-    }
+    private TaskTitle(string value) => this.Value = value;
 
     /// <summary>
     /// Gets the underlying string value of the task title.
@@ -71,17 +68,11 @@ public sealed record TaskTitle
     /// A <see cref="TaskTitle"/> instance containing the trimmed value,
     /// or <c>null</c> if <paramref name="value"/> is null, empty, or whitespace.
     /// </returns>
-    public static TaskTitle? CreateOptional(string? value)
-    {
-        return string.IsNullOrWhiteSpace(value) ? null : Create(value);
-    }
+    public static TaskTitle? CreateOptional(string? value) => string.IsNullOrWhiteSpace(value) ? null : Create(value);
 
     /// <summary>
     /// Returns the string representation of the task title.
     /// </summary>
     /// <returns>The underlying string value.</returns>
-    public override string ToString()
-    {
-        return this.Value;
-    }
+    public override string ToString() => this.Value;
 }

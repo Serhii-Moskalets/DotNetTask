@@ -37,11 +37,10 @@ public class PasswordHasherTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("  ")]
-    public void HashPassword_ShouldThrowException_WhenPasswordIsInvalid(string? invalidPassword)
-    {
+    public void HashPassword_ShouldThrowException_WhenPasswordIsInvalid(string? invalidPassword) =>
+
         // Act & Assert
         Assert.ThrowsAny<ArgumentException>(() => this._hasher.HashPassword(invalidPassword!));
-    }
 
     /// <summary>
     /// Verifies that <see cref="PasswordHasher.VerifyPassword"/> returns <c>false</c>

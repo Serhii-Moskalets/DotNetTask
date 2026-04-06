@@ -31,8 +31,5 @@ internal sealed class TestHttpContext : IDisposable
     /// <summary>
     /// Disposes the underlying <see cref="MemoryStream"/>.
     /// </summary>
-    public void Dispose()
-    {
-        this.BodyStream.Dispose();
-    }
+    public void Dispose() => this.BodyStream.Dispose();
 }

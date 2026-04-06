@@ -36,7 +36,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> GetUserProfile()
     {
-        GetUserProfileQuery command = new GetUserProfileQuery(this.CurrentUserId);
+        GetUserProfileQuery command = new(this.CurrentUserId);
         Result<UserBriefDto> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -56,7 +56,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResendEmailVerification()
     {
-        ResendEmailVerificationCommand command = new ResendEmailVerificationCommand(this.CurrentUserId);
+        ResendEmailVerificationCommand command = new(this.CurrentUserId, this.ClientIp);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -77,7 +77,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailRequest request)
     {
-        ChangeEmailCommand command = new ChangeEmailCommand(request.NewEmail, this.CurrentUserId);
+        ChangeEmailCommand command = new(request.NewEmail, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -95,7 +95,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ConfirmEmailChange([FromQuery] string token)
     {
-        ConfirmEmailChangeCommand command = new ConfirmEmailChangeCommand(token);
+        ConfirmEmailChangeCommand command = new(token, this.ClientIp);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -115,7 +115,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RevertEmailChange([FromQuery] string token)
     {
-        RevertEmailChangeCommand command = new RevertEmailChangeCommand(token);
+        RevertEmailChangeCommand command = new(token, this.ClientIp);
         Result<string> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -132,7 +132,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordRequest request)
     {
-        UpdatePasswordCommand command = new UpdatePasswordCommand(request.CurrentPassword, request.NewPassword, this.CurrentUserId);
+        UpdatePasswordCommand command = new(request.CurrentPassword, request.NewPassword, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -149,7 +149,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateUsername([FromBody] UpdateUsernameRequest request)
     {
-        UpdateUsernameCommand command = new UpdateUsernameCommand(request.NewUsername, this.CurrentUserId);
+        UpdateUsernameCommand command = new(request.NewUsername, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -166,7 +166,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> UpdateUserProfile([FromBody] UpdateUserProfileRequest request)
     {
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand(request.NewFirstName, request.NewLastName, this.CurrentUserId);
+        UpdateUserProfileCommand command = new(request.NewFirstName, request.NewLastName, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

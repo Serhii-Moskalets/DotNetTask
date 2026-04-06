@@ -38,7 +38,7 @@ public class TagsController : BaseController
     [HttpGet]
     public async Task<IActionResult> GetTags([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        GetTagsQuery query = new GetTagsQuery(this.CurrentUserId, page, pageSize);
+        GetTagsQuery query = new(this.CurrentUserId, page, pageSize);
         Result<PagedResultDto<TagDto>> result = await this.Mediator.Send(query, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
@@ -52,7 +52,7 @@ public class TagsController : BaseController
     [HttpPost("{taskId:guid}")]
     public async Task<IActionResult> CreateTag([FromRoute] Guid taskId, [FromBody] TagTitleRequest request)
     {
-        CreateTagCommand command = new CreateTagCommand(this.CurrentUserId, taskId, request.Name);
+        CreateTagCommand command = new(this.CurrentUserId, taskId, request.Name);
         Result<Guid> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
 
         if (result.IsSuccess)
@@ -71,7 +71,7 @@ public class TagsController : BaseController
     [HttpDelete("{tagId:guid}")]
     public async Task<IActionResult> DeleteTag([FromRoute] Guid tagId)
     {
-        DeleteTagCommand command = new DeleteTagCommand(tagId, this.CurrentUserId);
+        DeleteTagCommand command = new(tagId, this.CurrentUserId);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }

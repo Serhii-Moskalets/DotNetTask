@@ -1,21 +1,26 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using DotNetTask.Api.Middleware;
 using DotNetTask.Application.Common.Extensions;
 using DotNetTask.Domain.Constants;
-using DotNetTask.Domain.Constants.Settings;
 using DotNetTask.Domain.Exceptions;
 using DotNetTask.Infrastructure.Extensions;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 using Serilog.Sinks.PostgreSQL;
 
+Serilog.Debugging.SelfLog.Enable(Console.Error);
+
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 string connectionString = builder.Configuration.GetConnectionString(CommonPolicy.DataBaseConnectionString)
+    ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
+
+string loggingConnectionString = builder.Configuration.GetConnectionString(CommonPolicy.LoggingDatabaseConnectionString)
     ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
 
 Dictionary<string, ColumnWriterBase> columnWriters = new()
@@ -27,38 +32,50 @@ Dictionary<string, ColumnWriterBase> columnWriters = new()
     { "Context", new PropertiesColumnWriter(NpgsqlTypes.NpgsqlDbType.Text, null) },
 };
 
-// Serilog
 Log.Logger = new LoggerConfiguration()
     .Enrich.FromLogContext()
     .WriteTo.Console()
-    .WriteTo.PostgreSQL(
-        connectionString: connectionString,
+    .WriteTo.Async(w => w.PostgreSQL(
+        connectionString: loggingConnectionString,
         tableName: "Logs",
         columnOptions: columnWriters,
-        needAutoCreateTable: true)
+        needAutoCreateTable: true))
     .CreateLogger();
 
 builder.Logging.ClearProviders();
 
 builder.Host.UseSerilog();
 
-// DI
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+    options.KnownProxies.Clear();
+    options.KnownIPNetworks.Clear();
+});
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+    {
+        string partitionKey = httpContext.User.Identity?.Name
+                             ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                             ?? "unknown";
+
+        return RateLimitPartition.GetFixedWindowLimiter(
+              partitionKey: partitionKey,
+              factory: _ => new FixedWindowRateLimiterOptions
+              {
+                  AutoReplenishment = true,
+                  PermitLimit = 150,
+                  Window = TimeSpan.FromMinutes(1),
+                  QueueLimit = 3,
+              });
+    });
+});
+
 builder.Services.AddProblemDetails();
-
-builder.Services.Configure<AuthSettings>(builder.Configuration.GetSection("Auth"));
-
-builder.Services.AddSingleton(resolver =>
-   resolver.GetRequiredService<IOptions<AuthSettings>>().Value);
-
-builder.Services.Configure<TokenSettings>(builder.Configuration.GetSection("TokenSettings"));
-
-builder.Services.AddSingleton(resolver =>
-   resolver.GetRequiredService<IOptions<TokenSettings>>().Value);
-
-builder.Services.Configure<UserSettings>(builder.Configuration.GetSection("Users"));
-
-builder.Services.AddSingleton(resolver =>
-    resolver.GetRequiredService<IOptions<UserSettings>>().Value);
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
@@ -122,6 +139,8 @@ builder.Services.AddSwaggerGen(options =>
 
 WebApplication app = builder.Build();
 
+app.UseForwardedHeaders();
+
 app.UseExceptionHandler();
 
 app.UseSerilogRequestLogging(options =>
@@ -137,7 +156,6 @@ app.UseSerilogRequestLogging(options =>
     };
 });
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -147,6 +165,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthentication();
+
+app.UseRateLimiter();
 
 app.UseAuthorization();
 
