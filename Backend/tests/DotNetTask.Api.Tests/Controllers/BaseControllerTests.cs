@@ -26,8 +26,8 @@ public static class BaseControllerTests
     public static void GetClientIpOrUnknown_ReturnsIp_WhenSet()
     {
         TestController controller = CreateController("192.168.1.100");
-        IPAddress ip = controller.GetClientIpOrUnknown();
-        ip.Should().Be(IPAddress.Parse("192.168.1.100"));
+        string ip = controller.ClientIp;
+        ip.Should().Be("192.168.1.100");
     }
 
     /// <summary>
@@ -37,39 +37,8 @@ public static class BaseControllerTests
     public static void GetClientIpOrUnknown_ReturnsNone_WhenNotSet()
     {
         TestController controller = CreateController();
-        IPAddress ip = controller.GetClientIpOrUnknown();
-        ip.Should().Be(IPAddress.None);
-    }
-
-    /// <summary>
-    /// Checks if <see cref="BaseController.GetThrottlingIdentity"/> includes both IP and User ID in Development environment.
-    /// </summary>
-    [Fact]
-    public static void GetThrottlingIdentity_Dev_IncludesUserId()
-    {
-        Guid userId = Guid.NewGuid();
-        ClaimsPrincipal claims = new(new ClaimsIdentity(
-        [
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-        ], "mock"));
-
-        TestController controller = CreateController("127.0.0.1", true, claims);
-
-        string identity = controller.GetThrottlingIdentity();
-
-        identity.Should().Contain("127.0.0.1");
-        identity.Should().Contain(userId.ToString());
-    }
-
-    /// <summary>
-    /// Verifies that in Development environment, the identity defaults to a "dev" suffix when no user is authenticated.
-    /// </summary>
-    [Fact]
-    public static void GetThrottlingIdentity_Dev_NoUser_ReturnsDevSuffix()
-    {
-        TestController controller = CreateController("127.0.0.1", true, new ClaimsPrincipal(new ClaimsIdentity()));
-        string identity = controller.GetThrottlingIdentity();
-        identity.Should().Be("127.0.0.1_dev");
+        string ip = controller.ClientIp;
+        ip.Should().Be(IPAddress.None.ToString());
     }
 
     /// <summary>
@@ -79,8 +48,8 @@ public static class BaseControllerTests
     public static void GetThrottlingIdentity_Prod_ReturnsIpOnly()
     {
         TestController controller = CreateController("10.0.0.1", false);
-        string identity = controller.GetThrottlingIdentity();
-        identity.Should().Be("10.0.0.1");
+        string ip = controller.ClientIp;
+        ip.Should().Be("10.0.0.1");
     }
 
     /// <summary>
@@ -176,9 +145,11 @@ public static class BaseControllerTests
 
         public new Guid? CurrentUserIdOrNull => base.CurrentUserIdOrNull;
 
-        public new IPAddress GetClientIpOrUnknown() => base.GetClientIpOrUnknown();
+        public new IPAddress ClientIpAddress => base.ClientIpAddress;
 
-        public new string GetThrottlingIdentity() => base.GetThrottlingIdentity();
+        public new string ClientIp => base.ClientIp;
+
+        public new IPAddress GetClientIpOrUnknown() => base.GetClientIpOrUnknown();
 
         public new IActionResult HandleResult<T>(Result<T> result) => base.HandleResult(result);
 

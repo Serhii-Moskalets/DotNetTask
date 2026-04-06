@@ -18,8 +18,7 @@ namespace DotNetTask.Api.Controllers;
 public abstract class BaseController : ControllerBase
 {
     private Guid? _currentUserId;
-
-    private IWebHostEnvironment? _environment;
+    private IPAddress? _clientIpAddress;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="BaseController"/> class.
@@ -62,7 +61,19 @@ public abstract class BaseController : ControllerBase
         }
     }
 
-    private IWebHostEnvironment Environment => this._environment ??= this.HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
+    /// <summary>
+    /// Gets the IP address of the client making the current request.
+    /// </summary>
+    /// <remarks>
+    /// This property uses lazy initialization to retrieve and cache the client IP for the duration
+    /// of the current request.
+    /// </remarks>
+    protected IPAddress ClientIpAddress => this._clientIpAddress ??= this.GetClientIpOrUnknown();
+
+    /// <summary>
+    /// Gets the client's IP address as a string.
+    /// </summary>
+    protected string ClientIp => this.ClientIpAddress.ToString();
 
     /// <summary>
     /// Retrieves the unique identifier of the currently authenticated user from the JWT claims.
@@ -120,16 +131,6 @@ public abstract class BaseController : ControllerBase
     /// </summary>
     /// <returns>The <see cref="IPAddress"/> of the client, or <see cref="IPAddress.None"/> if it cannot be determined.</returns>
     protected IPAddress GetClientIpOrUnknown() => this.HttpContext.Connection.RemoteIpAddress ?? IPAddress.None;
-
-    /// <summary>
-    /// Generates a unique identity string used for throttling rate-limits.
-    /// </summary>
-    /// <remarks>
-    /// In Development, combines IP and user ID (if available).
-    /// In Production, uses only the IP for anonymous endpoints.
-    /// </remarks>
-    /// <returns>A string representing the throttling identity, combining IP and optionally user ID in development.</returns>
-    protected string GetThrottlingIdentity() => this.GetClientIpOrUnknown().ToString();
 
     /// <summary>
     /// Creates a standardized <see cref="ProblemDetails"/> response based on the provided error.

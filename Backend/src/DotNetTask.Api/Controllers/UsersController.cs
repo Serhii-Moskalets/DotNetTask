@@ -56,7 +56,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ResendEmailVerification()
     {
-        ResendEmailVerificationCommand command = new(this.CurrentUserId, this.GetThrottlingIdentity());
+        ResendEmailVerificationCommand command = new(this.CurrentUserId, this.ClientIp);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -95,7 +95,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> ConfirmEmailChange([FromQuery] string token)
     {
-        ConfirmEmailChangeCommand command = new(token, this.GetThrottlingIdentity());
+        ConfirmEmailChangeCommand command = new(token, this.ClientIp);
         Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
@@ -115,7 +115,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> RevertEmailChange([FromQuery] string token)
     {
-        RevertEmailChangeCommand command = new(token, this.GetThrottlingIdentity());
+        RevertEmailChangeCommand command = new(token, this.ClientIp);
         Result<string> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleResult(result);
     }
