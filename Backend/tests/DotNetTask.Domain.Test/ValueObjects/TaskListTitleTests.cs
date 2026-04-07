@@ -71,7 +71,7 @@ public class TaskListTitleTests
     public void Create_ShouldThrow_WhenValueExceedsMaxLength()
     {
         // Arrange
-        string tooLong = new string('z', TaskListTitle.MaxLength + 1);
+        string tooLong = new('z', TaskListTitle.MaxLength + 1);
 
         // Act
         Action act = () => TaskListTitle.Create(tooLong);
@@ -134,7 +134,7 @@ public class TaskListTitleTests
     public void Create_Should_Work_When_LengthIsExactlyMaxLength()
     {
         // Arrange
-        string value = new string('a', TaskListTitle.MaxLength);
+        string value = new('a', TaskListTitle.MaxLength);
 
         // Act
         TaskListTitle result = TaskListTitle.Create(value);

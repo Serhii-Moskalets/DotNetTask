@@ -1,4 +1,5 @@
 using DotNetTask.Domain.Entities;
+using FluentAssertions;
 
 namespace DotNetTask.Domain.Test.Entities;
 
@@ -14,12 +15,15 @@ public class UserTaskAccessEntityTest
     [Fact]
     public void Constructor_Should_SetTaskIdAndUserId()
     {
+        // Arrange
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(taskId, userId);
+        // Act
+        UserTaskAccessEntity access = new(taskId, userId);
 
-        Assert.Equal(taskId, access.TaskId);
-        Assert.Equal(userId, access.UserId);
+        // Assert
+        access.TaskId.Should().Be(taskId);
+        access.UserId.Should().Be(userId);
     }
 }

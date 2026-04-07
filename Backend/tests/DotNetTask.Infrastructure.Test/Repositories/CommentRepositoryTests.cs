@@ -4,6 +4,7 @@ using DotNetTask.Domain.ValueObjects;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 using DotNetTask.Infrastructure.Persistence.Repositories;
 using DotNetTask.Infrastructure.Test.Helpers;
+using FluentAssertions;
 
 namespace DotNetTask.Infrastructure.Test.Repositories;
 
@@ -22,15 +23,15 @@ public class CommentRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        CommentRepository repo = new CommentRepository(context);
+        CommentRepository repo = new(context);
         Guid taskId = Guid.NewGuid();
 
         // Act
         (IReadOnlyCollection<CommentEntity>? items, int totalCount) = await repo.GetCommentsByTaskIdAsync(taskId, 1, 10);
 
         // Assert
-        Assert.Empty(items);
-        Assert.Equal(0, totalCount);
+        items.Should().BeEmpty();
+        totalCount.Should().Be(0);
     }
 
     /// <summary>
@@ -43,14 +44,14 @@ public class CommentRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        CommentRepository repo = new CommentRepository(context);
+        CommentRepository repo = new(context);
 
         UserEntity user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
         Guid taskId = Guid.NewGuid();
-        CommentEntity comment = new CommentEntity(taskId, user.Id, CommentContent.Create("Comment"));
+        CommentEntity comment = new(taskId, user.Id, CommentContent.Create("Comment"));
         await repo.AddAsync(comment);
         await context.SaveChangesAsync();
 
@@ -59,8 +60,8 @@ public class CommentRepositoryTests
 
         // Assert
         CommentEntity result = items.First();
-        Assert.NotNull(result.User);
-        Assert.Equal(UserEntityFactory.UserName, result.User.UserName.Value);
+        result.User.Should().NotBeNull();
+        result.User.UserName.Value.Should().Be(UserEntityFactory.UserName);
     }
 
     /// <summary>
@@ -73,7 +74,7 @@ public class CommentRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        CommentRepository repo = new CommentRepository(context);
+        CommentRepository repo = new(context);
         UserEntity user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
@@ -81,17 +82,18 @@ public class CommentRepositoryTests
 
         for (int i = 1; i <= 5; i++)
         {
-            CommentEntity comment = new CommentEntity(taskId, user.Id, CommentContent.Create($"Text_{i}"));
+            CommentEntity comment = new(taskId, user.Id, CommentContent.Create($"Text_{i}"));
             await repo.AddAsync(comment);
         }
 
         await context.SaveChangesAsync();
 
+        // Act
         (IReadOnlyCollection<CommentEntity>? items, int totalCount) = await repo.GetCommentsByTaskIdAsync(taskId, page: 2, pageSize: 2);
 
         // Assert
-        Assert.Equal(5, totalCount);
-        Assert.Equal(2, items.Count);
-        Assert.Equal("Text_3", items.First().Content.Value);
+        totalCount.Should().Be(5);
+        items.Count.Should().Be(2);
+        items.First().Content.Value.Should().Be("Text_3");
     }
 }

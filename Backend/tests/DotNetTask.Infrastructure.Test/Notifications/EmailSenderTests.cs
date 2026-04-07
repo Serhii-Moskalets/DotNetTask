@@ -43,7 +43,7 @@ public class EmailSenderTests
         settings.Should().NotBeNull();
         settings!.Host.Should().NotBeNullOrEmpty("Host must be loaded from local appsettings.json");
 
-        EmailSender sender = new EmailSender(Options.Create(settings));
+        EmailSender sender = new(Options.Create(settings));
 
         // Act & Assert
         const string recipient = "s.moskalets16@gmail.com";

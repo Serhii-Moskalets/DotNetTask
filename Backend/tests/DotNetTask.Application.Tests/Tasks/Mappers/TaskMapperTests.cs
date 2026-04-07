@@ -16,7 +16,6 @@ public class TaskMapperTests
 {
     private static readonly TaskTitle Title = TaskTitle.Create("Task title");
     private static readonly TaskDescription Description = TaskDescription.Create("Task description");
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Verifies that <see cref="TaskEntity"/> is correctly mapped to <see cref="TaskDto"/>
@@ -28,7 +27,7 @@ public class TaskMapperTests
         // Arrange
         Guid userId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
-        TaskEntity entity = new TaskEntity(userId, taskListId, Title, DateTime.UtcNow.AddDays(1), Description);
+        TaskEntity entity = new(userId, taskListId, Title, DateTime.UtcNow.AddDays(1), Description);
 
         // Act
         TaskDto dto = TaskMapper.Map(entity);
@@ -51,7 +50,7 @@ public class TaskMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity entity = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity entity = new(userId, Guid.NewGuid(), Title);
 
         // Act
         TaskBriefDto dto = TaskMapper.MapToBrief(entity);
@@ -71,11 +70,11 @@ public class TaskMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        List<TaskEntity> entities = new List<TaskEntity>
-        {
+        List<TaskEntity> entities =
+        [
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 1")),
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 2")),
-        };
+        ];
 
         // Act
         IReadOnlyCollection<TaskBriefDto> dtos = TaskMapper.MapToBrief(entities);
@@ -97,7 +96,7 @@ public class TaskMapperTests
 
         UserEntity user = UserEntityFactory.Create();
 
-        CommentEntity entity = new CommentEntity(taskId, user.Id, CommentContent.Create("Content"), user);
+        CommentEntity entity = new(taskId, user.Id, CommentContent.Create("Content"), user);
 
         // Act
         CommentDto dto = TaskMapper.Map(entity);

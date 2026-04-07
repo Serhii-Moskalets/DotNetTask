@@ -31,20 +31,20 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
         UserEntity user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
-        TaskListEntity taskList = new TaskListEntity(user_1.Id, TaskListTitle);
+        TaskListEntity taskList = new(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
+        TaskEntity task = new(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(task.Id, user_2.Id);
+        UserTaskAccessEntity access = new(task.Id, user_2.Id);
         await repo.AddAsync(access);
         await context.SaveChangesAsync();
 
@@ -67,20 +67,20 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
         UserEntity user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
-        TaskListEntity taskList = new TaskListEntity(user_1.Id, TaskListTitle);
+        TaskListEntity taskList = new(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
+        TaskEntity task = new(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(task.Id, user_2.Id);
+        UserTaskAccessEntity access = new(task.Id, user_2.Id);
         await repo.AddAsync(access);
         await context.SaveChangesAsync();
 
@@ -103,26 +103,26 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
         UserEntity user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
-        TaskListEntity taskList = new TaskListEntity(user_1.Id, TaskListTitle);
+        TaskListEntity taskList = new(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task_1 = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
+        TaskEntity task_1 = new(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task_1);
 
-        TaskEntity task_2 = new TaskEntity(user_2.Id, taskList.Id, TaskTitle2);
+        TaskEntity task_2 = new(user_2.Id, taskList.Id, TaskTitle2);
         await context.Tasks.AddAsync(task_2);
 
-        UserTaskAccessEntity access_1 = new UserTaskAccessEntity(task_1.Id, user_2.Id);
+        UserTaskAccessEntity access_1 = new(task_1.Id, user_2.Id);
         await repo.AddAsync(access_1);
 
-        UserTaskAccessEntity access_2 = new UserTaskAccessEntity(task_2.Id, user_1.Id);
+        UserTaskAccessEntity access_2 = new(task_2.Id, user_1.Id);
         await repo.AddAsync(access_2);
         await context.SaveChangesAsync();
 
@@ -144,26 +144,26 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user_1 = UserEntityFactory.Create();
         await context.Users.AddAsync(user_1);
         UserEntity user_2 = UserEntityFactory.Create("rick", "rickky", "rick@example.com");
         await context.Users.AddAsync(user_2);
 
-        TaskListEntity taskList = new TaskListEntity(user_1.Id, TaskListTitle);
+        TaskListEntity taskList = new(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task_1 = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
+        TaskEntity task_1 = new(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task_1);
 
-        TaskEntity task_2 = new TaskEntity(user_2.Id, taskList.Id, TaskTitle2);
+        TaskEntity task_2 = new(user_2.Id, taskList.Id, TaskTitle2);
         await context.Tasks.AddAsync(task_2);
 
-        UserTaskAccessEntity access_1 = new UserTaskAccessEntity(task_1.Id, user_2.Id);
+        UserTaskAccessEntity access_1 = new(task_1.Id, user_2.Id);
         await repo.AddAsync(access_1);
 
-        UserTaskAccessEntity access_2 = new UserTaskAccessEntity(task_2.Id, user_1.Id);
+        UserTaskAccessEntity access_2 = new(task_2.Id, user_1.Id);
         await repo.AddAsync(access_2);
         await context.SaveChangesAsync();
 
@@ -185,15 +185,15 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity owner = UserEntityFactory.Create();
         await context.Users.AddAsync(owner);
 
-        TaskListEntity taskList = new TaskListEntity(owner.Id, TaskListTitle);
+        TaskListEntity taskList = new(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task = new TaskEntity(owner.Id, taskList.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow };
+        TaskEntity task = new(owner.Id, taskList.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow };
         await context.Tasks.AddAsync(task);
 
         for (int i = 0; i < 15; i++)
@@ -228,18 +228,18 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity owner = UserEntityFactory.Create("Owner", "owner", "owner@example.com");
         UserEntity sharedUser = UserEntityFactory.Create("Shared", "shared", "shared@example.com");
         await context.Users.AddRangeAsync(owner, sharedUser);
 
-        TaskListEntity list = new TaskListEntity(owner.Id, TaskListTitle);
+        TaskListEntity list = new(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
         for (int i = 0; i < 5; i++)
         {
-            TaskEntity t = new TaskEntity(owner.Id, list.Id, TaskTitle.Create($"Task{i}")) { CreatedDate = DateTime.UtcNow.AddMinutes(i) };
+            TaskEntity t = new(owner.Id, list.Id, TaskTitle.Create($"Task{i}")) { CreatedDate = DateTime.UtcNow.AddMinutes(i) };
             await context.Tasks.AddAsync(t);
             await repo.AddAsync(new UserTaskAccessEntity(t.Id, sharedUser.Id));
         }
@@ -264,15 +264,15 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
-        TaskListEntity list = new TaskListEntity(user.Id, TaskListTitle);
+        TaskListEntity list = new(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
-        TaskEntity oldTask = new TaskEntity(user.Id, list.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow.AddDays(-1) };
-        TaskEntity newTask = new TaskEntity(user.Id, list.Id, TaskTitle2) { CreatedDate = DateTime.UtcNow };
+        TaskEntity oldTask = new(user.Id, list.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow.AddDays(-1) };
+        TaskEntity newTask = new(user.Id, list.Id, TaskTitle2) { CreatedDate = DateTime.UtcNow };
 
         await context.Tasks.AddRangeAsync(oldTask, newTask);
         await repo.AddAsync(new UserTaskAccessEntity(oldTask.Id, user.Id));
@@ -296,21 +296,21 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity owner = UserEntityFactory.Create("Owner", "owner", "owner@example.com");
         UserEntity sharedUser = UserEntityFactory.Create("Shared", "shared", "shared@example.com");
         await context.Users.AddRangeAsync(owner, sharedUser);
 
-        TaskListEntity taskList = new TaskListEntity(owner.Id, TaskListTitle);
+        TaskListEntity taskList = new(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task1 = new TaskEntity(owner.Id, taskList.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow };
-        TaskEntity task2 = new TaskEntity(owner.Id, taskList.Id, TaskTitle2) { CreatedDate = DateTime.UtcNow.AddMinutes(1) };
+        TaskEntity task1 = new(owner.Id, taskList.Id, TaskTitle1) { CreatedDate = DateTime.UtcNow };
+        TaskEntity task2 = new(owner.Id, taskList.Id, TaskTitle2) { CreatedDate = DateTime.UtcNow.AddMinutes(1) };
         await context.Tasks.AddRangeAsync(task1, task2);
 
-        UserTaskAccessEntity access1 = new UserTaskAccessEntity(task1.Id, sharedUser.Id);
-        UserTaskAccessEntity access2 = new UserTaskAccessEntity(task2.Id, sharedUser.Id);
+        UserTaskAccessEntity access1 = new(task1.Id, sharedUser.Id);
+        UserTaskAccessEntity access2 = new(task2.Id, sharedUser.Id);
         await repo.AddAsync(access1);
         await repo.AddAsync(access2);
         await context.SaveChangesAsync();
@@ -334,25 +334,25 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user = UserEntityFactory.Create("SharedUser", "user", "user@e.com");
         UserEntity owner = UserEntityFactory.Create("Owner", "owner", "owner@e.com");
         await context.Users.AddRangeAsync(user, owner);
 
-        TaskListEntity list = new TaskListEntity(owner.Id, TaskListTitle);
+        TaskListEntity list = new(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(list);
 
         TaskTitle title3 = TaskTitle.Create("Task Title 3");
 
-        TaskEntity task1 = new TaskEntity(owner.Id, list.Id, TaskTitle1);
-        TaskEntity task2 = new TaskEntity(owner.Id, list.Id, TaskTitle2);
-        TaskEntity task3 = new TaskEntity(owner.Id, list.Id, title3);
+        TaskEntity task1 = new(owner.Id, list.Id, TaskTitle1);
+        TaskEntity task2 = new(owner.Id, list.Id, TaskTitle2);
+        TaskEntity task3 = new(owner.Id, list.Id, title3);
         await context.Tasks.AddRangeAsync(task1, task2, task3);
 
-        UserTaskAccessEntity accessOld = new UserTaskAccessEntity(task1.Id, user.Id) { CreatedDate = DateTime.UtcNow.AddHours(-2) };
-        UserTaskAccessEntity accessMiddle = new UserTaskAccessEntity(task2.Id, user.Id) { CreatedDate = DateTime.UtcNow.AddHours(-1) };
-        UserTaskAccessEntity accessNew = new UserTaskAccessEntity(task3.Id, user.Id) { CreatedDate = DateTime.UtcNow };
+        UserTaskAccessEntity accessOld = new(task1.Id, user.Id) { CreatedDate = DateTime.UtcNow.AddHours(-2) };
+        UserTaskAccessEntity accessMiddle = new(task2.Id, user.Id) { CreatedDate = DateTime.UtcNow.AddHours(-1) };
+        UserTaskAccessEntity accessNew = new(task3.Id, user.Id) { CreatedDate = DateTime.UtcNow };
 
         await context.UserTaskAccesses.AddRangeAsync(accessOld, accessMiddle, accessNew);
         await context.SaveChangesAsync();
@@ -374,20 +374,22 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrenge
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user_1 = UserEntityFactory.Create("John", "john", "john@example.com");
         await context.Users.AddAsync(user_1);
         UserEntity user_2 = UserEntityFactory.Create("John2", "john2", "john2@example.com");
         await context.Users.AddAsync(user_2);
 
-        TaskListEntity taskList = new TaskListEntity(user_1.Id, TaskListTitle);
+        TaskListEntity taskList = new(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
+        TaskEntity task = new(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(task.Id, user_2.Id);
+        UserTaskAccessEntity access = new(task.Id, user_2.Id);
+
+        // Act
         await repo.AddAsync(access);
         await context.SaveChangesAsync();
 
@@ -405,20 +407,22 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user_1 = UserEntityFactory.Create("John", "john", "john@example.com");
         await context.Users.AddAsync(user_1);
         UserEntity user_2 = UserEntityFactory.Create("John2", "john2", "john2@example.com");
         await context.Users.AddAsync(user_2);
 
-        TaskListEntity taskList = new TaskListEntity(user_1.Id, TaskListTitle);
+        TaskListEntity taskList = new(user_1.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task = new TaskEntity(user_1.Id, taskList.Id, TaskTitle1);
+        TaskEntity task = new(user_1.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(task.Id, user_2.Id);
+        UserTaskAccessEntity access = new(task.Id, user_2.Id);
+
+        // Act
         await repo.AddAsync(access);
         await context.SaveChangesAsync();
 
@@ -437,18 +441,20 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
-        TaskListEntity taskList = new TaskListEntity(user.Id, TaskListTitle);
+        TaskListEntity taskList = new(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task = new TaskEntity(user.Id, taskList.Id, TaskTitle1);
+        TaskEntity task = new(user.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(task.Id, user.Id);
+        UserTaskAccessEntity access = new(task.Id, user.Id);
+
+        // Act
         await repo.AddAsync(access);
         await context.SaveChangesAsync();
 
@@ -466,7 +472,7 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         // Assert
         (await repo.ExistsByUserIdAsync(Guid.NewGuid())).Should().BeFalse();
@@ -482,17 +488,18 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
-        TaskListEntity taskList = new TaskListEntity(user.Id, TaskListTitle);
+        TaskListEntity taskList = new(user.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
 
-        TaskEntity task = new TaskEntity(user.Id, taskList.Id, TaskTitle1);
+        TaskEntity task = new(user.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
+        // Act
         await repo.AddAsync(new UserTaskAccessEntity(task.Id, user.Id));
         await context.SaveChangesAsync();
 
@@ -510,16 +517,16 @@ public class UserTaskAccessRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = SqliteInMemoryDbContextFactory.Create();
-        UserTaskAccessRepository repo = new UserTaskAccessRepository(context);
+        UserTaskAccessRepository repo = new(context);
 
         UserEntity owner = UserEntityFactory.Create();
         await context.Users.AddAsync(owner);
-        TaskListEntity taskList = new TaskListEntity(owner.Id, TaskListTitle);
+        TaskListEntity taskList = new(owner.Id, TaskListTitle);
         await context.TaskLists.AddAsync(taskList);
-        TaskEntity task = new TaskEntity(owner.Id, taskList.Id, TaskTitle1);
+        TaskEntity task = new(owner.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
-        string[] userNames = new[] { "Zebra", "Alice", "Charlie", "Bob" };
+        string[] userNames = ["Zebra", "Alice", "Charlie", "Bob"];
         foreach (string? name in userNames)
         {
             UserEntity user = UserEntityFactory.Create(name, name.ToLower(), $"{name}@ex.com");

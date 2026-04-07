@@ -5,7 +5,7 @@ using DotNetTask.Domain.ValueObjects;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 using DotNetTask.Infrastructure.Persistence.Repositories;
 using DotNetTask.Infrastructure.Test.Helpers;
-
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DotNetTask.Infrastructure.Test.Repositories;
@@ -29,7 +29,7 @@ public class UserRepositoryTests
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         UserEntity user = UserEntityFactory.Create();
 
         await context.Users.AddAsync(user);
@@ -39,7 +39,7 @@ public class UserRepositoryTests
         bool exists = await repo.ExistsByEmailAsync(user.Email);
 
         // Assert
-        Assert.True(exists);
+        exists.Should().BeTrue();
     }
 
     /// <summary>
@@ -53,7 +53,7 @@ public class UserRepositoryTests
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         UserEntity user = UserEntityFactory.Create();
 
         await context.Users.AddAsync(user);
@@ -63,7 +63,7 @@ public class UserRepositoryTests
         bool exists = await repo.ExistsByUserNameAsync(user.UserName);
 
         // Assert
-        Assert.True(exists);
+        exists.Should().BeTrue();
     }
 
     /// <summary>
@@ -77,7 +77,7 @@ public class UserRepositoryTests
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         UserEntity userEntity = UserEntityFactory.Create();
 
         await context.Users.AddAsync(userEntity);
@@ -87,8 +87,8 @@ public class UserRepositoryTests
         UserEntity? saved = await repo.GetByEmailAsync(userEntity.Email);
 
         // Assert
-        Assert.NotNull(saved);
-        Assert.Equal(userEntity.UserName, saved.UserName);
+        saved.Should().NotBeNull();
+        saved.UserName.Should().Be(userEntity.UserName);
     }
 
     /// <summary>
@@ -101,13 +101,13 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         // Act
         UserEntity? saved = await repo.GetByEmailAsync(Email.Create("john@example.com"));
 
         // Assert
-        Assert.Null(saved);
+        saved.Should().BeNull();
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         Email email = Email.Create("track@test.com");
         UserEntity user = UserEntityFactory.Create(email: email.Value);
 
@@ -135,7 +135,7 @@ public class UserRepositoryTests
 
         // Assert
         bool isTracked = context.Entry(retrievedUser!).State != EntityState.Detached;
-        Assert.True(isTracked);
+        isTracked.Should().BeTrue();
     }
 
     /// <summary>
@@ -152,7 +152,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         Email email = Email.Create("notrack@test.com");
         UserEntity user = UserEntityFactory.Create(email: email.Value);
 
@@ -165,7 +165,7 @@ public class UserRepositoryTests
 
         // Assert
         bool isTracked = context.Entry(retrievedUser!).State != EntityState.Detached;
-        Assert.False(isTracked);
+        isTracked.Should().BeFalse();
     }
 
     /// <summary>
@@ -179,7 +179,7 @@ public class UserRepositoryTests
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         UserEntity userEntity = UserEntityFactory.Create();
 
         await context.Users.AddAsync(userEntity);
@@ -189,8 +189,8 @@ public class UserRepositoryTests
         UserEntity? saved = await repo.GetByUserNameAsync(userEntity.UserName);
 
         // Assert
-        Assert.NotNull(saved);
-        Assert.Equal(userEntity.UserName, saved.UserName);
+        saved.Should().NotBeNull();
+        saved.UserName.Should().Be(userEntity.UserName);
     }
 
     /// <summary>
@@ -203,13 +203,13 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         // Act
         UserEntity? saved = await repo.GetByUserNameAsync(UserName.Create("user"));
 
         // Assert
-        Assert.Null(saved);
+        saved.Should().BeNull();
     }
 
     /// <summary>
@@ -222,7 +222,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         UserEntity user = UserEntityFactory.Create();
 
@@ -233,9 +233,9 @@ public class UserRepositoryTests
         (string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)? result = await repo.GetUsersSecurityInfoAsync(user.Id);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(user.SecurityStamp.Value, result.Value.SecurityStamp);
-        Assert.Equal(user.MustChangePassword, result.Value.MustChangePassword);
+        result.Should().NotBeNull();
+        result.Value.SecurityStamp.Should().Be(user.SecurityStamp.Value);
+        result.Value.MustChangePassword.Should().Be(user.MustChangePassword);
     }
 
     /// <summary>
@@ -248,13 +248,13 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         // Act
         (string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)? result = await repo.GetUsersSecurityInfoAsync(Guid.NewGuid());
 
         // Assert
-        Assert.Null(result);
+        result.Should().BeNull();
     }
 
     /// <summary>
@@ -267,7 +267,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         SecurityToken token = SecurityToken.Create("current-secret-code", TimeSpan.FromHours(1), UserTokenType.PasswordReset, CurrentTime);
 
@@ -281,8 +281,8 @@ public class UserRepositoryTests
         UserEntity? result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(user.Id, result.Id);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(user.Id);
     }
 
     /// <summary>
@@ -295,7 +295,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         SecurityToken token = SecurityToken.Create("revert-secret-code", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 
@@ -309,8 +309,8 @@ public class UserRepositoryTests
         UserEntity? result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.Equal(user.Id, result.Id);
+        result.Should().NotBeNull();
+        result.Id.Should().Be(user.Id);
     }
 
     /// <summary>
@@ -323,7 +323,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         SecurityToken token = SecurityToken.Create("same-code", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 
@@ -336,7 +336,7 @@ public class UserRepositoryTests
         UserEntity? result = await repo.GetBySecurityTokenAsync(token.Value, UserTokenType.PasswordReset);
 
         // Assert
-        Assert.Null(result);
+        result.Should().BeNull();
     }
 
     /// <summary>
@@ -349,7 +349,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         SecurityToken token = SecurityToken.Create("track-token", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 
@@ -364,7 +364,7 @@ public class UserRepositoryTests
         UserEntity? result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
 
         // Assert
-        Assert.NotNull(result);
-        Assert.NotEqual(EntityState.Detached, context.Entry(result).State);
+        result.Should().NotBeNull();
+        context.Entry(result).State.Should().NotBe(EntityState.Detached);
     }
 }

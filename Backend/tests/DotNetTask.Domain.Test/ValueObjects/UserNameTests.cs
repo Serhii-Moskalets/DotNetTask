@@ -40,10 +40,10 @@ public class UserNameTests
     [InlineData("   ")]
     public void Create_Should_ThrowDomainException_When_ValueIsEmpty(string? invalidInput)
     {
-        // Act
+        // Arrange
         Action act = () => UserName.Create(invalidInput!);
 
-        // Assert
+        // Act & Assert
         act.Should().Throw<DomainException>()
             .WithMessage(UserNamePolicy.EmptyMessage);
     }
@@ -55,10 +55,10 @@ public class UserNameTests
     [Fact]
     public void Create_Should_ThrowDomainException_When_LengthIsLessThanMinLength()
     {
-        // Act
+        // Arrange
         Action act = () => UserName.Create(new string('A', UserName.MinLength - 1));
 
-        // Assert
+        // Act & Assert
         act.Should().Throw<DomainException>()
             .WithMessage(UserNamePolicy.LengthMessage);
     }
@@ -70,10 +70,10 @@ public class UserNameTests
     [Fact]
     public void Create_Should_ThrowDomainException_When_LengthIsLongerThanMaxLength()
     {
-        // Act
+        // Arrange & Act
         Action act = () => UserName.Create(new string('A', UserName.MaxLength + 1));
 
-        // Assert
+        // Act & Assert
         act.Should().Throw<DomainException>()
             .WithMessage(UserNamePolicy.LengthMessage);
     }
@@ -87,8 +87,10 @@ public class UserNameTests
     [Fact]
     public void Create_Should_Work_When_LengthIsMin()
     {
-        string value = new string('A', UserName.MinLength);
+        // Arrange
+        string value = new('A', UserName.MinLength);
 
+        // Act
         UserName result = UserName.Create(value);
 
         result.Value.Should().Be(value);
@@ -104,8 +106,10 @@ public class UserNameTests
     [Fact]
     public void Create_Should_Work_When_LengthIsMax()
     {
-        string value = new string('A', UserName.MaxLength);
+        // Arrange
+        string value = new('A', UserName.MaxLength);
 
+        // Act
         UserName result = UserName.Create(value);
 
         result.Value.Should().Be(value);
@@ -123,7 +127,7 @@ public class UserNameTests
     [InlineData("user-name")]
     public void Create_Should_ThrowDomainException_When_FormatIsInvalid(string invalidFormatInput)
     {
-        // Act
+        // Arrange & Act
         Action act = () => UserName.Create(invalidFormatInput);
 
         // Assert
@@ -154,7 +158,7 @@ public class UserNameTests
     [Fact]
     public void UserNames_WithSameValue_Should_BeEqual()
     {
-        // Arrange
+        // Arrange & Act
         UserName name1 = UserName.Create("alex_smith");
         UserName name2 = UserName.Create("alex_smith");
 

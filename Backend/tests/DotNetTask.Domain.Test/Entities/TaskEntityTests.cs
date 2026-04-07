@@ -324,8 +324,10 @@ public class TaskEntityTests
     [Fact]
     public void ChangeStatus_ShouldFollowFullLifecycle()
     {
+        // Arrange
         TaskEntity task = CreateTask();
 
+        // Assert
         task.ChangeStatus(StatusTask.InProgress);
         task.ChangeStatus(StatusTask.Done);
 

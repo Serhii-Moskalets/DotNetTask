@@ -29,8 +29,10 @@ public class LoginUserCommandValidatorTests
         // Arrange
         LoginUserCommand command = new(ValidEmail, ValidPassword, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<LoginUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -46,8 +48,10 @@ public class LoginUserCommandValidatorTests
         // Arrange
         LoginUserCommand command = new(email!, ValidPassword, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<LoginUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
               .WithErrorMessage(EmailPolicy.EmptyMessage);
     }
@@ -66,8 +70,10 @@ public class LoginUserCommandValidatorTests
         // Arrange
         LoginUserCommand command = new(email, ValidPassword, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<LoginUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
               .WithErrorMessage(EmailPolicy.InvalidFormatMessage);
     }
@@ -81,8 +87,10 @@ public class LoginUserCommandValidatorTests
         // Arrange
         LoginUserCommand command = new(ValidEmail, string.Empty, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<LoginUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Password)
               .WithErrorMessage(PasswordPolicy.EmptyMessage);
     }

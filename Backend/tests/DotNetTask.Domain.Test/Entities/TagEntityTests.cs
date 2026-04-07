@@ -23,7 +23,7 @@ public class TagEntityTests
         Guid userId = Guid.NewGuid();
 
         // Act
-        TagEntity tag = new TagEntity(this._name, userId);
+        TagEntity tag = new(this._name, userId);
 
         tag.Should().NotBeNull();
         tag.UserId.Should().Be(userId);
@@ -38,7 +38,7 @@ public class TagEntityTests
     public void Constructor_ShouldInitializeTasksCollection()
     {
         // Arrange & Act
-        TagEntity tag = new TagEntity(this._name, Guid.NewGuid());
+        TagEntity tag = new(this._name, Guid.NewGuid());
 
         // Assert
         tag.Should().NotBeNull();

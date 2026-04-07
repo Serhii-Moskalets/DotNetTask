@@ -38,7 +38,7 @@ public class CreateTaskCommandHandler(
 
         TaskTitle taskTitle = TaskTitle.Create(command.Dto.Title);
 
-        TaskEntity task = new TaskEntity(
+        TaskEntity task = new(
             command.UserId,
             command.Dto.TaskListId,
             taskTitle,

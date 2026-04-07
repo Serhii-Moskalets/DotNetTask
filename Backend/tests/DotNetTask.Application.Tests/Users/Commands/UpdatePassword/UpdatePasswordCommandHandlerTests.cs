@@ -47,7 +47,7 @@ public class UpdatePasswordCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        UpdatePasswordCommand command = new UpdatePasswordCommand("OldPass123!", "NewPass123!", userId);
+        UpdatePasswordCommand command = new("OldPass123!", "NewPass123!", userId);
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
@@ -78,7 +78,7 @@ public class UpdatePasswordCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        UpdatePasswordCommand command = new UpdatePasswordCommand("OldPass!", "NewPass!", userId);
+        UpdatePasswordCommand command = new("OldPass!", "NewPass!", userId);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
@@ -102,7 +102,7 @@ public class UpdatePasswordCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        UpdatePasswordCommand command = new UpdatePasswordCommand("WrongPass!", "NewPass!", userId);
+        UpdatePasswordCommand command = new("WrongPass!", "NewPass!", userId);
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))

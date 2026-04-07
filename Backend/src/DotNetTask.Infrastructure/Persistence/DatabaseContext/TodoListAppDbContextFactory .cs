@@ -32,7 +32,7 @@ public class DotNetTaskDbContextFactory : IDesignTimeDbContextFactory<DotNetTask
         string connectionString = configuration.GetConnectionString(CommonPolicy.DataBaseConnectionString)
                 ?? throw new InvalidOperationException(CommonPolicy.MissingConnectionStringMessage);
 
-        DbContextOptionsBuilder<DotNetTaskDbContext> optionsBuilder = new DbContextOptionsBuilder<DotNetTaskDbContext>();
+        DbContextOptionsBuilder<DotNetTaskDbContext> optionsBuilder = new();
         optionsBuilder.UseNpgsql(connectionString);
 
         return new DotNetTaskDbContext(optionsBuilder.Options);

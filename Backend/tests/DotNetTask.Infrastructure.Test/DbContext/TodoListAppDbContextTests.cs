@@ -3,7 +3,7 @@ using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 using DotNetTask.Infrastructure.Test.Helpers;
-
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DotNetTask.Infrastructure.Test.DbContext;
@@ -23,16 +23,19 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_UserEntity()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-
         UserEntity user = UserEntityFactory.Create();
+
+        // Act
         context.Add(user);
         context.SaveChanges();
 
+        // Assert
         UserEntity? savedUser = context.Users.FirstOrDefault(u => u.UserName.Value == UserEntityFactory.UserName);
-        Assert.NotNull(savedUser);
-        Assert.Equal("john@example.com", savedUser.Email.Value);
-        Assert.Equal("John", savedUser.FirstName.Value);
+        savedUser.Should().NotBeNull();
+        savedUser.Email.Value.Should().Be("john@example.com");
+        savedUser.FirstName.Value.Should().Be("John");
     }
 
     /// <summary>
@@ -42,19 +45,23 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_TaskListEntity_With_User()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-
         UserEntity user = UserEntityFactory.Create();
+
         context.Add(user);
         context.SaveChanges();
 
-        TaskListEntity taskList = new TaskListEntity(user.Id, TaskListTitle);
+        TaskListEntity taskList = new(user.Id, TaskListTitle);
+
+        // Act
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
+        // Assert
         TaskListEntity? savedTaskList = context.TaskLists.FirstOrDefault(tl => tl.OwnerId == user.Id);
-        Assert.NotNull(savedTaskList);
-        Assert.Equal(TaskListTitle, savedTaskList.Title);
+        savedTaskList.Should().NotBeNull();
+        savedTaskList.Title.Should().Be(TaskListTitle);
     }
 
     /// <summary>
@@ -64,20 +71,24 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_TaskEntity_With_TaskList()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        TaskListEntity taskList = new TaskListEntity(Guid.NewGuid(), TaskListTitle);
+        TaskListEntity taskList = new(Guid.NewGuid(), TaskListTitle);
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
-        TaskEntity task = new TaskEntity(Guid.NewGuid(), taskList.Id, TaskTitle);
+        TaskEntity task = new(Guid.NewGuid(), taskList.Id, TaskTitle);
+
+        // Act
         context.Tasks.Add(task);
         context.SaveChanges();
 
+        // Assert
         TaskEntity? savedTask = context.Tasks.Include(t => t.TaskList).FirstOrDefault();
-        Assert.NotNull(savedTask);
-        Assert.Equal(TaskTitle, savedTask.Title);
-        Assert.Equal(taskList.Id, savedTask.TaskListId);
+        savedTask.Should().NotBeNull();
+        savedTask.Title.Should().Be(TaskTitle);
+        savedTask.TaskListId.Should().Be(taskList.Id);
     }
 
     /// <summary>
@@ -87,19 +98,23 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_TagEntity_With_User()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
         UserEntity user = UserEntityFactory.Create();
         context.Add(user);
         context.SaveChanges();
 
-        TagEntity tag = new TagEntity(TagName.Create("Tag"), user.Id);
+        TagEntity tag = new(TagName.Create("Tag"), user.Id);
+
+        // Act
         context.Tags.Add(tag);
         context.SaveChanges();
 
+        // Assert
         TagEntity? savedTag = context.Tags.FirstOrDefault(c => c.Id == tag.Id);
-        Assert.NotNull(savedTag);
-        Assert.Equal("Tag", savedTag.Name.Value);
+        savedTag.Should().NotBeNull();
+        savedTag.Name.Value.Should().Be("Tag");
     }
 
     /// <summary>
@@ -109,27 +124,31 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_ComentEntity_With_TaskList_User_Task()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
         UserEntity user = UserEntityFactory.Create();
         context.Add(user);
         context.SaveChanges();
 
-        TaskListEntity taskList = new TaskListEntity(user.Id, TaskListTitle);
+        TaskListEntity taskList = new(user.Id, TaskListTitle);
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
-        TaskEntity task = new TaskEntity(user.Id, taskList.Id, TaskTitle);
+        TaskEntity task = new(user.Id, taskList.Id, TaskTitle);
         context.Tasks.Add(task);
         context.SaveChanges();
 
-        CommentEntity comment = new CommentEntity(task.Id, user.Id, CommentContent.Create("Comment"));
+        CommentEntity comment = new(task.Id, user.Id, CommentContent.Create("Comment"));
+
+        // Act
         context.Comments.Add(comment);
         context.SaveChanges();
 
+        // Assert
         CommentEntity? savedComment = context.Comments.FirstOrDefault(c => c.Id == comment.Id);
-        Assert.NotNull(savedComment);
-        Assert.Equal("Comment", savedComment.Content.Value);
+        savedComment.Should().NotBeNull();
+        savedComment.Content.Value.Should().Be("Comment");
     }
 
     /// <summary>
@@ -139,18 +158,22 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_UserTaskAccess()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
         Guid userId = Guid.NewGuid();
         Guid taskId = Guid.NewGuid();
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(taskId, userId);
+        UserTaskAccessEntity access = new(taskId, userId);
+
+        // Act
         context.UserTaskAccesses.Add(access);
         context.SaveChanges();
 
+        // Assert
         UserTaskAccessEntity? savedAccess = context.UserTaskAccesses.FirstOrDefault();
-        Assert.NotNull(savedAccess);
-        Assert.Equal(userId, savedAccess.UserId);
-        Assert.Equal(taskId, savedAccess.TaskId);
+        savedAccess.Should().NotBeNull();
+        savedAccess.UserId.Should().Be(userId);
+        savedAccess.TaskId.Should().Be(taskId);
     }
 }

@@ -28,8 +28,10 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Arrange
         ConfirmPasswordResetCommand command = new(ValidPassword, ValidToken, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -42,8 +44,10 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Arrange
         ConfirmPasswordResetCommand command = new(ValidPassword, string.Empty, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Token)
               .WithErrorMessage(TokenPolicy.RequiredMessage);
     }
@@ -57,8 +61,10 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Arrange
         ConfirmPasswordResetCommand command = new("Short1!", ValidToken, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
               .WithErrorMessage(PasswordPolicy.TooShortMessage);
     }
@@ -72,8 +78,10 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Arrange
         ConfirmPasswordResetCommand command = new("lowercase123!", ValidToken, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
               .WithErrorMessage(PasswordPolicy.UppercaseMessage);
     }
@@ -87,8 +95,10 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Arrange
         ConfirmPasswordResetCommand command = new("UPPERCASE123!", ValidToken, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
               .WithErrorMessage(PasswordPolicy.LowercaseMessage);
     }
@@ -102,8 +112,10 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Arrange
         ConfirmPasswordResetCommand command = new("NoNumbers!", ValidToken, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
               .WithErrorMessage(PasswordPolicy.NumberMessage);
     }
@@ -120,8 +132,10 @@ public class ConfirmPasswordResetCommandValidatorTests
         // Arrange
         ConfirmPasswordResetCommand command = new(password, ValidToken, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ConfirmPasswordResetCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
               .WithErrorMessage(PasswordPolicy.SpecialCharMessage);
     }

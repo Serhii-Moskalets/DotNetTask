@@ -28,10 +28,10 @@ public class TaskListRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TaskListRepository repo = new TaskListRepository(context);
+        TaskListRepository repo = new(context);
 
         Guid userId = Guid.NewGuid();
-        TaskListEntity taskList = new TaskListEntity(userId, title: TaskListTitleA);
+        TaskListEntity taskList = new(userId, title: TaskListTitleA);
 
         await repo.AddAsync(taskList);
         await context.SaveChangesAsync();
@@ -53,7 +53,7 @@ public class TaskListRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TaskListRepository repo = new TaskListRepository(context);
+        TaskListRepository repo = new(context);
         Guid userId = Guid.NewGuid();
 
         // Act
@@ -73,15 +73,15 @@ public class TaskListRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TaskListRepository repo = new TaskListRepository(context);
+        TaskListRepository repo = new(context);
         Guid userId = Guid.NewGuid();
 
-        List<TaskListEntity> taskLists = new List<TaskListEntity>
-        {
+        List<TaskListEntity> taskLists =
+        [
             new (userId, TaskListTitleA),
             new (userId, TaskListTitleB),
             new (userId, TaskListTitleC),
-        };
+        ];
 
         await context.AddRangeAsync(taskLists);
         await context.SaveChangesAsync();
@@ -106,7 +106,7 @@ public class TaskListRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TaskListRepository repo = new TaskListRepository(context);
+        TaskListRepository repo = new(context);
         Guid user1 = Guid.NewGuid();
         Guid user2 = Guid.NewGuid();
 
@@ -134,12 +134,12 @@ public class TaskListRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TaskListRepository repo = new TaskListRepository(context);
+        TaskListRepository repo = new(context);
         Guid userId = Guid.NewGuid();
 
-        TaskListEntity listOld = new TaskListEntity(userId, TaskListTitleA) { CreatedDate = DateTime.UtcNow.AddMinutes(-10) };
-        TaskListEntity listMiddle = new TaskListEntity(userId, TaskListTitleB) { CreatedDate = DateTime.UtcNow.AddMinutes(-5) };
-        TaskListEntity listNew = new TaskListEntity(userId, TaskListTitleC) { CreatedDate = DateTime.UtcNow };
+        TaskListEntity listOld = new(userId, TaskListTitleA) { CreatedDate = DateTime.UtcNow.AddMinutes(-10) };
+        TaskListEntity listMiddle = new(userId, TaskListTitleB) { CreatedDate = DateTime.UtcNow.AddMinutes(-5) };
+        TaskListEntity listNew = new(userId, TaskListTitleC) { CreatedDate = DateTime.UtcNow };
 
         await context.AddRangeAsync(listMiddle, listNew, listOld);
         await context.SaveChangesAsync();
@@ -163,10 +163,10 @@ public class TaskListRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TaskListRepository repo = new TaskListRepository(context);
+        TaskListRepository repo = new(context);
 
         Guid userId = Guid.NewGuid();
-        TaskListEntity taskList = new TaskListEntity(userId, title: TaskListTitleA);
+        TaskListEntity taskList = new(userId, title: TaskListTitleA);
 
         await repo.AddAsync(taskList);
         await context.SaveChangesAsync();
@@ -189,7 +189,7 @@ public class TaskListRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TaskListRepository repo = new TaskListRepository(context);
+        TaskListRepository repo = new(context);
 
         Guid userId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
@@ -211,11 +211,11 @@ public class TaskListRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TaskListRepository repo = new TaskListRepository(context);
+        TaskListRepository repo = new(context);
 
         Guid user1 = Guid.NewGuid();
         Guid user2 = Guid.NewGuid();
-        TaskListEntity taskList = new TaskListEntity(user1, title: TaskListTitleA);
+        TaskListEntity taskList = new(user1, title: TaskListTitleA);
         await repo.AddAsync(taskList);
         await context.SaveChangesAsync();
 

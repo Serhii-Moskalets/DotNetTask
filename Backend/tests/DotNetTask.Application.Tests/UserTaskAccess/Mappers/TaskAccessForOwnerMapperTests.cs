@@ -12,8 +12,6 @@ namespace DotNetTask.Application.Tests.UserTaskAccess.Mappers;
 /// </summary>
 public class TaskAccessForOwnerMapperTests
 {
-    private readonly string _passwordHash = new('a', 64);
-
     /// <summary>
     /// Verifies that a single <see cref="UserTaskAccessEntity"/> is correctly mapped
     /// to a <see cref="UserBriefDto"/>, specifically checking the nested User properties.
@@ -26,7 +24,7 @@ public class TaskAccessForOwnerMapperTests
 
         UserEntity user = UserEntityFactory.Create();
 
-        UserTaskAccessEntity entity = new UserTaskAccessEntity(taskId, user.Id)
+        UserTaskAccessEntity entity = new(taskId, user.Id)
         {
             User = user,
         };
@@ -52,8 +50,8 @@ public class TaskAccessForOwnerMapperTests
     {
         // Arrange
         Guid taskId = Guid.NewGuid();
-        List<UserTaskAccessEntity> entities = new List<UserTaskAccessEntity>
-        {
+        List<UserTaskAccessEntity> entities =
+        [
             new(taskId, Guid.NewGuid())
             {
                 User = UserEntityFactory.Create(),
@@ -62,7 +60,7 @@ public class TaskAccessForOwnerMapperTests
             {
                 User = UserEntityFactory.Create("Rick", "ricky", "rick@test.com"),
             },
-        };
+        ];
 
         // Act
         IReadOnlyCollection<UserBriefDto> result = TaskAccessForOwnerMapper.Map(entities);
@@ -85,7 +83,7 @@ public class TaskAccessForOwnerMapperTests
     public void Map_EmptyCollection_ShouldReturnEmptyList()
     {
         // Arrange
-        List<UserTaskAccessEntity> entities = new List<UserTaskAccessEntity>();
+        List<UserTaskAccessEntity> entities = [];
 
         // Act
         IReadOnlyCollection<UserBriefDto> result = TaskAccessForOwnerMapper.Map(entities);

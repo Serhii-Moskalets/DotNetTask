@@ -23,10 +23,12 @@ public class UpdateUserProfileCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand("John", "Johnson", Guid.NewGuid());
+        UpdateUserProfileCommand command = new("John", "Johnson", Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdateUserProfileCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -41,7 +43,7 @@ public class UpdateUserProfileCommandValidatorTests
     public void Should_Have_Error_When_Names_Is_Empty(string? firstName, string? lastName)
     {
         // Arrange
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand(firstName, lastName, Guid.NewGuid());
+        UpdateUserProfileCommand command = new(firstName, lastName, Guid.NewGuid());
 
         // Act
         TestValidationResult<UpdateUserProfileCommand> result = this._validator.TestValidate(command);
@@ -59,9 +61,9 @@ public class UpdateUserProfileCommandValidatorTests
     public void Should_Have_Errors_When_Names_Exceed_Maximum_Length()
     {
         // Arrange
-        string longFirstName = new string('a', FirstName.MaxLength + 1);
-        string longLastName = new string('a', LastName.MaxLength + 1);
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand(longFirstName, longLastName, Guid.NewGuid());
+        string longFirstName = new('a', FirstName.MaxLength + 1);
+        string longLastName = new('a', LastName.MaxLength + 1);
+        UpdateUserProfileCommand command = new(longFirstName, longLastName, Guid.NewGuid());
 
         // Act
         TestValidationResult<UpdateUserProfileCommand> result = this._validator.TestValidate(command);
@@ -78,10 +80,12 @@ public class UpdateUserProfileCommandValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand("FirstName", "LastName", Guid.Empty);
+        UpdateUserProfileCommand command = new("FirstName", "LastName", Guid.Empty);
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdateUserProfileCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }

@@ -1,6 +1,6 @@
 using DotNetTask.Application.Abstractions.Interfaces.Notifications;
 using DotNetTask.Infrastructure.Notifications.Services;
-
+using FluentAssertions;
 using Moq;
 
 namespace DotNetTask.Infrastructure.Test.Notifications;
@@ -180,8 +180,11 @@ public class EmailServiceTests
             .Setup(x => x.GetEmailTemplateAsync(It.IsAny<string>(), It.IsAny<Dictionary<string, string>>()))
             .ThrowsAsync(new FileNotFoundException("Template missing"));
 
-        // Act & Assert
-        await Assert.ThrowsAsync<FileNotFoundException>(() =>
-            this._emailService.SendPasswordResetEmailAsync(Email, UserName, Link, CancellationToken.None));
+        // Act
+        Func<Task> act = () => this._emailService.SendPasswordResetEmailAsync(Email, UserName, Link, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<FileNotFoundException>()
+        .WithMessage("Template missing");
     }
 }

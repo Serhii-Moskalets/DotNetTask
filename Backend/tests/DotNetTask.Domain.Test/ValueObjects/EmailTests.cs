@@ -112,11 +112,14 @@ public class EmailTests
     [Fact]
     public void Create_Should_Work_When_LengthIsExactlyMaxLength()
     {
+        // Arrange
         int localPartLength = Email.MaxLength - "@a.com".Length;
         string value = new string('a', localPartLength) + "@a.com";
 
+        // Act
         Email result = Email.Create(value);
 
+        // Assert
         result.Value.Length.Should().Be(Email.MaxLength);
     }
 

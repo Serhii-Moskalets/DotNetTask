@@ -22,14 +22,14 @@ public class TaskAccessForUserMapperTests
         // Arrange
         Guid ownerId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(
+        TaskEntity task = new(
             ownerId,
             taskListId: Guid.NewGuid(),
             TaskTitle.Create("Shared Task"),
             dueDate: DateTime.UtcNow.AddDays(1),
             TaskDescription.Create("Task Description"));
 
-        UserTaskAccessEntity accessEntity = new UserTaskAccessEntity(task.Id, userId)
+        UserTaskAccessEntity accessEntity = new(task.Id, userId)
         {
             Task = task,
         };
@@ -55,14 +55,14 @@ public class TaskAccessForUserMapperTests
         Guid ownerId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
 
-        TaskEntity task1 = new TaskEntity(ownerId, Guid.NewGuid(), TaskTitle.Create("Task 1"));
-        TaskEntity task2 = new TaskEntity(ownerId, Guid.NewGuid(), TaskTitle.Create("Task 2"));
+        TaskEntity task1 = new(ownerId, Guid.NewGuid(), TaskTitle.Create("Task 1"));
+        TaskEntity task2 = new(ownerId, Guid.NewGuid(), TaskTitle.Create("Task 2"));
 
-        List<UserTaskAccessEntity> entities = new List<UserTaskAccessEntity>
-        {
+        List<UserTaskAccessEntity> entities =
+        [
             new(task1.Id, userId) { Task = task1 },
             new(task2.Id, userId) { Task = task2 },
-        };
+        ];
 
         // Act
         IReadOnlyCollection<TaskDto> result = TaskAccessForUserMapper.Map(entities);
@@ -80,7 +80,7 @@ public class TaskAccessForUserMapperTests
     public void Map_EmptyCollection_ShouldReturnEmptyList()
     {
         // Arrange
-        List<UserTaskAccessEntity> entities = new List<UserTaskAccessEntity>();
+        List<UserTaskAccessEntity> entities = [];
 
         // Act
         IReadOnlyCollection<TaskDto> result = TaskAccessForUserMapper.Map(entities);
@@ -97,7 +97,7 @@ public class TaskAccessForUserMapperTests
     public void Map_TaskEntityDirectly_ShouldMapToTaskDto()
     {
         // Arrange
-        TaskEntity task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), TaskTitle.Create("Direct Map"));
+        TaskEntity task = new(Guid.NewGuid(), Guid.NewGuid(), TaskTitle.Create("Direct Map"));
 
         // Act
         TaskDto result = TaskAccessForUserMapper.Map(task);

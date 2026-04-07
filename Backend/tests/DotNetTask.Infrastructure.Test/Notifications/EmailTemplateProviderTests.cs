@@ -24,7 +24,7 @@ public class EmailTemplateProviderTests
     public async Task GetEmailTemplateAsync_ShouldReplaceAllPlaceholders()
     {
         // Arrange
-        Dictionary<string, string> placeholders = new Dictionary<string, string>
+        Dictionary<string, string> placeholders = new()
         {
             { "USER_NAME", "john" },
             { "VERIFY_LINK", "https://todo-app.com/verify?token=abc" },
@@ -73,7 +73,7 @@ public class EmailTemplateProviderTests
     public async Task GetEmailTemplateAsync_ShouldHtmlEncodePlaceholderValues()
     {
         // Arrange
-        Dictionary<string, string> placeholders = new Dictionary<string, string>
+        Dictionary<string, string> placeholders = new()
         {
             { "USER_NAME", "<script>alert('xss')</script>" },
             { "VERIFY_LINK", "http://test.com" },

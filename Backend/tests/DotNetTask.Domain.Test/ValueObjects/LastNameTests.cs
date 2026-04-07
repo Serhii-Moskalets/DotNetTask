@@ -38,7 +38,7 @@ public class LastNameTests
     public void Create_Should_Work_When_LengthIsExactlyMaxLength()
     {
         // Arrange
-        string value = new string('a', LastName.MaxLength);
+        string value = new('a', LastName.MaxLength);
 
         // Act
         LastName result = LastName.Create(value);
@@ -77,8 +77,10 @@ public class LastNameTests
     [InlineData("   ")]
     public void CreateOptional_ShouldReturnNull_WhenInputIsNullOrWhiteSpace(string? input)
     {
+        // Act
         LastName? result = LastName.CreateOptional(input);
 
+        // Assert
         result.Should().BeNull();
     }
 
@@ -104,7 +106,7 @@ public class LastNameTests
     public void Create_Should_ThrowDomainException_When_NameTooLong()
     {
         // Arrange
-        string longName = new string('A', LastName.MaxLength + 1);
+        string longName = new('A', LastName.MaxLength + 1);
 
         // Act
         Action act = () => LastName.Create(longName);

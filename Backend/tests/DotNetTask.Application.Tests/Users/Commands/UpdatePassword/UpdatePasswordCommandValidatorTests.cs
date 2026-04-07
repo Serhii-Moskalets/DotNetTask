@@ -36,10 +36,12 @@ public class UpdatePasswordCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        UpdatePasswordCommand command = new UpdatePasswordCommand("OldPassword123!", "NewPassword456!", Guid.NewGuid());
+        UpdatePasswordCommand command = new("OldPassword123!", "NewPassword456!", Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -51,10 +53,12 @@ public class UpdatePasswordCommandValidatorTests
     {
         // Arrange
         string password = "SafePassword123!";
-        UpdatePasswordCommand command = new UpdatePasswordCommand(password, password, Guid.NewGuid());
+        UpdatePasswordCommand command = new(password, password, Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
             .WithErrorMessage(PasswordPolicy.SameAsOldMessage);
     }
@@ -66,10 +70,12 @@ public class UpdatePasswordCommandValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        UpdatePasswordCommand command = new UpdatePasswordCommand("OldPass123!", "NewPass456!", Guid.Empty);
+        UpdatePasswordCommand command = new("OldPass123!", "NewPass456!", Guid.Empty);
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
             .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -81,10 +87,12 @@ public class UpdatePasswordCommandValidatorTests
     public void Should_Have_Error_When_CurrentPassword_Is_Empty()
     {
         // Arrange
-        UpdatePasswordCommand command = new UpdatePasswordCommand(string.Empty, "NewPass456!", Guid.NewGuid());
+        UpdatePasswordCommand command = new(string.Empty, "NewPass456!", Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.CurrentPassword)
             .WithErrorMessage(PasswordPolicy.EmptyMessage);
     }
@@ -99,10 +107,12 @@ public class UpdatePasswordCommandValidatorTests
     public void Should_Have_Error_When_NewPassword_Complexity_Is_Not_Met(string weakPassword, string expectedMessage)
     {
         // Arrange
-        UpdatePasswordCommand command = new UpdatePasswordCommand("ValidOldPass1!", weakPassword, Guid.NewGuid());
+        UpdatePasswordCommand command = new("ValidOldPass1!", weakPassword, Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
             .WithErrorMessage(expectedMessage);
     }

@@ -18,6 +18,7 @@ Serilog.Debugging.SelfLog.Enable(Console.Error);
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateBootstrapLogger();
+
 try
 {
     WebApplicationBuilder builder = WebApplication.CreateBuilder(args);

@@ -169,7 +169,7 @@ public class UserTaskAccessServiceTests
         Guid ownerId = Guid.NewGuid();
         Guid taskId = Guid.NewGuid();
         UserEntity sharedUser = UserEntityFactory.Create();
-        TaskEntity task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
+        TaskEntity task = new(ownerId, Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
