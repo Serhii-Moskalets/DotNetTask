@@ -1,9 +1,8 @@
+using DotNetTask.Infrastructure.Notifications.Settings;
 using DotNetTask.Infrastructure.Services;
 
 using FluentAssertions;
-
-using Microsoft.Extensions.Configuration;
-
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace DotNetTask.Infrastructure.Test.Services;
@@ -17,10 +16,16 @@ public class UrlProviderTests
     private const string Url1 = "http://localhost:3000";
     private const string Url2 = "https://todolist.com";
 
+    private const string ConfirmEmailPath = "confirm-email";
+    private const string EmailChangeConfirmationPath = "confirm-email-change";
+    private const string PasswordResetPath = "reset-password";
+    private const string RevertEmailChangePath = "revert-email-change";
+
     private const string Token = "Security-token";
     private const string TokenWithSpecialCharacters = "abc/123+def==";
 
-    private readonly Mock<IConfiguration> _configurationMock;
+    private readonly Mock<IOptions<FrontendSettings>> _optionsMock;
+    private readonly FrontendSettings _settings;
     private readonly UrlProvider _sut;
 
     /// <summary>
@@ -28,13 +33,13 @@ public class UrlProviderTests
     /// </summary>
     public UrlProviderTests()
     {
-        this._configurationMock = new Mock<IConfiguration>();
+        this._optionsMock = new Mock<IOptions<FrontendSettings>>();
 
-        this._configurationMock
-            .Setup(x => x["FrontendSettings:BaseUrl"])
-            .Returns(BaseUrl);
+        this._settings = CreateFrontendSettings();
 
-        this._sut = new UrlProvider(this._configurationMock.Object);
+        this._optionsMock.Setup(x => x.Value).Returns(this._settings);
+
+        this._sut = new UrlProvider(this._optionsMock.Object);
     }
 
     /// <summary>
@@ -48,15 +53,16 @@ public class UrlProviderTests
     public void GetEmailConfirmationLink_ShouldWorkWithAnyProtocol(string baseUrl)
     {
         // Arrange
-        this._configurationMock.Setup(x => x["FrontendSettings:BaseUrl"]).Returns(baseUrl);
-        UrlProvider sut = new UrlProvider(this._configurationMock.Object);
+        this._optionsMock.Setup(x => x.Value).Returns(CreateFrontendSettings(baseUrl: baseUrl));
+
+        UrlProvider sut = new(this._optionsMock.Object);
 
         // Act
         string result = sut.GetEmailConfirmationLink(Token);
 
         // Assert
         result.Should().StartWith(baseUrl);
-        result.Should().Contain("/confirm-email");
+        result.Should().Contain(this._settings.ConfirmEmailPath);
     }
 
     /// <summary>
@@ -72,7 +78,7 @@ public class UrlProviderTests
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain("/confirm-email");
+        result.Should().Contain(this._settings.ConfirmEmailPath);
     }
 
     /// <summary>
@@ -86,15 +92,16 @@ public class UrlProviderTests
     public void GetEmailChangeLink_ShouldWorkWithAnyProtocol(string baseUrl)
     {
         // Arrange
-        this._configurationMock.Setup(x => x["FrontendSettings:BaseUrl"]).Returns(baseUrl);
-        UrlProvider sut = new UrlProvider(this._configurationMock.Object);
+        this._optionsMock.Setup(x => x.Value).Returns(CreateFrontendSettings(baseUrl: baseUrl));
+
+        UrlProvider sut = new(this._optionsMock.Object);
 
         // Act
         string result = sut.GetEmailChangeLink(Token);
 
         // Assert
         result.Should().StartWith(baseUrl);
-        result.Should().Contain("/confirm-email-change");
+        result.Should().Contain(this._settings.EmailChangeConfirmationPath);
     }
 
     /// <summary>
@@ -110,7 +117,7 @@ public class UrlProviderTests
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain("/confirm-email-change");
+        result.Should().Contain(this._settings.EmailChangeConfirmationPath);
     }
 
     /// <summary>
@@ -124,15 +131,16 @@ public class UrlProviderTests
     public void GetEmailRevertLink_ShouldWorkWithAnyProtocol(string baseUrl)
     {
         // Arrange
-        this._configurationMock.Setup(x => x["FrontendSettings:BaseUrl"]).Returns(baseUrl);
-        UrlProvider sut = new UrlProvider(this._configurationMock.Object);
+        this._optionsMock.Setup(x => x.Value).Returns(CreateFrontendSettings(baseUrl: baseUrl));
+
+        UrlProvider sut = new(this._optionsMock.Object);
 
         // Act
         string result = sut.GetEmailRevertLink(Token);
 
         // Assert
         result.Should().StartWith(baseUrl);
-        result.Should().Contain("/revert-email-change");
+        result.Should().Contain(this._settings.RevertEmailChangePath);
     }
 
     /// <summary>
@@ -148,7 +156,7 @@ public class UrlProviderTests
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain("/revert-email-change");
+        result.Should().Contain(this._settings.RevertEmailChangePath);
     }
 
     /// <summary>
@@ -162,15 +170,16 @@ public class UrlProviderTests
     public void GetPasswordResetLink_ShouldWorkWithAnyProtocol(string baseUrl)
     {
         // Arrange
-        this._configurationMock.Setup(x => x["FrontendSettings:BaseUrl"]).Returns(baseUrl);
-        UrlProvider sut = new UrlProvider(this._configurationMock.Object);
+        this._optionsMock.Setup(x => x.Value).Returns(CreateFrontendSettings(baseUrl: baseUrl));
+
+        UrlProvider sut = new(this._optionsMock.Object);
 
         // Act
         string result = sut.GetPasswordResetLink(Token);
 
         // Assert
         result.Should().StartWith(baseUrl);
-        result.Should().Contain("/reset-password");
+        result.Should().Contain(this._settings.PasswordResetPath);
     }
 
     /// <summary>
@@ -186,7 +195,7 @@ public class UrlProviderTests
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain("/reset-password");
+        result.Should().Contain(this._settings.PasswordResetPath);
     }
 
     /// <summary>
@@ -198,8 +207,9 @@ public class UrlProviderTests
     {
         // Arrange
         const string baseUrlWithSlash = "https://site.com/";
-        this._configurationMock.Setup(x => x["FrontendSettings:BaseUrl"]).Returns(baseUrlWithSlash);
-        UrlProvider sut = new UrlProvider(this._configurationMock.Object);
+        this._optionsMock.Setup(x => x.Value).Returns(CreateFrontendSettings(baseUrl: baseUrlWithSlash));
+
+        UrlProvider sut = new(this._optionsMock.Object);
 
         // Act
         string result = sut.GetEmailConfirmationLink(Token);
@@ -217,14 +227,33 @@ public class UrlProviderTests
     public void Constructor_ShouldThrowException_WhenBaseUrlIsMissing()
     {
         // Arrange
-        Mock<IConfiguration> emptyConfig = new Mock<IConfiguration>();
-        emptyConfig.Setup(x => x["FrontendSettings:BaseUrl"]).Returns((string?)null);
+        this._optionsMock.Setup(x => x.Value).Returns(new FrontendSettings
+        {
+            BaseUrl = null!,
+        });
 
         // Act
-        Action act = () => _ = new UrlProvider(emptyConfig.Object);
+        Action act = () => _ = new UrlProvider(this._optionsMock.Object);
 
         // Assert
         act.Should().Throw<InvalidOperationException>()
            .WithMessage("Frontend BaseUrl is not configured.");
+    }
+
+    private static FrontendSettings CreateFrontendSettings(
+        string? baseUrl = null,
+        string? confirmEmailPath = null,
+        string? emailChangeConfirmationPath = null,
+        string? passwordResetPath = null,
+        string? revertEmailChangePath = null)
+    {
+        return new FrontendSettings
+        {
+            BaseUrl = baseUrl ?? BaseUrl,
+            ConfirmEmailPath = confirmEmailPath ?? ConfirmEmailPath,
+            EmailChangeConfirmationPath = emailChangeConfirmationPath ?? EmailChangeConfirmationPath,
+            PasswordResetPath = passwordResetPath ?? PasswordResetPath,
+            RevertEmailChangePath = revertEmailChangePath ?? RevertEmailChangePath,
+        };
     }
 }

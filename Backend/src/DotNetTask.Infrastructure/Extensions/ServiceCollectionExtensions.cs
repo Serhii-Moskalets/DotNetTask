@@ -118,6 +118,9 @@ public static class ServiceCollectionExtensions
         // --- Add Throttling Settings ---
         services.Configure<ThrottlingSettings>(config.GetSection(ThrottlingSettings.SectionName));
 
+        // -- Add Frontend Settings ---
+        services.Configure<FrontendSettings>(config.GetSection(FrontendSettings.SectionName));
+
         return services;
     }
 }

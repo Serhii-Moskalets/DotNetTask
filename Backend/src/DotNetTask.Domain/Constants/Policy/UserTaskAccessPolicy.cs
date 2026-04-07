@@ -54,4 +54,14 @@ public static class UserTaskAccessPolicy
     /// The error message returned when a task is not found or the user does not have access to it.
     /// </summary>
     public const string TaskNotFoundOrAccessDeniedMessage = "The task was not found or you do not have access to it.";
+
+    /// <summary>
+    /// The error message when attemptiong to share a task with someone who already has access to it.
+    /// </summary>
+    public const string AlreadySharedMessage = "Task already shared with this user.";
+
+    /// <summary>
+    /// The error message when attempting to share a task with its owner.
+    /// </summary>
+    public const string CannotShareWithOwnerMessage = "Task cannot be shared with ith owner.";
 }
