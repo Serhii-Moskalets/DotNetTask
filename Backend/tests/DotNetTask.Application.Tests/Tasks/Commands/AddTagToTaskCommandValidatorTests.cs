@@ -18,8 +18,13 @@ public class AddTagToTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
+        // Arrange
         AddTagToTaskCommand command = new(Guid.Empty, Guid.NewGuid(), Guid.NewGuid());
+
+        // Act
         TestValidationResult<AddTagToTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
@@ -30,8 +35,13 @@ public class AddTagToTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
+        // Arrange
         AddTagToTaskCommand command = new(Guid.NewGuid(), Guid.Empty, Guid.NewGuid());
+
+        // Act
         TestValidationResult<AddTagToTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -42,8 +52,13 @@ public class AddTagToTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TagId_Is_Empty()
     {
+        // Arrange
         AddTagToTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty);
+
+        // Act
         TestValidationResult<AddTagToTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.TagId)
               .WithErrorMessage(TagPolicy.IdRequiredMessage);
     }
@@ -54,8 +69,13 @@ public class AddTagToTaskCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_All_Fields_Are_Valid()
     {
+        // Arrange
         AddTagToTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+
+        // Act
         TestValidationResult<AddTagToTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

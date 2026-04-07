@@ -25,8 +25,10 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         UpdateUserProfileCommand command = new("John", "Johnson", Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdateUserProfileCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -80,8 +82,10 @@ public class UpdateUserProfileCommandValidatorTests
         // Arrange
         UpdateUserProfileCommand command = new("FirstName", "LastName", Guid.Empty);
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdateUserProfileCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }

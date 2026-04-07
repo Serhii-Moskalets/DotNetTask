@@ -18,8 +18,13 @@ public class CreateUserTaskAccessCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
+        // Arrange
         CreateUserTaskAccessCommand command = new(Guid.Empty, Guid.NewGuid(), "test@test.com");
+
+        // Act
         TestValidationResult<CreateUserTaskAccessCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
@@ -30,8 +35,13 @@ public class CreateUserTaskAccessCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_OwnerId_Is_Empty()
     {
+        // Arrange
         CreateUserTaskAccessCommand command = new(Guid.NewGuid(), Guid.Empty, "test@test.com");
+
+        // Act
         TestValidationResult<CreateUserTaskAccessCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.OwnerId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -42,8 +52,13 @@ public class CreateUserTaskAccessCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Email_Is_Empty()
     {
+        // Arrange
         CreateUserTaskAccessCommand command = new(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
+
+        // Act
         TestValidationResult<CreateUserTaskAccessCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
               .WithErrorMessage(EmailPolicy.EmptyMessage);
     }
@@ -57,8 +72,13 @@ public class CreateUserTaskAccessCommandValidatorTests
     [InlineData("@example.com")]
     public void Should_Fail_For_Clearly_Invalid_Emails(string email)
     {
+        // Arrange
         CreateUserTaskAccessCommand command = new(Guid.NewGuid(), Guid.NewGuid(), email);
+
+        // Act
         TestValidationResult<CreateUserTaskAccessCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
               .WithErrorMessage(EmailPolicy.InvalidFormatMessage);
     }
@@ -69,8 +89,13 @@ public class CreateUserTaskAccessCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_All_Fields_Are_Valid()
     {
+        // Arrange
         CreateUserTaskAccessCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "test@example.com");
+
+        // Act
         TestValidationResult<CreateUserTaskAccessCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

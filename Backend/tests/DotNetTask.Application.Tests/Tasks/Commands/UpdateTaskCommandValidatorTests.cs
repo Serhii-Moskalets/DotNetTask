@@ -21,6 +21,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
+        // Arrange
         UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
@@ -29,7 +30,10 @@ public class UpdateTaskCommandValidatorTests
             },
             Guid.NewGuid());
 
+        // Act
         TestValidationResult<UpdateTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.Dto.TaskId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
@@ -40,6 +44,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
+        // Arrange
         UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
@@ -48,7 +53,10 @@ public class UpdateTaskCommandValidatorTests
             },
             Guid.Empty);
 
+        // Act
         TestValidationResult<UpdateTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -59,6 +67,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Title_TooLong()
     {
+        // Arrange
         string longTitle = new('A', TaskTitle.MaxLength + 1);
         UpdateTaskCommand command = new(
             new UpdateTaskDto
@@ -68,7 +77,10 @@ public class UpdateTaskCommandValidatorTests
             },
             Guid.NewGuid());
 
+        // Act
         TestValidationResult<UpdateTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.Dto.Title)
               .WithErrorMessage(TaskPolicy.TooLongTitleMessage);
     }
@@ -79,6 +91,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Description_TooLong()
     {
+        // Arrange
         string longDescription = new('B', TaskDescription.MaxLength + 1);
         UpdateTaskCommand command = new(
             new UpdateTaskDto
@@ -89,7 +102,10 @@ public class UpdateTaskCommandValidatorTests
             },
             Guid.NewGuid());
 
+        // Act
         TestValidationResult<UpdateTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.Dto.Description)
               .WithErrorMessage(TaskPolicy.TooLongDescriptionMessage);
     }
@@ -100,6 +116,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_DueDate_IsInPast()
     {
+        // Arrange
         UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
@@ -109,7 +126,10 @@ public class UpdateTaskCommandValidatorTests
             },
             Guid.NewGuid());
 
+        // Act
         TestValidationResult<UpdateTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.Dto.DueDate)
               .WithErrorMessage(TaskPolicy.InvalidDueDateMessage);
     }
@@ -120,6 +140,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_CommandIsValid()
     {
+        // Arrange
         UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
@@ -130,7 +151,10 @@ public class UpdateTaskCommandValidatorTests
             },
             Guid.NewGuid());
 
+        // Act
         TestValidationResult<UpdateTaskCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

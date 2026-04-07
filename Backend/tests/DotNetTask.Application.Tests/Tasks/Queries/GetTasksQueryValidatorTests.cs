@@ -19,12 +19,15 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
+        // Arrange
         GetTasksQuery query = new(
             UserId: Guid.Empty,
             TaskListId: Guid.NewGuid());
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -35,12 +38,15 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_UserId_Is_Valid()
     {
+        // Arrange
         GetTasksQuery query = new(
             UserId: Guid.NewGuid(),
             TaskListId: Guid.NewGuid());
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveValidationErrorFor(x => x.UserId);
     }
 
@@ -50,12 +56,15 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskListId_Is_Empty()
     {
+        // Arrange
         GetTasksQuery query = new(
             UserId: Guid.NewGuid(),
             TaskListId: Guid.Empty);
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.TaskListId)
               .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
@@ -66,12 +75,15 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_TaskListId_Is_Valid()
     {
+        // Arrange
         GetTasksQuery query = new(
             UserId: Guid.NewGuid(),
             TaskListId: Guid.NewGuid());
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveValidationErrorFor(x => x.TaskListId);
     }
 
@@ -81,14 +93,17 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_DueDates_Are_Null()
     {
+        // Arrange
         GetTasksQuery query = new(
             UserId: Guid.NewGuid(),
             TaskListId: Guid.NewGuid(),
             DueBefore: null,
             DueAfter: null);
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -98,14 +113,17 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Only_DueAfter_Is_Set()
     {
+        // Arrange
         GetTasksQuery query = new(
             UserId: Guid.NewGuid(),
             TaskListId: Guid.NewGuid(),
             DueBefore: null,
             DueAfter: DateTime.UtcNow);
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -115,14 +133,17 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Only_DueBefore_Is_Set()
     {
+        // Arrange
         GetTasksQuery query = new(
             UserId: Guid.NewGuid(),
             TaskListId: Guid.NewGuid(),
             DueBefore: DateTime.UtcNow,
             DueAfter: null);
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -132,6 +153,7 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_DueAfter_Equals_DueBefore()
     {
+        // Arrange
         DateTime date = DateTime.UtcNow;
 
         GetTasksQuery query = new(
@@ -140,8 +162,10 @@ public class GetTasksQueryValidatorTests
             DueBefore: date,
             DueAfter: date);
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -151,14 +175,17 @@ public class GetTasksQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_DueAfter_Is_Greater_Than_DueBefore()
     {
+        // Arrange
         GetTasksQuery query = new(
             UserId: Guid.NewGuid(),
             TaskListId: Guid.NewGuid(),
             DueBefore: DateTime.UtcNow,
             DueAfter: DateTime.UtcNow.AddDays(1));
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.DueAfter)
               .WithErrorMessage(TaskPolicy.InvalidDateRangeMessage);
     }
@@ -172,10 +199,13 @@ public class GetTasksQueryValidatorTests
     [InlineData(-1)]
     public void Should_Have_Error_When_Page_Is_Invalid(int page)
     {
+        // Arrange
         GetTasksQuery query = new(Guid.NewGuid(), Guid.NewGuid(), page, 10);
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Page)
               .WithErrorMessage(CommonPolicy.PageMinMessage);
     }
@@ -189,10 +219,13 @@ public class GetTasksQueryValidatorTests
     [InlineData(101)]
     public void Should_Have_Error_When_PageSize_Is_Invalid(int pageSize)
     {
+        // Arrange
         GetTasksQuery query = new(Guid.NewGuid(), Guid.NewGuid(), 1, pageSize);
 
+        // Act
         TestValidationResult<GetTasksQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.PageSize)
             .WithErrorMessage(CommonPolicy.PageSizeRangeMessage);
     }

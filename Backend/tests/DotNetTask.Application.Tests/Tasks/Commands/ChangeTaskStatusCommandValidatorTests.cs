@@ -20,8 +20,13 @@ public class ChangeTaskStatusCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
+        // Arrange
         ChangeTaskStatusCommand command = new(Guid.Empty, Guid.NewGuid(), StatusTask.Done);
+
+        // Act
         TestValidationResult<ChangeTaskStatusCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
             .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
@@ -32,8 +37,13 @@ public class ChangeTaskStatusCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
+        // Arrange
         ChangeTaskStatusCommand command = new(Guid.NewGuid(), Guid.Empty, StatusTask.Done);
+
+        // Act
         TestValidationResult<ChangeTaskStatusCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -44,13 +54,16 @@ public class ChangeTaskStatusCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Status_Is_Invalid()
     {
+        // Arrange
         ChangeTaskStatusCommand command = new(
             Guid.NewGuid(),
             Guid.NewGuid(),
             (StatusTask)999);
 
+        // Act
         TestValidationResult<ChangeTaskStatusCommand> result = this._validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Status)
               .WithErrorMessage(TaskPolicy.InvalidTaskSatusMessage);
     }
@@ -61,13 +74,16 @@ public class ChangeTaskStatusCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Errors_When_Command_Is_Valid()
     {
+        // Arrange
         ChangeTaskStatusCommand command = new(
             Guid.NewGuid(),
             Guid.NewGuid(),
             StatusTask.Done);
 
+        // Act
         TestValidationResult<ChangeTaskStatusCommand> result = this._validator.TestValidate(command);
 
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

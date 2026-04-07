@@ -118,8 +118,8 @@ public class UserEntityTests
         FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
+        // Act
         user.RequestEmailVerification(TokenValue, Duration, fakeClock.UtcNow);
-
         user.ConfirmEmailVerification(TokenValue, fakeClock.UtcNow);
 
         // Assert
@@ -178,8 +178,8 @@ public class UserEntityTests
         FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
+        // Act
         user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, fakeClock.UtcNow);
-
         user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
 
         // Assert

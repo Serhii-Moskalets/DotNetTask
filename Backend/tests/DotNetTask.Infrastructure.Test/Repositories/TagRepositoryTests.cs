@@ -100,6 +100,7 @@ public class TagRepositoryTests
 
         await context.SaveChangesAsync();
 
+        // Act
         (IReadOnlyCollection<TagEntity>? items, int totalCount) = await repo.GetTagsAsync(userId, page: 1, pageSize: 10);
 
         // Assert
@@ -187,10 +188,11 @@ public class TagRepositoryTests
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();
 
-        // Act & Assert
+        // Act
         bool result1 = await repo.IsTagOwnerAsync(tag.Id, userId_1);
         bool result2 = await repo.IsTagOwnerAsync(tag.Id, userId_2);
 
+        // Assert
         result1.Should().BeTrue();
         result2.Should().BeFalse();
     }

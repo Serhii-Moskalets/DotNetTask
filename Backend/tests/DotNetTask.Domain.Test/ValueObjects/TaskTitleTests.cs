@@ -37,8 +37,10 @@ public class TaskTitleTests
     [InlineData("\nClean house\t", "Clean house")]
     public void Create_ShouldTrimValue(string input, string expected)
     {
+        // Arrange & Act
         TaskTitle result = TaskTitle.Create(input);
 
+        // Assert
         result.Value.Should().Be(expected);
     }
 
@@ -53,8 +55,10 @@ public class TaskTitleTests
     [InlineData("\n\t")]
     public void Create_ShouldThrow_WhenValueIsNullOrWhiteSpace(string? invalidValue)
     {
+        // Arrange
         Action act = () => TaskTitle.Create(invalidValue!);
 
+        // Act & Assert
         act.Should()
             .Throw<DomainException>()
             .WithMessage(TaskPolicy.EmptyTitleMessage);
@@ -88,8 +92,10 @@ public class TaskTitleTests
     [InlineData("   ")]
     public void CreateOptional_ShouldReturnNull_WhenInputIsNullOrWhiteSpace(string? input)
     {
+        // Arrange & Act
         TaskTitle? result = TaskTitle.CreateOptional(input);
 
+        // Assert
         result.Should().BeNull();
     }
 
@@ -99,10 +105,13 @@ public class TaskTitleTests
     [Fact]
     public void CreateOptional_ShouldReturnInstance_WhenValid()
     {
+        // Arrange
         const string input = "Optional Task";
 
+        // Act
         TaskTitle? result = TaskTitle.CreateOptional(input);
 
+        // Assert
         result.Should().NotBeNull();
         result!.Value.Should().Be(input);
     }
@@ -113,10 +122,13 @@ public class TaskTitleTests
     [Fact]
     public void ToString_ShouldReturnValue()
     {
+        // Arrange
         const string text = "Task String";
 
+        // Act
         TaskTitle result = TaskTitle.Create(text);
 
+        // Assert
         result.ToString().Should().Be(text);
     }
 
@@ -126,9 +138,11 @@ public class TaskTitleTests
     [Fact]
     public void ShouldBeEqual_WhenValuesAreSame()
     {
+        // Arrange & Act
         TaskTitle first = TaskTitle.Create("Same Title");
         TaskTitle second = TaskTitle.Create("Same Title");
 
+        // Assert
         first.Should().Be(second);
     }
 

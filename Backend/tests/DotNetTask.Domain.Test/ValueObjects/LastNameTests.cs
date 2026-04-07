@@ -77,8 +77,10 @@ public class LastNameTests
     [InlineData("   ")]
     public void CreateOptional_ShouldReturnNull_WhenInputIsNullOrWhiteSpace(string? input)
     {
+        // Act
         LastName? result = LastName.CreateOptional(input);
 
+        // Assert
         result.Should().BeNull();
     }
 

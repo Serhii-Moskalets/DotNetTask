@@ -42,12 +42,12 @@ public class TaskRepositoryTests
         DateTime pastTime = DateTime.UtcNow.AddMinutes(5);
         DateTime now = DateTime.UtcNow.AddMinutes(20);
 
-        TaskEntity[] tasks = new[]
-        {
+        TaskEntity[] tasks =
+        [
             new TaskEntity(userId, taskListId, TaskTitle.Create("Task_1"), pastTime),
             new TaskEntity(userId, taskListId, TaskTitle.Create("Task_2"), pastTime),
             new TaskEntity(userId, taskListId, TaskTitle.Create("Task_3"), now.AddMinutes(10)),
-        };
+        ];
 
         foreach (TaskEntity? task in tasks)
         {
@@ -91,6 +91,7 @@ public class TaskRepositoryTests
     [Fact]
     public async Task GetTasksAsync_ReturnsCorrectPageAndTotalCount()
     {
+        // Arrange
         Guid userId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
 
@@ -102,12 +103,14 @@ public class TaskRepositoryTests
 
         await this._context.SaveChangesAsync();
 
+        // Act
         (IReadOnlyCollection<TaskEntity>? items, int total) = await this._repo.GetTasksAsync(
             userId,
             taskListId,
             page: 2,
             pageSize: 2);
 
+        // Assert
         total.Should().Be(5);
         items.Should().HaveCount(2);
     }
@@ -120,15 +123,16 @@ public class TaskRepositoryTests
     [Fact]
     public async Task SearchByTitleAsync_ReturnsPaginatedResults()
     {
+        // Arrange
         Guid userId = Guid.NewGuid();
         Guid listId = Guid.NewGuid();
 
-        TaskEntity[] tasks = new[]
-        {
+        TaskEntity[] tasks =
+        [
             new TaskEntity(userId, listId, TaskTitle.Create("Apple")),
             new TaskEntity(userId, listId, TaskTitle.Create("Application")),
             new TaskEntity(userId, listId, TaskTitle.Create("Banana")),
-        };
+        ];
 
         foreach (TaskEntity? task in tasks)
         {
@@ -137,8 +141,10 @@ public class TaskRepositoryTests
 
         await this._context.SaveChangesAsync();
 
+        // Act
         (IReadOnlyCollection<TaskEntity>? items, int total) = await this._repo.SearchByTitleAsync(userId, "App", page: 1, pageSize: 10);
 
+        // Assert
         total.Should().Be(2);
         items.Should().AllSatisfy(task => task.Title.Value.Should().Contain("App"));
     }
@@ -151,6 +157,7 @@ public class TaskRepositoryTests
     [Fact]
     public async Task GetTasks_ReturnsAll_WhenStatusesNullOrEmpty()
     {
+        // Arrange
         Guid userId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
 
@@ -158,9 +165,11 @@ public class TaskRepositoryTests
         await this._repo.AddAsync(new TaskEntity(userId, taskListId, TaskTitle.Create("Task_2")));
         await this._context.SaveChangesAsync();
 
+        // Act
         (IReadOnlyCollection<TaskEntity> _, int total1) = await this._repo.GetTasksAsync(userId, taskListId, statuses: null);
         (IReadOnlyCollection<TaskEntity>? items2, int _) = await this._repo.GetTasksAsync(userId, taskListId, statuses: []);
 
+        // Assert
         total1.Should().Be(2);
         items2.Should().HaveCount(2);
     }

@@ -23,12 +23,15 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_UserEntity()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-
         UserEntity user = UserEntityFactory.Create();
+
+        // Act
         context.Add(user);
         context.SaveChanges();
 
+        // Assert
         UserEntity? savedUser = context.Users.FirstOrDefault(u => u.UserName.Value == UserEntityFactory.UserName);
         savedUser.Should().NotBeNull();
         savedUser.Email.Value.Should().Be("john@example.com");
@@ -42,16 +45,20 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_TaskListEntity_With_User()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-
         UserEntity user = UserEntityFactory.Create();
+
         context.Add(user);
         context.SaveChanges();
 
         TaskListEntity taskList = new(user.Id, TaskListTitle);
+
+        // Act
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
+        // Assert
         TaskListEntity? savedTaskList = context.TaskLists.FirstOrDefault(tl => tl.OwnerId == user.Id);
         savedTaskList.Should().NotBeNull();
         savedTaskList.Title.Should().Be(TaskListTitle);
@@ -64,6 +71,7 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_TaskEntity_With_TaskList()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
         TaskListEntity taskList = new(Guid.NewGuid(), TaskListTitle);
@@ -71,9 +79,12 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         TaskEntity task = new(Guid.NewGuid(), taskList.Id, TaskTitle);
+
+        // Act
         context.Tasks.Add(task);
         context.SaveChanges();
 
+        // Assert
         TaskEntity? savedTask = context.Tasks.Include(t => t.TaskList).FirstOrDefault();
         savedTask.Should().NotBeNull();
         savedTask.Title.Should().Be(TaskTitle);
@@ -87,6 +98,7 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_TagEntity_With_User()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
         UserEntity user = UserEntityFactory.Create();
@@ -94,9 +106,12 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         TagEntity tag = new(TagName.Create("Tag"), user.Id);
+
+        // Act
         context.Tags.Add(tag);
         context.SaveChanges();
 
+        // Assert
         TagEntity? savedTag = context.Tags.FirstOrDefault(c => c.Id == tag.Id);
         savedTag.Should().NotBeNull();
         savedTag.Name.Value.Should().Be("Tag");
@@ -109,6 +124,7 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_ComentEntity_With_TaskList_User_Task()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
         UserEntity user = UserEntityFactory.Create();
@@ -124,9 +140,12 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         CommentEntity comment = new(task.Id, user.Id, CommentContent.Create("Comment"));
+
+        // Act
         context.Comments.Add(comment);
         context.SaveChanges();
 
+        // Assert
         CommentEntity? savedComment = context.Comments.FirstOrDefault(c => c.Id == comment.Id);
         savedComment.Should().NotBeNull();
         savedComment.Content.Value.Should().Be("Comment");
@@ -139,15 +158,19 @@ public class DotNetTaskDbContextTests
     [Fact]
     public void Can_Add_UserTaskAccess()
     {
+        // Arrange
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
         Guid userId = Guid.NewGuid();
         Guid taskId = Guid.NewGuid();
 
         UserTaskAccessEntity access = new(taskId, userId);
+
+        // Act
         context.UserTaskAccesses.Add(access);
         context.SaveChanges();
 
+        // Assert
         UserTaskAccessEntity? savedAccess = context.UserTaskAccesses.FirstOrDefault();
         savedAccess.Should().NotBeNull();
         savedAccess.UserId.Should().Be(userId);

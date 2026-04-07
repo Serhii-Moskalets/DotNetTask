@@ -12,8 +12,6 @@ namespace DotNetTask.Application.Tests.UserTaskAccess.Mappers;
 /// </summary>
 public class TaskAccessForOwnerMapperTests
 {
-    private readonly string _passwordHash = new('a', 64);
-
     /// <summary>
     /// Verifies that a single <see cref="UserTaskAccessEntity"/> is correctly mapped
     /// to a <see cref="UserBriefDto"/>, specifically checking the nested User properties.

@@ -15,11 +15,14 @@ public class UserTaskAccessEntityTest
     [Fact]
     public void Constructor_Should_SetTaskIdAndUserId()
     {
+        // Arrange
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
 
+        // Act
         UserTaskAccessEntity access = new(taskId, userId);
 
+        // Assert
         access.TaskId.Should().Be(taskId);
         access.UserId.Should().Be(userId);
     }

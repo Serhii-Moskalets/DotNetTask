@@ -388,6 +388,8 @@ public class UserTaskAccessRepositoryTests
         await context.Tasks.AddAsync(task);
 
         UserTaskAccessEntity access = new(task.Id, user_2.Id);
+
+        // Act
         await repo.AddAsync(access);
         await context.SaveChangesAsync();
 
@@ -419,6 +421,8 @@ public class UserTaskAccessRepositoryTests
         await context.Tasks.AddAsync(task);
 
         UserTaskAccessEntity access = new(task.Id, user_2.Id);
+
+        // Act
         await repo.AddAsync(access);
         await context.SaveChangesAsync();
 
@@ -449,6 +453,8 @@ public class UserTaskAccessRepositoryTests
         await context.Tasks.AddAsync(task);
 
         UserTaskAccessEntity access = new(task.Id, user.Id);
+
+        // Act
         await repo.AddAsync(access);
         await context.SaveChangesAsync();
 
@@ -493,6 +499,7 @@ public class UserTaskAccessRepositoryTests
         TaskEntity task = new(user.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
+        // Act
         await repo.AddAsync(new UserTaskAccessEntity(task.Id, user.Id));
         await context.SaveChangesAsync();
 

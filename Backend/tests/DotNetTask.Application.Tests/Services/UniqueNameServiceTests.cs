@@ -74,9 +74,9 @@ public class UniqueValueServiceTests
 
         this._unitOfWorkMock
             .SetupSequence(x => x.TaskLists.ExistsByTitleAsync(It.IsAny<TaskListTitle>(), userId, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(true) // "Task List" exists
-                .ReturnsAsync(true) // "Task List (1)" exists
-                .ReturnsAsync(false); // "Task List (2)" does not exists
+                .ReturnsAsync(true)
+                .ReturnsAsync(true)
+                .ReturnsAsync(false);
 
         // Act
         TaskListTitle result = await this._service.GetUniqueValueAsync<TaskListTitle>(

@@ -23,8 +23,10 @@ public class ResendEmailVerificationCommandValidatorTests
         // Arrage
         ResendEmailVerificationCommand command = new(UserId, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ResendEmailVerificationCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -37,8 +39,10 @@ public class ResendEmailVerificationCommandValidatorTests
         // Arrange
         ResendEmailVerificationCommand command = new(Guid.Empty, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<ResendEmailVerificationCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
             .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }

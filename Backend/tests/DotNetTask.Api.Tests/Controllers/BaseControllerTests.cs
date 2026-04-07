@@ -25,8 +25,13 @@ public static class BaseControllerTests
     [Fact]
     public static void GetClientIpOrUnknown_ReturnsIp_WhenSet()
     {
+        // Arrange
         TestController controller = CreateController("192.168.1.100");
+
+        // Act
         string ip = controller.ClientIp;
+
+        // Assert
         ip.Should().Be("192.168.1.100");
     }
 
@@ -36,8 +41,13 @@ public static class BaseControllerTests
     [Fact]
     public static void GetClientIpOrUnknown_ReturnsNone_WhenNotSet()
     {
+        // Arrange
         TestController controller = CreateController();
+
+        // Act
         string ip = controller.ClientIp;
+
+        // Assert
         ip.Should().Be(IPAddress.None.ToString());
     }
 
@@ -47,8 +57,13 @@ public static class BaseControllerTests
     [Fact]
     public static void GetThrottlingIdentity_Prod_ReturnsIpOnly()
     {
+        // Arrange
         TestController controller = CreateController("10.0.0.1", false);
+
+        // Act
         string ip = controller.ClientIp;
+
+        // Assert
         ip.Should().Be("10.0.0.1");
     }
 
@@ -58,9 +73,14 @@ public static class BaseControllerTests
     [Fact]
     public static void HandleResult_Success_ReturnsOk()
     {
+        // Arrange
         TestController controller = CreateController();
         Result<int> result = Result<int>.Success(123);
+
+        // Act
         OkObjectResult? response = controller.HandleResult(result) as OkObjectResult;
+
+        // Assert
         response.Should().NotBeNull();
         response.Value.Should().Be(123);
     }
@@ -72,10 +92,15 @@ public static class BaseControllerTests
     [Fact]
     public static void HandleResult_Failure_ReturnsProblemDetails()
     {
+        // Arrange
         TestController controller = CreateController();
         Error error = new(ErrorCode.NotFound, "Not found");
         Result<int> result = Result<int>.Failure(error);
+
+        // Act
         ObjectResult? response = controller.HandleResult(result) as ObjectResult;
+
+        // Assert
         response.Should().NotBeNull();
         response.StatusCode.Should().Be(StatusCodes.Status404NotFound);
     }
@@ -86,9 +111,14 @@ public static class BaseControllerTests
     [Fact]
     public static void HandleNoContent_Success_ReturnsNoContent()
     {
+        // Arrange
         TestController controller = CreateController();
         Result<bool> result = Result<bool>.Success(true);
+
+        // Act
         IActionResult response = controller.HandleNoContent(result);
+
+        // Assert
         response.Should().BeOfType<NoContentResult>();
     }
 
@@ -98,10 +128,15 @@ public static class BaseControllerTests
     [Fact]
     public static void HandleNoContent_Failure_ReturnsProblemDetails()
     {
+        // Arrange
         TestController controller = CreateController();
         Error error = new(ErrorCode.InvalidOperation, "Invalid");
         Result<bool> result = Result<bool>.Failure(error);
+
+        // Act
         ObjectResult? response = controller.HandleNoContent(result) as ObjectResult;
+
+        // Assert
         response.Should().NotBeNull();
         response.StatusCode.Should().Be(StatusCodes.Status409Conflict);
     }

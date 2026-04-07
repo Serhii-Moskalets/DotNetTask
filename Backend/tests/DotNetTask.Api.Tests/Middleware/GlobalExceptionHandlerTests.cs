@@ -38,13 +38,16 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_400_For_DomainException()
     {
+        // Arrange
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
         DomainException exception = new("Domain error");
 
+        // Act
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
+        // Assert
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
@@ -59,13 +62,16 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_403_For_PasswordChangeRequiredException()
     {
+        // Arrange
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
         PasswordChangeRequiredException exception = new("Change password");
 
+        // Act
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
+        // Assert
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
@@ -80,13 +86,16 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_403_For_EmailResendVerificationException()
     {
+        // Arrange
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
         EmailResendVerificationException exception = new();
 
+        // Act
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
+        // Assert
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
@@ -101,13 +110,16 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_404_And_LogWarning_For_KeyNotFoundException()
     {
+        // Arrange
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
         KeyNotFoundException exception = new();
 
+        // Act
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
+        // Assert
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status404NotFound);
@@ -130,13 +142,16 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_500_And_LogError_For_UnknownException()
     {
+        // Arrange
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
         Exception exception = new("boom");
 
+        // Act
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
+        // Assert
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
@@ -160,13 +175,16 @@ public class GlobalExceptionHandlerTests
     [Fact]
     public async Task Should_Return_401_For_UnauthorizedAccessException()
     {
+        // Arrange
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
         UnauthorizedAccessException exception = new("Unauthorized");
 
+        // Act
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
+        // Assert
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);

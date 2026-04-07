@@ -51,10 +51,13 @@ public class GetAllTaskListQueryValidatorTests
     [InlineData(-1)]
     public void Should_Have_Error_When_Page_Is_Invalid(int page)
     {
+        // Arrange
         GetTaskListsQuery query = new(Guid.NewGuid(), page, 10);
 
+        // Act
         TestValidationResult<GetTaskListsQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Page)
               .WithErrorMessage(CommonPolicy.PageMinMessage);
     }
@@ -68,10 +71,13 @@ public class GetAllTaskListQueryValidatorTests
     [InlineData(101)]
     public void Should_Have_Error_When_PageSize_Is_Invalid(int pageSize)
     {
+        // Arrange
         GetTaskListsQuery query = new(Guid.NewGuid(), 1, pageSize);
 
+        // Act
         TestValidationResult<GetTaskListsQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.PageSize)
             .WithErrorMessage(CommonPolicy.PageSizeRangeMessage);
     }

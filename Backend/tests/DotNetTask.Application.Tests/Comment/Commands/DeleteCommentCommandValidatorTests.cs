@@ -19,10 +19,13 @@ public class DeleteCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
+        // Arrange
         DeleteCommentCommand command = new(Guid.NewGuid(), Guid.Empty);
 
+        // Act
         TestValidationResult<DeleteCommentCommand> result = this._validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -33,10 +36,13 @@ public class DeleteCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_CommentId_Is_Empty()
     {
+        // Arrange
         DeleteCommentCommand command = new(Guid.Empty, Guid.NewGuid());
 
+        // Act
         TestValidationResult<DeleteCommentCommand> result = this._validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.CommentId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
@@ -47,10 +53,13 @@ public class DeleteCommentCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
+        // Arrange
         DeleteCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
+        // Act
         TestValidationResult<DeleteCommentCommand> result = this._validator.TestValidate(command);
 
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

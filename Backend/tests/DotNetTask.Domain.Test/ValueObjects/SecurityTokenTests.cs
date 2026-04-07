@@ -117,7 +117,10 @@ public class SecurityTokenTests
     [Fact]
     public void Create_Should_AllowNullMetadata()
     {
+        // Act
         SecurityToken token = SecurityToken.Create(ValidTokenValue, this._validDuration, UserTokenType.EmailVerification, this._currentTime);
+
+        // Assert
         token.Metadata.Should().BeNull();
     }
 
@@ -127,8 +130,13 @@ public class SecurityTokenTests
     [Fact]
     public void IsValid_Should_ReturnFalse_When_TokenExactlyExpired()
     {
+        // Arrange
         SecurityToken token = SecurityToken.Create(ValidTokenValue, TimeSpan.FromSeconds(1), UserTokenType.PasswordReset, this._currentTime);
+
+        // Act
         DateTime testTime = this._currentTime.AddSeconds(1);
+
+        // Assert
         token.IsValid(ValidTokenValue, UserTokenType.PasswordReset, testTime).Should().BeFalse();
     }
 

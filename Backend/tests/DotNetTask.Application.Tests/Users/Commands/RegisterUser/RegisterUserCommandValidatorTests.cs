@@ -47,8 +47,10 @@ public class RegisterUserCommandValidatorTests
         // Arrange
         RegisterUserCommand command = CreateCommend();
 
-        // Act & Assert
+        // Act
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -66,8 +68,10 @@ public class RegisterUserCommandValidatorTests
         // Arrange
         RegisterUserCommand command = new(firstName, LastName, userName, email, password, IpAddress);
 
-        // Act & Assert
+        // Act
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.FirstName).WithErrorMessage(FirstNamePolicy.EmptyMessage);
         result.ShouldHaveValidationErrorFor(x => x.UserName).WithErrorMessage(UserNamePolicy.EmptyMessage);
         result.ShouldHaveValidationErrorFor(x => x.Email).WithErrorMessage(EmailPolicy.EmptyMessage);
@@ -105,8 +109,10 @@ public class RegisterUserCommandValidatorTests
         // Arrange
         RegisterUserCommand command = CreateCommend(userName: userName);
 
-        // Act & Assert
+        // Act
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserName)
             .WithErrorMessage(UserNamePolicy.LengthMessage);
     }
@@ -120,8 +126,10 @@ public class RegisterUserCommandValidatorTests
         // Arrange
         RegisterUserCommand command = CreateCommend(userName: "user@name!");
 
-        // Act & Assert
+        // Act
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserName)
             .WithErrorMessage(UserNamePolicy.InvalidCharactersMessage);
     }
@@ -138,8 +146,10 @@ public class RegisterUserCommandValidatorTests
         // Arrange
         RegisterUserCommand command = CreateCommend(password: password);
 
-        // Act & Assert
+        // Act
         TestValidationResult<RegisterUserCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Password)
               .WithErrorMessage(expectedErrorMessage);
     }

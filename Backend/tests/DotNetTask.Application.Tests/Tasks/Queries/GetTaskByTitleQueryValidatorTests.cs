@@ -38,12 +38,15 @@ public class GetTaskByTitleQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_UserId_Is_Valid()
     {
+        // Arrange
         GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: "test");
 
+        // Act
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveValidationErrorFor(x => x.UserId);
     }
 
@@ -53,12 +56,15 @@ public class GetTaskByTitleQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Text_Is_Null()
     {
+        // Arrange
         GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: null);
 
+        // Act
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveValidationErrorFor(x => x.Text);
     }
 
@@ -73,12 +79,15 @@ public class GetTaskByTitleQueryValidatorTests
     [InlineData("   ")]
     public void Should_Not_Have_Error_When_Text_Is_Empty_Or_Whitespace(string text)
     {
+        // Arrange
         GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: text);
 
+        // Act
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveValidationErrorFor(x => x.Text);
     }
 
@@ -88,12 +97,15 @@ public class GetTaskByTitleQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_Text_Exceeds_100_Characters()
     {
+        // Arrange
         GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: new string('a', CommonPolicy.MaxSearchTextLength + 1));
 
+        // Act
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Text)
               .WithErrorMessage(CommonPolicy.SearchTextTooLongMessage);
     }
@@ -104,12 +116,15 @@ public class GetTaskByTitleQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Text_Is_Exactly_100_Characters()
     {
+        // Arrange
         GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: new string('a', CommonPolicy.MaxSearchTextLength));
 
+        // Act
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldNotHaveValidationErrorFor(x => x.Text);
     }
 
@@ -122,10 +137,13 @@ public class GetTaskByTitleQueryValidatorTests
     [InlineData(-1)]
     public void Should_Have_Error_When_Page_Is_Invalid(int page)
     {
+        // Arrange
         GetTaskByTitleQuery query = new(Guid.NewGuid(), "test", page, 10);
 
+        // Act
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Page)
               .WithErrorMessage(CommonPolicy.PageMinMessage);
     }
@@ -139,10 +157,13 @@ public class GetTaskByTitleQueryValidatorTests
     [InlineData(101)]
     public void Should_Have_Error_When_PageSize_Is_Invalid(int pageSize)
     {
+        // Arrange
         GetTaskByTitleQuery query = new(Guid.NewGuid(), "test", 1, pageSize);
 
+        // Act
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.PageSize)
             .WithErrorMessage(CommonPolicy.PageSizeRangeMessage);
     }

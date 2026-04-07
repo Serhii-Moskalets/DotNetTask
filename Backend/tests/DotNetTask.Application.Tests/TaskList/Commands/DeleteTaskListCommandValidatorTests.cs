@@ -19,10 +19,13 @@ public class DeleteTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
+        // Assert
         DeleteTaskListCommand command = new(Guid.NewGuid(), Guid.Empty);
 
+        // Act
         TestValidationResult<DeleteTaskListCommand> result = this._validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -37,6 +40,7 @@ public class DeleteTaskListCommandValidatorTests
 
         TestValidationResult<DeleteTaskListCommand> result = this._validator.TestValidate(command);
 
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.TaskListId)
               .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
@@ -47,10 +51,13 @@ public class DeleteTaskListCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Valid_Command()
     {
+        // Assert
         DeleteTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
+        // Act
         TestValidationResult<DeleteTaskListCommand> result = this._validator.TestValidate(command);
 
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

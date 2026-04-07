@@ -22,8 +22,10 @@ public class GetUserProfileQueryValidatorTests
         // Arrange
         GetUserProfileQuery command = new(Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<GetUserProfileQuery> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -36,8 +38,10 @@ public class GetUserProfileQueryValidatorTests
         // Arrange
         GetUserProfileQuery command = new(Guid.Empty);
 
-        // Act & Assert
+        // Act
         TestValidationResult<GetUserProfileQuery> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }

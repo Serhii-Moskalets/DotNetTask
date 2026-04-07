@@ -22,7 +22,10 @@ public class UpdateTaskListCommandValidatorTests
     {
         UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
 
+        // Act
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.NewTitle)
             .WithErrorMessage(TaskListPolicy.EmptyMessage);
     }
@@ -33,10 +36,14 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_NewTitle_Exceeds_MaxLength()
     {
+        // Arrange
         string longTitle = new('A', TaskListTitle.MaxLength + 1);
         UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid(), longTitle);
 
+        // Act
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.NewTitle)
             .WithErrorMessage(TaskListPolicy.TooLongMessage);
     }
@@ -47,9 +54,13 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
+        // Arrange
         UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.Empty, "Valid Title");
 
+        // Act
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.UserId)
             .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -60,9 +71,12 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskListId_Is_Empty()
     {
+        // Arrange
         UpdateTaskListCommand command = new(Guid.Empty, Guid.NewGuid(), "Valid Title");
 
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(c => c.TaskListId)
             .WithErrorMessage(TaskListPolicy.IdRequiredMessage);
     }
@@ -73,9 +87,13 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_For_Valid_Command()
     {
+        // Arrange
         UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Valid Title");
 
+        // Act
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

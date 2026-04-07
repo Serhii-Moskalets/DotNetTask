@@ -18,8 +18,13 @@ public class GetSharedTasksByUserIdQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
+        // Arrange
         GetSharedTasksByUserIdQuery query = new(Guid.Empty);
+
+        // Act
         TestValidationResult<GetSharedTasksByUserIdQuery> result = this._validator.TestValidate(query);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -30,8 +35,13 @@ public class GetSharedTasksByUserIdQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_UserId_Is_Valid()
     {
+        // Arrange
         GetSharedTasksByUserIdQuery query = new(Guid.NewGuid());
+
+        // Act
         TestValidationResult<GetSharedTasksByUserIdQuery> result = this._validator.TestValidate(query);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

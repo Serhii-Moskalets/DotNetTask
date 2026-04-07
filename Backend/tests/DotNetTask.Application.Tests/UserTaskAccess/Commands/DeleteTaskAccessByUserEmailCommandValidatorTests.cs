@@ -18,8 +18,13 @@ public class DeleteTaskAccessByUserEmailCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
+        // Arrange
         DeleteTaskAccessByUserEmailCommand command = new(Guid.Empty, Guid.NewGuid(), "test@test.com");
+
+        // Act
         TestValidationResult<DeleteTaskAccessByUserEmailCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
     }
@@ -30,8 +35,13 @@ public class DeleteTaskAccessByUserEmailCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_OwnerId_Is_Empty()
     {
+        // Arrange
         DeleteTaskAccessByUserEmailCommand command = new(Guid.NewGuid(), Guid.Empty, "test@test.com");
+
+        // Act
         TestValidationResult<DeleteTaskAccessByUserEmailCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.OwnerId)
               .WithErrorMessage(UserTaskAccessPolicy.OwnerIdRequired);
     }
@@ -42,8 +52,13 @@ public class DeleteTaskAccessByUserEmailCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Email_Is_Empty()
     {
+        // Arrange
         DeleteTaskAccessByUserEmailCommand command = new(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
+
+        // Act
         TestValidationResult<DeleteTaskAccessByUserEmailCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
               .WithErrorMessage(EmailPolicy.EmptyMessage);
     }
@@ -59,8 +74,13 @@ public class DeleteTaskAccessByUserEmailCommandValidatorTests
     [InlineData("@example.com")]
     public void Should_Have_Error_When_Email_Is_Invalid(string email)
     {
+        // Arrange
         DeleteTaskAccessByUserEmailCommand command = new(Guid.NewGuid(), Guid.NewGuid(), email);
+
+        // Act
         TestValidationResult<DeleteTaskAccessByUserEmailCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
               .WithErrorMessage(EmailPolicy.InvalidFormatMessage);
     }
@@ -71,8 +91,13 @@ public class DeleteTaskAccessByUserEmailCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_All_Fields_Are_Valid()
     {
+        // Arrange
         DeleteTaskAccessByUserEmailCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "test@example.com");
+
+        // Act
         TestValidationResult<DeleteTaskAccessByUserEmailCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 }

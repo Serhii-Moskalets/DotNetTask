@@ -37,8 +37,10 @@ public class TaskDescriptionTests
     [InlineData("\nMulti-line\t", "Multi-line")]
     public void Create_ShouldTrimValue(string input, string expected)
     {
+        // Arrange & Act
         TaskDescription result = TaskDescription.Create(input);
 
+        // Assert
         result.Value.Should().Be(expected);
     }
 
@@ -53,8 +55,10 @@ public class TaskDescriptionTests
     [InlineData("\n\t")]
     public void Create_ShouldThrow_WhenValueIsNullOrWhiteSpace(string? invalidValue)
     {
+        // Arrange
         Action act = () => TaskDescription.Create(invalidValue!);
 
+        // Act & Asserrt
         act.Should()
             .Throw<DomainException>()
             .WithMessage(TaskPolicy.EmptyDescriptionMessage);
@@ -88,8 +92,10 @@ public class TaskDescriptionTests
     [InlineData("   ")]
     public void CreateOptional_ShouldReturnNull_WhenInputIsNullOrWhiteSpace(string? input)
     {
+        // Arrange & Act
         TaskDescription? result = TaskDescription.CreateOptional(input);
 
+        // Assert
         result.Should().BeNull();
     }
 
@@ -99,10 +105,13 @@ public class TaskDescriptionTests
     [Fact]
     public void CreateOptional_ShouldReturnInstance_WhenValid()
     {
+        // Arrange
         const string input = "Optional description content.";
 
+        // Act
         TaskDescription? result = TaskDescription.CreateOptional(input);
 
+        // Assert
         result.Should().NotBeNull();
         result!.Value.Should().Be(input);
     }
@@ -113,10 +122,13 @@ public class TaskDescriptionTests
     [Fact]
     public void ToString_ShouldReturnValue()
     {
+        // Arrange
         const string text = "ToString content";
 
+        // Act
         TaskDescription result = TaskDescription.Create(text);
 
+        // Assert
         result.ToString().Should().Be(text);
     }
 
@@ -126,10 +138,14 @@ public class TaskDescriptionTests
     [Fact]
     public void ShouldBeEqual_WhenValuesAreSame()
     {
+        // Arrange
         const string content = "Same content";
+
+        // Act
         TaskDescription first = TaskDescription.Create(content);
         TaskDescription second = TaskDescription.Create(content);
 
+        // Assert
         first.Should().Be(second);
     }
 
@@ -139,9 +155,11 @@ public class TaskDescriptionTests
     [Fact]
     public void ShouldNotBeEqual_WhenValuesAreDifferent()
     {
+        // Arrange & Act
         TaskDescription first = TaskDescription.Create("Description A");
         TaskDescription second = TaskDescription.Create("Description B");
 
+        // Assert
         first.Should().NotBe(second);
     }
 

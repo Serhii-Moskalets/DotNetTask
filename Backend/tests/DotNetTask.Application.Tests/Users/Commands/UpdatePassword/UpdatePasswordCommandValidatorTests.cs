@@ -38,8 +38,10 @@ public class UpdatePasswordCommandValidatorTests
         // Arrange
         UpdatePasswordCommand command = new("OldPassword123!", "NewPassword456!", Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -53,8 +55,10 @@ public class UpdatePasswordCommandValidatorTests
         string password = "SafePassword123!";
         UpdatePasswordCommand command = new(password, password, Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
             .WithErrorMessage(PasswordPolicy.SameAsOldMessage);
     }
@@ -68,8 +72,10 @@ public class UpdatePasswordCommandValidatorTests
         // Arrange
         UpdatePasswordCommand command = new("OldPass123!", "NewPass456!", Guid.Empty);
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
             .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }
@@ -83,8 +89,10 @@ public class UpdatePasswordCommandValidatorTests
         // Arrange
         UpdatePasswordCommand command = new(string.Empty, "NewPass456!", Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.CurrentPassword)
             .WithErrorMessage(PasswordPolicy.EmptyMessage);
     }
@@ -101,8 +109,10 @@ public class UpdatePasswordCommandValidatorTests
         // Arrange
         UpdatePasswordCommand command = new("ValidOldPass1!", weakPassword, Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdatePasswordCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.NewPassword)
             .WithErrorMessage(expectedMessage);
     }

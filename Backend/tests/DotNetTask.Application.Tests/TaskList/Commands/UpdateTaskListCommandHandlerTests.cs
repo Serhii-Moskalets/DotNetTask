@@ -131,6 +131,7 @@ public class UpdateTaskListCommandHandlerTests
         // Act
         Result<bool> result = await handler.Handle(command, CancellationToken.None);
 
+        // Assert
         result.IsSuccess.Should().BeTrue();
         taskList.Title.Should().Be(uniqueTitle);
 

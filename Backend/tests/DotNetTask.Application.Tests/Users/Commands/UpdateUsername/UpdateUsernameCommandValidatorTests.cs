@@ -22,8 +22,10 @@ public class UpdateUsernameCommandValidatorTests
         // Arrange
         UpdateUsernameCommand command = new("ValidUsername", Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdateUsernameCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
 
@@ -39,8 +41,10 @@ public class UpdateUsernameCommandValidatorTests
         // Arrange
         UpdateUsernameCommand command = new(username!, Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdateUsernameCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserName)
             .WithErrorMessage(UserNamePolicy.EmptyMessage);
     }
@@ -58,8 +62,10 @@ public class UpdateUsernameCommandValidatorTests
         // Arrange
         UpdateUsernameCommand command = new(username, Guid.NewGuid());
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdateUsernameCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserName)
               .WithErrorMessage(UserNamePolicy.LengthMessage);
     }
@@ -73,8 +79,10 @@ public class UpdateUsernameCommandValidatorTests
         // Arrange
         UpdateUsernameCommand command = new("ValidUser", Guid.Empty);
 
-        // Act & Assert
+        // Act
         TestValidationResult<UpdateUsernameCommand> result = this._validator.TestValidate(command);
+
+        // Assert
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
     }

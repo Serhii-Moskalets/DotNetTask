@@ -16,7 +16,6 @@ public class TaskMapperTests
 {
     private static readonly TaskTitle Title = TaskTitle.Create("Task title");
     private static readonly TaskDescription Description = TaskDescription.Create("Task description");
-    private readonly string _passwordHash = new('a', 64);
 
     /// <summary>
     /// Verifies that <see cref="TaskEntity"/> is correctly mapped to <see cref="TaskDto"/>
