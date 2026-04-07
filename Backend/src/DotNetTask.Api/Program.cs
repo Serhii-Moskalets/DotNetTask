@@ -15,6 +15,11 @@ using Serilog.Sinks.PostgreSQL;
 
 Serilog.Debugging.SelfLog.Enable(Console.Error);
 
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
+try
+{
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 string connectionString = builder.Configuration.GetConnectionString(CommonPolicy.DataBaseConnectionString)
@@ -175,3 +180,12 @@ app.UseMiddleware<UserSecurityMiddleware>();
 app.MapControllers();
 
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
