@@ -1,6 +1,7 @@
 using System.Collections.Specialized;
 using DotNetTask.Application.Abstractions.Interfaces.Common;
-using Microsoft.Extensions.Configuration;
+using DotNetTask.Infrastructure.Notifications.Settings;
+using Microsoft.Extensions.Options;
 
 namespace DotNetTask.Infrastructure.Services;
 
@@ -11,24 +12,26 @@ namespace DotNetTask.Infrastructure.Services;
 public class UrlProvider : IUrlProvider
 {
     private readonly string _frontendBaseUrl;
+    private readonly FrontendSettings _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UrlProvider"/> class.
     /// </summary>
-    /// <param name="configuration">The application configuration used to retrieve settings.</param>
+    /// /// <param name="options">The frontend settings containing the base URL.</param>
     /// <exception cref="InvalidOperationException">Thrown when the 'FrontendSettings:BaseUrl' is missing in configuration.</exception>
-    public UrlProvider(IConfiguration configuration)
+    public UrlProvider(IOptions<FrontendSettings> options)
     {
-        string baseUrl = configuration["FrontendSettings:BaseUrl"]
+        string baseUrl = options.Value.BaseUrl
             ?? throw new InvalidOperationException("Frontend BaseUrl is not configured.");
 
+        this._options = options.Value;
         this._frontendBaseUrl = baseUrl.TrimEnd('/');
     }
 
     /// <inheritdoc />
     public string GetEmailChangeLink(string token)
     {
-        return this.BuildUrl("confirm-email-change", new Dictionary<string, string>
+        return this.BuildUrl(this._options.EmailChangeConfirmationPath, new Dictionary<string, string>
             {
                 { "token", token },
             });
@@ -37,7 +40,7 @@ public class UrlProvider : IUrlProvider
     /// <inheritdoc />
     public string GetEmailConfirmationLink(string token)
     {
-        return this.BuildUrl("confirm-email", new Dictionary<string, string>
+        return this.BuildUrl(this._options.ConfirmEmailPath, new Dictionary<string, string>
             {
                 { "token", token },
             });
@@ -46,7 +49,7 @@ public class UrlProvider : IUrlProvider
     /// <inheritdoc />
     public string GetEmailRevertLink(string token)
     {
-        return this.BuildUrl("revert-email-change", new Dictionary<string, string>
+        return this.BuildUrl(this._options.RevertEmailChangePath, new Dictionary<string, string>
         {
             { "token", token },
         });
@@ -55,7 +58,7 @@ public class UrlProvider : IUrlProvider
     /// <inheritdoc />
     public string GetPasswordResetLink(string token)
     {
-        return this.BuildUrl("reset-password", new Dictionary<string, string>
+        return this.BuildUrl(this._options.PasswordResetPath, new Dictionary<string, string>
         {
             { "token", token },
         });
