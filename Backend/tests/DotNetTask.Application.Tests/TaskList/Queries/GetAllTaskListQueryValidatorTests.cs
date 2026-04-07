@@ -20,7 +20,7 @@ public class GetAllTaskListQueryValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        GetTaskListsQuery query = new GetTaskListsQuery(Guid.Empty);
+        GetTaskListsQuery query = new(Guid.Empty);
 
         // Act & Assert
         TestValidationResult<GetTaskListsQuery> result = this._validator.TestValidate(query);
@@ -35,7 +35,7 @@ public class GetAllTaskListQueryValidatorTests
     public void Should_Not_Have_Error_When_UserId_Is_Provided()
     {
         // Arrange
-        GetTaskListsQuery query = new GetTaskListsQuery(Guid.NewGuid());
+        GetTaskListsQuery query = new(Guid.NewGuid());
 
         // Act & Assert
         TestValidationResult<GetTaskListsQuery> result = this._validator.TestValidate(query);
@@ -51,7 +51,7 @@ public class GetAllTaskListQueryValidatorTests
     [InlineData(-1)]
     public void Should_Have_Error_When_Page_Is_Invalid(int page)
     {
-        GetTaskListsQuery query = new GetTaskListsQuery(Guid.NewGuid(), page, 10);
+        GetTaskListsQuery query = new(Guid.NewGuid(), page, 10);
 
         TestValidationResult<GetTaskListsQuery> result = this._validator.TestValidate(query);
 
@@ -68,7 +68,7 @@ public class GetAllTaskListQueryValidatorTests
     [InlineData(101)]
     public void Should_Have_Error_When_PageSize_Is_Invalid(int pageSize)
     {
-        GetTaskListsQuery query = new GetTaskListsQuery(Guid.NewGuid(), 1, pageSize);
+        GetTaskListsQuery query = new(Guid.NewGuid(), 1, pageSize);
 
         TestValidationResult<GetTaskListsQuery> result = this._validator.TestValidate(query);
 
@@ -84,7 +84,7 @@ public class GetAllTaskListQueryValidatorTests
     public void Should_Not_Have_Error_When_Pagination_Is_Valid()
     {
         // Arrange
-        GetTaskListsQuery query = new GetTaskListsQuery(Guid.NewGuid(), Page: 1, PageSize: 50);
+        GetTaskListsQuery query = new(Guid.NewGuid(), Page: 1, PageSize: 50);
 
         // Act
         TestValidationResult<GetTaskListsQuery> result = this._validator.TestValidate(query);

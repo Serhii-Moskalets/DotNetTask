@@ -36,7 +36,7 @@ public class CommentEntityTests
         Guid userId = Guid.NewGuid();
 
         // Act
-        CommentEntity comment = new CommentEntity(taskId, userId, this._validContent);
+        CommentEntity comment = new(taskId, userId, this._validContent);
 
         // Assert
         comment.TaskId.Should().Be(taskId);
@@ -54,7 +54,7 @@ public class CommentEntityTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        UserEntity differentUser = new UserEntity(FirstName, UserName, Email, PasswordHash);
+        UserEntity differentUser = new(FirstName, UserName, Email, PasswordHash);
 
         // Act
         Func<CommentEntity> act = () => new CommentEntity(Guid.NewGuid(), userId, this._validContent, differentUser);
@@ -71,7 +71,7 @@ public class CommentEntityTests
     public void Update_ShouldChangeContent_WhenNewContentIsDifferent()
     {
         // Arrange
-        CommentEntity comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
+        CommentEntity comment = new(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
         CommentContent newContent = CommentContent.Create("Updated text");
 
         // Act
@@ -90,7 +90,7 @@ public class CommentEntityTests
     public void Update_ShouldReturnFailure_WhenContentIsSame()
     {
         // Arrange
-        CommentEntity comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
+        CommentEntity comment = new(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
 
         // Act
         Result<bool> result = comment.Update(this._validContent);

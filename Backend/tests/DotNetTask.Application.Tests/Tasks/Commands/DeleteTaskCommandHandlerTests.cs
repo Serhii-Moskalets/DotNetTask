@@ -53,7 +53,7 @@ public class DeleteTaskCommandHandlerTests
 
         this._uowMock.Setup(u => u.Tasks).Returns(this._taskRepoMock.Object);
 
-        DeleteTaskCommand command = new DeleteTaskCommand(Guid.NewGuid(), Guid.NewGuid());
+        DeleteTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -76,7 +76,7 @@ public class DeleteTaskCommandHandlerTests
         Guid taskId = Guid.NewGuid();
         Guid ownerId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(ownerId, taskListId, TaskTitle.Create("Title"));
+        TaskEntity task = new(ownerId, taskListId, TaskTitle.Create("Title"));
 
         this._taskRepoMock.Setup(r => r.GetTaskByIdForUserAsync(taskId, ownerId, false, It.IsAny<CancellationToken>()))
                     .ReturnsAsync(task);
@@ -84,7 +84,7 @@ public class DeleteTaskCommandHandlerTests
         this._uowMock.Setup(u => u.Tasks).Returns(this._taskRepoMock.Object);
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        DeleteTaskCommand command = new DeleteTaskCommand(taskId, ownerId);
+        DeleteTaskCommand command = new(taskId, ownerId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

@@ -43,7 +43,7 @@ public class UserMapperTests
     public void Map_ShouldMap_ToUserBriefDto_WhenLastNameIsNull()
     {
         // Arrange
-        UserEntity entity = new UserEntity(
+        UserEntity entity = new(
             FirstName.Create("John"),
             UserName.Create("test"),
             Email.Create("john@example.com"),

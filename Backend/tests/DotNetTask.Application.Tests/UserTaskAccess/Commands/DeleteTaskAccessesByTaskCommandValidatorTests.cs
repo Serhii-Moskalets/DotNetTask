@@ -18,7 +18,7 @@ public class DeleteTaskAccessesByTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
-        DeleteTaskAccessesByTaskCommand command = new DeleteTaskAccessesByTaskCommand(Guid.Empty, Guid.NewGuid());
+        DeleteTaskAccessesByTaskCommand command = new(Guid.Empty, Guid.NewGuid());
         TestValidationResult<DeleteTaskAccessesByTaskCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
@@ -30,7 +30,7 @@ public class DeleteTaskAccessesByTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        DeleteTaskAccessesByTaskCommand command = new DeleteTaskAccessesByTaskCommand(Guid.NewGuid(), Guid.Empty);
+        DeleteTaskAccessesByTaskCommand command = new(Guid.NewGuid(), Guid.Empty);
         TestValidationResult<DeleteTaskAccessesByTaskCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
@@ -42,7 +42,7 @@ public class DeleteTaskAccessesByTaskCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_All_Fields_Are_Valid()
     {
-        DeleteTaskAccessesByTaskCommand command = new DeleteTaskAccessesByTaskCommand(Guid.NewGuid(), Guid.NewGuid());
+        DeleteTaskAccessesByTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid());
         TestValidationResult<DeleteTaskAccessesByTaskCommand> result = this._validator.TestValidate(command);
         result.ShouldNotHaveAnyValidationErrors();
     }

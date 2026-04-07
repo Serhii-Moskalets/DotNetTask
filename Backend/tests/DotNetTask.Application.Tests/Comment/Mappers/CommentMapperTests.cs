@@ -24,7 +24,7 @@ public class CommentMapperTests
         // Arrange
         Guid taskId = Guid.NewGuid();
         UserEntity user = UserEntityFactory.Create();
-        CommentEntity comment = new CommentEntity(taskId, user.Id, this._content, user);
+        CommentEntity comment = new(taskId, user.Id, this._content, user);
 
         // Act
         CommentDto result = CommentMapper.Map(comment);
@@ -50,7 +50,7 @@ public class CommentMapperTests
         // Arrange
         Guid taskId = Guid.NewGuid();
         UserEntity user = UserEntityFactory.Create();
-        List<CommentEntity> entities = new List<CommentEntity>
+        List<CommentEntity> entities = new()
         {
             new(taskId, user.Id, this._content, user),
             new(taskId, user.Id, CommentContent.Create("Content_2"), user),

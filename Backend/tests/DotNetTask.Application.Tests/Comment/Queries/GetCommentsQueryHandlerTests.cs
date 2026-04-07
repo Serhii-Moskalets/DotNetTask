@@ -57,7 +57,7 @@ public class GetCommentsQueryHandlerTests
             .Setup(s => s.HasAccessAsync(taskId, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        GetCommentsQuery query = new GetCommentsQuery(taskId, userId);
+        GetCommentsQuery query = new(taskId, userId);
 
         // Act
         Result<PagedResultDto<CommentDto>> result = await this._handler.Handle(query, CancellationToken.None);
@@ -83,7 +83,7 @@ public class GetCommentsQueryHandlerTests
         int pageSize = 10;
 
         UserEntity author = UserEntityFactory.Create();
-        List<CommentEntity> comments = new List<CommentEntity>
+        List<CommentEntity> comments = new()
         {
             new(taskId, author.Id, CommentContent.Create("Comment_1"), author),
             new(taskId, author.Id, CommentContent.Create("Comment_2"), author),
@@ -97,7 +97,7 @@ public class GetCommentsQueryHandlerTests
             .Setup(r => r.GetCommentsByTaskIdAsync(taskId, page, pageSize, It.IsAny<CancellationToken>()))
             .ReturnsAsync((comments, comments.Count));
 
-        GetCommentsQuery query = new GetCommentsQuery(taskId, userId, page, pageSize);
+        GetCommentsQuery query = new(taskId, userId, page, pageSize);
 
         // Act
         Result<PagedResultDto<CommentDto>> result = await this._handler.Handle(query, CancellationToken.None);

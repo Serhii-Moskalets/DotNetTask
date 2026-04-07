@@ -18,7 +18,7 @@ public class UserTaskAccessEntityTest
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(taskId, userId);
+        UserTaskAccessEntity access = new(taskId, userId);
 
         access.TaskId.Should().Be(taskId);
         access.UserId.Should().Be(userId);

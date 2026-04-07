@@ -20,7 +20,7 @@ public class UpdateUsernameCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        UpdateUsernameCommand command = new UpdateUsernameCommand("ValidUsername", Guid.NewGuid());
+        UpdateUsernameCommand command = new("ValidUsername", Guid.NewGuid());
 
         // Act & Assert
         TestValidationResult<UpdateUsernameCommand> result = this._validator.TestValidate(command);
@@ -37,7 +37,7 @@ public class UpdateUsernameCommandValidatorTests
     public void Should_Have_Error_When_Username_Is_Empty(string? username)
     {
         // Arrange
-        UpdateUsernameCommand command = new UpdateUsernameCommand(username!, Guid.NewGuid());
+        UpdateUsernameCommand command = new(username!, Guid.NewGuid());
 
         // Act & Assert
         TestValidationResult<UpdateUsernameCommand> result = this._validator.TestValidate(command);
@@ -56,7 +56,7 @@ public class UpdateUsernameCommandValidatorTests
     public void Should_Have_Error_When_Username_Length_Is_Invalid(string username)
     {
         // Arrange
-        UpdateUsernameCommand command = new UpdateUsernameCommand(username, Guid.NewGuid());
+        UpdateUsernameCommand command = new(username, Guid.NewGuid());
 
         // Act & Assert
         TestValidationResult<UpdateUsernameCommand> result = this._validator.TestValidate(command);
@@ -71,7 +71,7 @@ public class UpdateUsernameCommandValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        UpdateUsernameCommand command = new UpdateUsernameCommand("ValidUser", Guid.Empty);
+        UpdateUsernameCommand command = new("ValidUser", Guid.Empty);
 
         // Act & Assert
         TestValidationResult<UpdateUsernameCommand> result = this._validator.TestValidate(command);

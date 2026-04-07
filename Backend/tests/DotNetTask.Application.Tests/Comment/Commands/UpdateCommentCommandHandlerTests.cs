@@ -50,7 +50,7 @@ public class UpdateCommentCommandHandlerTests
         this._uowMock.Setup(u => u.Comments.GetByIdAsync(It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
                .ReturnsAsync((CommentEntity?)null);
 
-        UpdateCommentCommand command = new UpdateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), "New Text");
+        UpdateCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "New Text");
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -70,12 +70,12 @@ public class UpdateCommentCommandHandlerTests
     public async Task HandleAsync_ShouldReturnFailure_WhenUserIsNotOwner()
     {
         // Arrange
-        CommentEntity comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._oldContent);
+        CommentEntity comment = new(Guid.NewGuid(), Guid.NewGuid(), this._oldContent);
 
         this._uowMock.Setup(u => u.Comments.GetByIdAsync(comment.Id, false, It.IsAny<CancellationToken>()))
                .ReturnsAsync(comment);
 
-        UpdateCommentCommand command = new UpdateCommentCommand(comment.Id, Guid.NewGuid(), "New Text");
+        UpdateCommentCommand command = new(comment.Id, Guid.NewGuid(), "New Text");
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -96,12 +96,12 @@ public class UpdateCommentCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        CommentEntity comment = new CommentEntity(Guid.NewGuid(), userId, this._oldContent);
+        CommentEntity comment = new(Guid.NewGuid(), userId, this._oldContent);
 
         this._commentsRepoMock.Setup(r => r.GetByIdAsync(comment.Id, false, It.IsAny<CancellationToken>()))
                .ReturnsAsync(comment);
 
-        UpdateCommentCommand command = new UpdateCommentCommand(comment.Id, userId, this._oldContent.Value);
+        UpdateCommentCommand command = new(comment.Id, userId, this._oldContent.Value);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -121,15 +121,15 @@ public class UpdateCommentCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        CommentEntity comment = new CommentEntity(Guid.NewGuid(), userId, this._oldContent);
+        CommentEntity comment = new(Guid.NewGuid(), userId, this._oldContent);
 
         this._uowMock.Setup(u => u.Comments.GetByIdAsync(comment.Id, false, It.IsAny<CancellationToken>()))
                .ReturnsAsync(comment);
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        UpdateCommentCommandHandler handler = new UpdateCommentCommandHandler(this._uowMock.Object);
+        UpdateCommentCommandHandler handler = new(this._uowMock.Object);
 
-        UpdateCommentCommand command = new UpdateCommentCommand(comment.Id, userId, "New Text");
+        UpdateCommentCommand command = new(comment.Id, userId, "New Text");
 
         // Act
         Result<bool> result = await handler.Handle(command, CancellationToken.None);

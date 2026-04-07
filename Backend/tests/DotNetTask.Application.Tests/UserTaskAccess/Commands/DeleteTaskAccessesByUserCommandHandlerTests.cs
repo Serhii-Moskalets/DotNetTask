@@ -42,7 +42,7 @@ public class DeleteTaskAccessesByUserCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        DeleteTaskAccessesByUserCommand command = new DeleteTaskAccessesByUserCommand(userId);
+        DeleteTaskAccessesByUserCommand command = new(userId);
 
         this._userTaskAccessRepoMock
             .Setup(r => r.ExistsByUserIdAsync(userId, It.IsAny<CancellationToken>()))
@@ -66,7 +66,7 @@ public class DeleteTaskAccessesByUserCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        DeleteTaskAccessesByUserCommand command = new DeleteTaskAccessesByUserCommand(userId);
+        DeleteTaskAccessesByUserCommand command = new(userId);
 
         this._userTaskAccessRepoMock
             .Setup(r => r.ExistsByUserIdAsync(userId, It.IsAny<CancellationToken>()))

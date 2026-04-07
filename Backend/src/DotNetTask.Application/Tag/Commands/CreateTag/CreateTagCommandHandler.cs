@@ -46,7 +46,7 @@ public class CreateTagCommandHandler(
             (vo, ct) => this.UnitOfWork.Tags.ExistsByNameAsync(vo, command.UserId, ct),
             cancellationToken);
 
-        TagEntity tagEntity = new TagEntity(tagName, command.UserId);
+        TagEntity tagEntity = new(tagName, command.UserId);
         await this.UnitOfWork.Tags.AddAsync(tagEntity, cancellationToken);
 
         task.SetTag(tagEntity.Id);

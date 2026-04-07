@@ -42,7 +42,7 @@ public class CreateTaskListCommandHandler(
             (vo, ct) => this.UnitOfWork.TaskLists.ExistsByTitleAsync(vo, command.UserId, ct),
             cancellationToken);
 
-        TaskListEntity taskList = new TaskListEntity(user.Id, title);
+        TaskListEntity taskList = new(user.Id, title);
 
         await this.UnitOfWork.TaskLists.AddAsync(taskList, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);

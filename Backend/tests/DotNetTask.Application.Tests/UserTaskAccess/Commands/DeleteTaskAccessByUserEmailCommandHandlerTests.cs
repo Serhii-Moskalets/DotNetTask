@@ -44,7 +44,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     public async Task Handle_ShouldReturnValidationError_WhenUserDoesNotHaveAccess()
     {
         // Arrange
-        DeleteTaskAccessByUserEmailCommand command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), "test@test.com");
+        DeleteTaskAccessByUserEmailCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "test@test.com");
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(false);
@@ -66,7 +66,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenUserNotFound()
     {
         // Arrange
-        DeleteTaskAccessByUserEmailCommand command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), "test@test.com");
+        DeleteTaskAccessByUserEmailCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "test@test.com");
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
@@ -92,7 +92,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        DeleteTaskAccessByUserEmailCommand command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), user.Email.Value);
+        DeleteTaskAccessByUserEmailCommand command = new(Guid.NewGuid(), Guid.NewGuid(), user.Email.Value);
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);
@@ -121,7 +121,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        DeleteTaskAccessByUserEmailCommand command = new DeleteTaskAccessByUserEmailCommand(Guid.NewGuid(), Guid.NewGuid(), user.Email.Value);
+        DeleteTaskAccessByUserEmailCommand command = new(Guid.NewGuid(), Guid.NewGuid(), user.Email.Value);
 
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(true);

@@ -56,7 +56,7 @@ public class DeleteOverdueTasksCommandHandlerTests
 
         this._uowMock.Setup(u => u.TaskLists).Returns(this._taskListRepoMock.Object);
 
-        DeleteOverdueTasksCommand command = new DeleteOverdueTasksCommand(taskListId, userId);
+        DeleteOverdueTasksCommand command = new(taskListId, userId);
 
         // Act
         Result<int> result = await this._handler.Handle(command, CancellationToken.None);
@@ -80,7 +80,7 @@ public class DeleteOverdueTasksCommandHandlerTests
         // Arrange
         Guid userId = Guid.NewGuid();
         int expectedDeletedCount = 5;
-        TaskListEntity taskList = new TaskListEntity(userId, TaskListTitle.Create("My list"));
+        TaskListEntity taskList = new(userId, TaskListTitle.Create("My list"));
 
         this._taskListRepoMock
             .Setup(r => r.GetTaskListByIdForUserAsync(taskList.Id, userId, true, It.IsAny<CancellationToken>()))
@@ -90,7 +90,7 @@ public class DeleteOverdueTasksCommandHandlerTests
             .Setup(r => r.DeleteOverdueTaskAsync(taskList.Id, It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedDeletedCount);
 
-        DeleteOverdueTasksCommand command = new DeleteOverdueTasksCommand(taskList.Id, userId);
+        DeleteOverdueTasksCommand command = new(taskList.Id, userId);
 
         // Act
         Result<int> result = await this._handler.Handle(command, CancellationToken.None);

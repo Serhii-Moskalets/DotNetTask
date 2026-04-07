@@ -47,7 +47,7 @@ public class GetSharedTaskByIdQueryHandlerTests
         // Arrange
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
-        GetSharedTaskByIdQuery query = new GetSharedTaskByIdQuery(taskId, userId);
+        GetSharedTaskByIdQuery query = new(taskId, userId);
 
         this._userTaskAccessRepoMock
             .Setup(r => r.GetByTaskAndUserIdAsync(taskId, userId, It.IsAny<CancellationToken>()))
@@ -72,7 +72,7 @@ public class GetSharedTaskByIdQueryHandlerTests
         // Arrange
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
-        UserTaskAccessEntity taskAccess = new UserTaskAccessEntity(taskId, userId)
+        UserTaskAccessEntity taskAccess = new(taskId, userId)
         {
             Task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Task")),
             User = UserEntityFactory.Create(),
@@ -82,7 +82,7 @@ public class GetSharedTaskByIdQueryHandlerTests
             .Setup(r => r.GetByTaskAndUserIdAsync(taskId, userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(taskAccess);
 
-        GetSharedTaskByIdQuery query = new GetSharedTaskByIdQuery(taskId, userId);
+        GetSharedTaskByIdQuery query = new(taskId, userId);
 
         // Act
         Result<TaskDto> result = await this._handler.Handle(query, CancellationToken.None);

@@ -46,7 +46,7 @@ public class DeleteTaskListCommandHandlerTests
         this._taskListRepoMock.Setup(r => r.GetTaskListByIdForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
                         .ReturnsAsync((TaskListEntity?)null);
 
-        DeleteTaskListCommand command = new DeleteTaskListCommand(Guid.NewGuid(), Guid.NewGuid());
+        DeleteTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -65,7 +65,7 @@ public class DeleteTaskListCommandHandlerTests
     public async Task Handle_ShouldDeleteTaskList_WhenValidationPasses()
     {
         // Arrange
-        TaskListEntity taskList = new TaskListEntity(Guid.NewGuid(), TaskListTitle.Create("Test TaskList"));
+        TaskListEntity taskList = new(Guid.NewGuid(), TaskListTitle.Create("Test TaskList"));
 
         this._taskListRepoMock.Setup(r => r.GetTaskListByIdForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
                         .ReturnsAsync(taskList);
@@ -73,7 +73,7 @@ public class DeleteTaskListCommandHandlerTests
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        DeleteTaskListCommand command = new DeleteTaskListCommand(taskList.Id, Guid.NewGuid());
+        DeleteTaskListCommand command = new(taskList.Id, Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

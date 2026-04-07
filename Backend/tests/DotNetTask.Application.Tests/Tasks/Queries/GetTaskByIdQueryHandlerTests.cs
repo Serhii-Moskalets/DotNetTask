@@ -49,7 +49,7 @@ public class GetTaskByIdQueryHandlerTests
             .Setup(r => r.GetTaskByIdForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
 
-        GetTaskByIdQuery query = new GetTaskByIdQuery(Guid.NewGuid(), Guid.NewGuid());
+        GetTaskByIdQuery query = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<TaskDto> result = await this._handler.Handle(query, CancellationToken.None);
@@ -70,7 +70,7 @@ public class GetTaskByIdQueryHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Task"), DateTime.UtcNow.AddDays(1));
+        TaskEntity task = new(userId, Guid.NewGuid(), TaskTitle.Create("Task"), DateTime.UtcNow.AddDays(1));
 
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(
@@ -80,7 +80,7 @@ public class GetTaskByIdQueryHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        GetTaskByIdQuery query = new GetTaskByIdQuery(userId, task.Id);
+        GetTaskByIdQuery query = new(userId, task.Id);
 
         // Act
         Result<TaskDto> result = await this._handler.Handle(query, CancellationToken.None);

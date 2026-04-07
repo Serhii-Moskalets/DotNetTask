@@ -115,7 +115,7 @@ public class UserEntityTests
     public void ConfirmEmailVerification_Should_SetConfirmed_When_TokenValid()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         user.RequestEmailVerification(TokenValue, Duration, fakeClock.UtcNow);
@@ -135,7 +135,7 @@ public class UserEntityTests
     public void ConfirmEmailVerification_ShoulReturnFailure_When_TokenExpired()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         user.RequestEmailVerification(TokenValue, TimeSpan.FromMinutes(1), fakeClock.UtcNow);
@@ -157,7 +157,7 @@ public class UserEntityTests
     public void ConfirmEmailVerification_Should_ReturnFailure_When_NoRequestWasMade()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         // Act
@@ -175,7 +175,7 @@ public class UserEntityTests
     public void ConfirmEmailChange_Should_UpdateEmail_When_Valid()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, fakeClock.UtcNow);
@@ -197,7 +197,7 @@ public class UserEntityTests
     public void ConfirmEmailChange_Should_UpdateSecurityStamp_When_Valid()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
         SecurityStamp initialStamp = user.SecurityStamp;
 
@@ -218,7 +218,7 @@ public class UserEntityTests
     public void ConfirmEmailChange_Should_ReturnFailure_When_TokenExpired()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         user.RequestEmailChange(NewEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1), fakeClock.UtcNow);
@@ -240,7 +240,7 @@ public class UserEntityTests
     public void ConfirmEmailChange_Should_ReturnFailure_When_NoRequestWasMade()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         // Act
@@ -358,7 +358,7 @@ public class UserEntityTests
     public void RevertEmailChange_Should_SetPasswordResetToken()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
         user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, CurrentTime);
         user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
@@ -379,7 +379,7 @@ public class UserEntityTests
     public void RevertEmailChange_Should_ReturnFailure_When_TokenExpired()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         user.RequestEmailChange(NewEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1), fakeClock.UtcNow);
@@ -420,7 +420,7 @@ public class UserEntityTests
     public void ResetPassword_Should_UpdatePassword_And_SecurityStamp_When_ValidToken()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
         SecurityStamp initialStamp = user.SecurityStamp;
 
@@ -446,7 +446,7 @@ public class UserEntityTests
     public void ConfirmPasswordReset_ShoulReturnFailure_When_TokenExpired()
     {
         // Arrange
-        FakeClock fakeClock = new FakeClock(CurrentTime);
+        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         user.RequestPasswordReset(TokenValue, TimeSpan.FromMinutes(1), fakeClock.UtcNow);

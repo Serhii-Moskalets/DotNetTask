@@ -20,7 +20,7 @@ public class CreateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        CreateCommentCommand command = new CreateCommentCommand(
+        CreateCommentCommand command = new(
             TaskId: Guid.NewGuid(),
             UserId: Guid.Empty,
             Content: "Some content");
@@ -37,7 +37,7 @@ public class CreateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
-        CreateCommentCommand command = new CreateCommentCommand(
+        CreateCommentCommand command = new(
             TaskId: Guid.Empty,
             UserId: Guid.NewGuid(),
             Content: "Some content");
@@ -54,7 +54,7 @@ public class CreateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Text_Is_Empty()
     {
-        CreateCommentCommand command = new CreateCommentCommand(
+        CreateCommentCommand command = new(
             TaskId: Guid.Empty,
             UserId: Guid.NewGuid(),
             Content: string.Empty);
@@ -71,8 +71,8 @@ public class CreateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Text_Exceeds_MaxLength()
     {
-        string longText = new string('a', CommentContent.MaxLength + 1);
-        CreateCommentCommand command = new CreateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), longText);
+        string longText = new('a', CommentContent.MaxLength + 1);
+        CreateCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid(), longText);
 
         TestValidationResult<CreateCommentCommand> result = this._validator.TestValidate(command);
 
@@ -86,7 +86,7 @@ public class CreateCommentCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
-        CreateCommentCommand command = new CreateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), "Valid comment");
+        CreateCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Valid comment");
 
         TestValidationResult<CreateCommentCommand> result = this._validator.TestValidate(command);
 

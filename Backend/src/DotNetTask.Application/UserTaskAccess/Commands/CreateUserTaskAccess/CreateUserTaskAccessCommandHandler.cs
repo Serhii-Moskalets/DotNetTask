@@ -43,7 +43,7 @@ public class CreateUserTaskAccessCommandHandler(
             return accessValidation;
         }
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(command.TaskId, sharedUser!.Id);
+        UserTaskAccessEntity access = new(command.TaskId, sharedUser!.Id);
 
         await this.UnitOfWork.UserTaskAccesses.AddAsync(access, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);

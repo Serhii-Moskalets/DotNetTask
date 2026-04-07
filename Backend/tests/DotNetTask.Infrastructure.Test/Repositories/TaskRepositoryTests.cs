@@ -74,7 +74,7 @@ public class TaskRepositoryTests
         // Arrange
         Guid userId_1 = Guid.NewGuid();
         Guid userId_2 = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId_1, Guid.NewGuid(), TaskTitle.Create("Task"));
+        TaskEntity task = new(userId_1, Guid.NewGuid(), TaskTitle.Create("Task"));
         await this._repo.AddAsync(task);
         await this._context.SaveChangesAsync();
 
@@ -96,7 +96,7 @@ public class TaskRepositoryTests
 
         for (int i = 1; i <= 5; i++)
         {
-            TaskEntity task = new TaskEntity(userId, taskListId, TaskTitle.Create($"Task_{i}"), DateTime.UtcNow.AddDays(i));
+            TaskEntity task = new(userId, taskListId, TaskTitle.Create($"Task_{i}"), DateTime.UtcNow.AddDays(i));
             await this._repo.AddAsync(task);
         }
 
@@ -202,7 +202,7 @@ public class TaskRepositoryTests
         // Arrange
         Guid user1 = Guid.NewGuid();
         Guid user2 = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(user1, Guid.NewGuid(), TaskTitle.Create("Task"));
+        TaskEntity task = new(user1, Guid.NewGuid(), TaskTitle.Create("Task"));
         await this._repo.AddAsync(task);
         await this._context.SaveChangesAsync();
 

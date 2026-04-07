@@ -50,7 +50,7 @@ public class ChangeEmailCommandHandlerTests
     public async Task Handle_Should_ReturnSuccess_When_RequestIsValid()
     {
         // Arrange
-        ChangeEmailCommand command = new ChangeEmailCommand(NewEmail, Guid.NewGuid());
+        ChangeEmailCommand command = new(NewEmail, Guid.NewGuid());
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
@@ -84,7 +84,7 @@ public class ChangeEmailCommandHandlerTests
     public async Task Handle_Should_ReturnNotFound_When_UserDoesNotExist()
     {
         // Arrange
-        ChangeEmailCommand command = new ChangeEmailCommand(NewEmail, Guid.NewGuid());
+        ChangeEmailCommand command = new(NewEmail, Guid.NewGuid());
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
@@ -108,7 +108,7 @@ public class ChangeEmailCommandHandlerTests
     public async Task Handle_Should_ReturnFailure_When_EmailAlreadyInUse()
     {
         // Arrange
-        ChangeEmailCommand command = new ChangeEmailCommand(NewEmail, Guid.NewGuid());
+        ChangeEmailCommand command = new(NewEmail, Guid.NewGuid());
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
@@ -138,7 +138,7 @@ public class ChangeEmailCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        ChangeEmailCommand command = new ChangeEmailCommand(user.Email.Value, Guid.NewGuid());
+        ChangeEmailCommand command = new(user.Email.Value, Guid.NewGuid());
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

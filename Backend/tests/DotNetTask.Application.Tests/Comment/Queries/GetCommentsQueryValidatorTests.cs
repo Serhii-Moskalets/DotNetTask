@@ -19,7 +19,7 @@ public class GetCommentsQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        GetCommentsQuery query = new GetCommentsQuery(Guid.NewGuid(), Guid.Empty);
+        GetCommentsQuery query = new(Guid.NewGuid(), Guid.Empty);
 
         TestValidationResult<GetCommentsQuery> result = this._validator.TestValidate(query);
 
@@ -33,7 +33,7 @@ public class GetCommentsQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
-        GetCommentsQuery query = new GetCommentsQuery(Guid.Empty, Guid.NewGuid());
+        GetCommentsQuery query = new(Guid.Empty, Guid.NewGuid());
 
         TestValidationResult<GetCommentsQuery> result = this._validator.TestValidate(query);
 
@@ -50,7 +50,7 @@ public class GetCommentsQueryValidatorTests
     [InlineData(-1)]
     public void Should_Have_Error_When_Page_Is_Invalid(int page)
     {
-        GetCommentsQuery query = new GetCommentsQuery(Guid.NewGuid(), Guid.NewGuid(), page, 10);
+        GetCommentsQuery query = new(Guid.NewGuid(), Guid.NewGuid(), page, 10);
 
         TestValidationResult<GetCommentsQuery> result = this._validator.TestValidate(query);
 
@@ -67,7 +67,7 @@ public class GetCommentsQueryValidatorTests
     [InlineData(101)]
     public void Should_Have_Error_When_PageSize_Is_Invalid(int pageSize)
     {
-        GetCommentsQuery query = new GetCommentsQuery(Guid.NewGuid(), Guid.NewGuid(), 1, pageSize);
+        GetCommentsQuery query = new(Guid.NewGuid(), Guid.NewGuid(), 1, pageSize);
 
         TestValidationResult<GetCommentsQuery> result = this._validator.TestValidate(query);
 
@@ -81,7 +81,7 @@ public class GetCommentsQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Query_Is_Valid()
     {
-        GetCommentsQuery query = new GetCommentsQuery(Guid.NewGuid(), Guid.NewGuid());
+        GetCommentsQuery query = new(Guid.NewGuid(), Guid.NewGuid());
 
         TestValidationResult<GetCommentsQuery> result = this._validator.TestValidate(query);
 

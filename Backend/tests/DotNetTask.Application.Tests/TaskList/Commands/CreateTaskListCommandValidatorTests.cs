@@ -21,7 +21,7 @@ public class CreateTaskListCommandValidatorTests
     public void Should_Have_Error_When_Title_Is_Empty()
     {
         // Arrange
-        CreateTaskListCommand command = new CreateTaskListCommand(Guid.NewGuid(), string.Empty);
+        CreateTaskListCommand command = new(Guid.NewGuid(), string.Empty);
 
         // Act
         TestValidationResult<CreateTaskListCommand> result = this._validator.TestValidate(command);
@@ -38,8 +38,8 @@ public class CreateTaskListCommandValidatorTests
     public void Should_Have_Error_When_Title_Too_Long()
     {
         // Arrange
-        string longTitle = new string('A', TaskListTitle.MaxLength + 1);
-        CreateTaskListCommand command = new CreateTaskListCommand(Guid.NewGuid(), longTitle);
+        string longTitle = new('A', TaskListTitle.MaxLength + 1);
+        CreateTaskListCommand command = new(Guid.NewGuid(), longTitle);
 
         // Act
         TestValidationResult<CreateTaskListCommand> result = this._validator.TestValidate(command);
@@ -56,7 +56,7 @@ public class CreateTaskListCommandValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        CreateTaskListCommand command = new CreateTaskListCommand(Guid.Empty, "Valid Title");
+        CreateTaskListCommand command = new(Guid.Empty, "Valid Title");
 
         // Act
         TestValidationResult<CreateTaskListCommand> result = this._validator.TestValidate(command);
@@ -73,7 +73,7 @@ public class CreateTaskListCommandValidatorTests
     public void Should_Not_Have_Error_When_Valid()
     {
         // Arrange
-        CreateTaskListCommand command = new CreateTaskListCommand(Guid.NewGuid(), "Valid Title");
+        CreateTaskListCommand command = new(Guid.NewGuid(), "Valid Title");
 
         // Act
         TestValidationResult<CreateTaskListCommand> result = this._validator.TestValidate(command);

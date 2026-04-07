@@ -41,7 +41,7 @@ public class GlobalExceptionHandlerTests
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
-        DomainException exception = new DomainException("Domain error");
+        DomainException exception = new("Domain error");
 
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
@@ -62,7 +62,7 @@ public class GlobalExceptionHandlerTests
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
-        PasswordChangeRequiredException exception = new PasswordChangeRequiredException("Change password");
+        PasswordChangeRequiredException exception = new("Change password");
 
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
@@ -83,7 +83,7 @@ public class GlobalExceptionHandlerTests
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
-        EmailResendVerificationException exception = new EmailResendVerificationException();
+        EmailResendVerificationException exception = new();
 
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
@@ -104,7 +104,7 @@ public class GlobalExceptionHandlerTests
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
-        KeyNotFoundException exception = new KeyNotFoundException();
+        KeyNotFoundException exception = new();
 
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
@@ -133,7 +133,7 @@ public class GlobalExceptionHandlerTests
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
-        Exception exception = new Exception("boom");
+        Exception exception = new("boom");
 
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 
@@ -163,7 +163,7 @@ public class GlobalExceptionHandlerTests
         using TestHttpContext testContext = Setup.CreateHttpContext();
         DefaultHttpContext context = testContext.Context;
 
-        UnauthorizedAccessException exception = new UnauthorizedAccessException("Unauthorized");
+        UnauthorizedAccessException exception = new("Unauthorized");
 
         await this._handler.TryHandleAsync(context, exception, CancellationToken.None);
 

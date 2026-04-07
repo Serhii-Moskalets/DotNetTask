@@ -56,7 +56,7 @@ public class CreateUserTaskAccessCommandHandlerTests
         // Arrange
         string email = "test@test.com";
         UserEntity user = UserEntityFactory.Create(email: email);
-        CreateUserTaskAccessCommand command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
+        CreateUserTaskAccessCommand command = new(Guid.NewGuid(), Guid.NewGuid(), email);
 
         this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -89,7 +89,7 @@ public class CreateUserTaskAccessCommandHandlerTests
         // Arrange
         string email = "share@test.com";
         UserEntity user = UserEntityFactory.Create();
-        CreateUserTaskAccessCommand command = new CreateUserTaskAccessCommand(Guid.NewGuid(), Guid.NewGuid(), email);
+        CreateUserTaskAccessCommand command = new(Guid.NewGuid(), Guid.NewGuid(), email);
 
         this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

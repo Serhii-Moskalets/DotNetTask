@@ -41,7 +41,7 @@ public class UpdateUsernameCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        UpdateUsernameCommand command = new UpdateUsernameCommand("NewUserName", user.Id);
+        UpdateUsernameCommand command = new("NewUserName", user.Id);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -67,7 +67,7 @@ public class UpdateUsernameCommandHandlerTests
     public async Task Handle_ShouldReturnNotFound_WhenUserDoesNotExist()
     {
         // Arrange
-        UpdateUsernameCommand command = new UpdateUsernameCommand("AnyName", Guid.NewGuid());
+        UpdateUsernameCommand command = new("AnyName", Guid.NewGuid());
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
 
@@ -91,7 +91,7 @@ public class UpdateUsernameCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        UpdateUsernameCommand command = new UpdateUsernameCommand(UserEntityFactory.UserName, userId);
+        UpdateUsernameCommand command = new(UserEntityFactory.UserName, userId);
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
@@ -119,7 +119,7 @@ public class UpdateUsernameCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        UpdateUsernameCommand command = new UpdateUsernameCommand("TakenName", userId);
+        UpdateUsernameCommand command = new("TakenName", userId);
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))

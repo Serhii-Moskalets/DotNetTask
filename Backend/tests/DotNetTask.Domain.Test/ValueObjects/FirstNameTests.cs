@@ -56,7 +56,7 @@ public class FirstNameTests
     public void Create_Should_ThrowDomainException_When_NameTooLong()
     {
         // Arrange
-        string longName = new string('A', FirstName.MaxLength + 1);
+        string longName = new('A', FirstName.MaxLength + 1);
 
         // Act
         Action act = () => FirstName.Create(longName);
@@ -73,7 +73,7 @@ public class FirstNameTests
     public void Create_Should_Work_When_LengthIsExactlyMaxLength()
     {
         // Arrange
-        string value = new string('a', FirstName.MaxLength);
+        string value = new('a', FirstName.MaxLength);
 
         // Act
         FirstName result = FirstName.Create(value);

@@ -53,7 +53,7 @@ public class CreateTaskListCommandHandlerTests
         this._uowMock.Setup(u => u.Users.GetByIdAsync(userId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync((UserEntity)null!);
 
-        CreateTaskListCommand command = new CreateTaskListCommand(userId, "My Task List");
+        CreateTaskListCommand command = new(userId, "My Task List");
 
         // Act
         Result<Guid> result = await this._handler.Handle(command, CancellationToken.None);
@@ -92,7 +92,7 @@ public class CreateTaskListCommandHandlerTests
             It.IsAny<CancellationToken>()))
             .ReturnsAsync(uniqueTaskListTitle);
 
-        CreateTaskListCommand command = new CreateTaskListCommand(user.Id, "My Task List");
+        CreateTaskListCommand command = new(user.Id, "My Task List");
 
         // Act
         Result<Guid> result = await this._handler.Handle(command, CancellationToken.None);

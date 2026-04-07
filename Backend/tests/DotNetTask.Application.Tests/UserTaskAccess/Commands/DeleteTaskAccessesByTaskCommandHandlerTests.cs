@@ -48,7 +48,7 @@ public class DeleteTaskAccessesByTaskCommandHandlerTests
         // Arrange
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
-        DeleteTaskAccessesByTaskCommand command = new DeleteTaskAccessesByTaskCommand(taskId, userId);
+        DeleteTaskAccessesByTaskCommand command = new(taskId, userId);
 
         this._tasksRepoMock.Setup(r => r.GetTaskByIdForUserAsync(taskId, userId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                       .ReturnsAsync((TaskEntity?)null);
@@ -78,8 +78,8 @@ public class DeleteTaskAccessesByTaskCommandHandlerTests
         // Arrange
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Test Task"));
-        DeleteTaskAccessesByTaskCommand command = new DeleteTaskAccessesByTaskCommand(taskId, userId);
+        TaskEntity task = new(userId, Guid.NewGuid(), TaskTitle.Create("Test Task"));
+        DeleteTaskAccessesByTaskCommand command = new(taskId, userId);
 
         this._tasksRepoMock.Setup(r => r.GetTaskByIdForUserAsync(taskId, userId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                       .ReturnsAsync(task);

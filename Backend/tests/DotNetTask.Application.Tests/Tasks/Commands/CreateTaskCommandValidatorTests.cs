@@ -22,7 +22,7 @@ public class CreateTaskCommandValidatorTests
     public void Should_HaveError_When_TaskListId_IsEmpty()
     {
         // Arrange
-        CreateTaskCommand command = new CreateTaskCommand(
+        CreateTaskCommand command = new(
             new CreateTaskDto
             {
                 TaskListId = Guid.Empty,
@@ -42,7 +42,7 @@ public class CreateTaskCommandValidatorTests
     public void Should_HaveError_When_UserId_IsEmpty()
     {
         // Arrange
-        CreateTaskCommand command = new CreateTaskCommand(
+        CreateTaskCommand command = new(
             new CreateTaskDto
             {
                 TaskListId = Guid.NewGuid(),
@@ -62,7 +62,7 @@ public class CreateTaskCommandValidatorTests
     public void Should_HaveError_When_Title_IsEmpty()
     {
         // Arrange
-        CreateTaskCommand command = new CreateTaskCommand(
+        CreateTaskCommand command = new(
             new CreateTaskDto
             {
                 TaskListId = Guid.NewGuid(),
@@ -82,8 +82,8 @@ public class CreateTaskCommandValidatorTests
     public void Should_HaveError_When_Title_TooLong()
     {
         // Arrange
-        string longTitle = new string('A', TaskTitle.MaxLength + 1);
-        CreateTaskCommand command = new CreateTaskCommand(
+        string longTitle = new('A', TaskTitle.MaxLength + 1);
+        CreateTaskCommand command = new(
             new CreateTaskDto
             {
                 TaskListId = Guid.NewGuid(),
@@ -103,7 +103,7 @@ public class CreateTaskCommandValidatorTests
     public void Should_HaveError_When_DueDate_IsInPast()
     {
         // Arrange
-        CreateTaskCommand command = new CreateTaskCommand(
+        CreateTaskCommand command = new(
             new CreateTaskDto
             {
                 TaskListId = Guid.NewGuid(),
@@ -124,7 +124,7 @@ public class CreateTaskCommandValidatorTests
     public void Should_NotHaveError_When_CommandIsValid()
     {
         // Arrange
-        CreateTaskCommand command = new CreateTaskCommand(
+        CreateTaskCommand command = new(
             new CreateTaskDto
             {
                 TaskListId = Guid.NewGuid(),

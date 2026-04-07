@@ -20,7 +20,7 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_NewTitle_Is_Null_Or_Empty()
     {
-        UpdateTaskListCommand command = new UpdateTaskListCommand(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
+        UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
 
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.NewTitle)
@@ -33,8 +33,8 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_NewTitle_Exceeds_MaxLength()
     {
-        string longTitle = new string('A', TaskListTitle.MaxLength + 1);
-        UpdateTaskListCommand command = new UpdateTaskListCommand(Guid.NewGuid(), Guid.NewGuid(), longTitle);
+        string longTitle = new('A', TaskListTitle.MaxLength + 1);
+        UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid(), longTitle);
 
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.NewTitle)
@@ -47,7 +47,7 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        UpdateTaskListCommand command = new UpdateTaskListCommand(Guid.NewGuid(), Guid.Empty, "Valid Title");
+        UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.Empty, "Valid Title");
 
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.UserId)
@@ -60,7 +60,7 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskListId_Is_Empty()
     {
-        UpdateTaskListCommand command = new UpdateTaskListCommand(Guid.Empty, Guid.NewGuid(), "Valid Title");
+        UpdateTaskListCommand command = new(Guid.Empty, Guid.NewGuid(), "Valid Title");
 
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(c => c.TaskListId)
@@ -73,7 +73,7 @@ public class UpdateTaskListCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_For_Valid_Command()
     {
-        UpdateTaskListCommand command = new UpdateTaskListCommand(Guid.NewGuid(), Guid.NewGuid(), "Valid Title");
+        UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Valid Title");
 
         TestValidationResult<UpdateTaskListCommand> result = this._validator.TestValidate(command);
         result.ShouldNotHaveAnyValidationErrors();

@@ -56,7 +56,7 @@ public class CreateTaskCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskListEntity?)null);
 
-        CreateTaskCommand command = new CreateTaskCommand(
+        CreateTaskCommand command = new(
             new CreateTaskDto
             {
                 TaskListId = Guid.NewGuid(),
@@ -82,7 +82,7 @@ public class CreateTaskCommandHandlerTests
         // Arrange
         Guid userId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
-        TaskListEntity taskList = new TaskListEntity(userId, TaskListTitle.Create("My list"));
+        TaskListEntity taskList = new(userId, TaskListTitle.Create("My list"));
 
         this._taskListRepoMock
             .Setup(r => r.GetTaskListByIdForUserAsync(
@@ -95,14 +95,14 @@ public class CreateTaskCommandHandlerTests
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
                .ReturnsAsync(1);
 
-        CreateTaskDto dto = new CreateTaskDto
+        CreateTaskDto dto = new()
         {
             DueDate = DateTime.UtcNow.AddDays(1),
             TaskListId = taskListId,
             Title = "New task",
         };
 
-        CreateTaskCommand command = new CreateTaskCommand(dto, userId);
+        CreateTaskCommand command = new(dto, userId);
 
         // Act
         Result<Guid> result = await this._handler.Handle(command, CancellationToken.None);

@@ -56,7 +56,7 @@ public class AddTagToTaskCommandHandlerTests
             .Setup(r => r.GetTaskByIdForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
 
-        AddTagToTaskCommand command = new AddTagToTaskCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        AddTagToTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -80,7 +80,7 @@ public class AddTagToTaskCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
         Guid tagId = Guid.NewGuid();
         task.SetTag(tagId);
 
@@ -88,7 +88,7 @@ public class AddTagToTaskCommandHandlerTests
             .Setup(r => r.GetTaskByIdForUserAsync(task.Id, userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        AddTagToTaskCommand command = new AddTagToTaskCommand(task.Id, userId, tagId);
+        AddTagToTaskCommand command = new(task.Id, userId, tagId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -110,8 +110,8 @@ public class AddTagToTaskCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
-        TagEntity tag = new TagEntity(TagName.Create("Tag"), userId);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
+        TagEntity tag = new(TagName.Create("Tag"), userId);
 
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(task.Id, userId, false, It.IsAny<CancellationToken>()))
@@ -123,7 +123,7 @@ public class AddTagToTaskCommandHandlerTests
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        AddTagToTaskCommand command = new AddTagToTaskCommand(task.Id, userId, tag.Id);
+        AddTagToTaskCommand command = new(task.Id, userId, tag.Id);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -144,7 +144,7 @@ public class AddTagToTaskCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
         Guid tagId = Guid.NewGuid();
 
         this._taskRepoMock
@@ -155,7 +155,7 @@ public class AddTagToTaskCommandHandlerTests
             .Setup(r => r.GetByIdAsync(tagId, true, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TagEntity?)null);
 
-        AddTagToTaskCommand command = new AddTagToTaskCommand(task.Id, userId, tagId);
+        AddTagToTaskCommand command = new(task.Id, userId, tagId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -178,8 +178,8 @@ public class AddTagToTaskCommandHandlerTests
         Guid userId = Guid.NewGuid();
         Guid otherUserId = Guid.NewGuid();
 
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
-        TagEntity tag = new TagEntity(TagName.Create("Foreign Tag"), otherUserId);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
+        TagEntity tag = new(TagName.Create("Foreign Tag"), otherUserId);
 
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(task.Id, userId, false, It.IsAny<CancellationToken>()))
@@ -189,7 +189,7 @@ public class AddTagToTaskCommandHandlerTests
             .Setup(r => r.GetByIdAsync(tag.Id, true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(tag);
 
-        AddTagToTaskCommand command = new AddTagToTaskCommand(task.Id, userId, tag.Id);
+        AddTagToTaskCommand command = new(task.Id, userId, tag.Id);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

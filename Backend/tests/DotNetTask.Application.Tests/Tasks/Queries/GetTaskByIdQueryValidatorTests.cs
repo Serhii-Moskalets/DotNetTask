@@ -20,7 +20,7 @@ public class GetTaskByIdQueryValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        GetTaskByIdQuery query = new GetTaskByIdQuery(Guid.Empty, Guid.NewGuid());
+        GetTaskByIdQuery query = new(Guid.Empty, Guid.NewGuid());
 
         // Act
         TestValidationResult<GetTaskByIdQuery> result = this._validator.TestValidate(query);
@@ -37,7 +37,7 @@ public class GetTaskByIdQueryValidatorTests
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
         // Arrange
-        GetTaskByIdQuery query = new GetTaskByIdQuery(Guid.NewGuid(), Guid.Empty);
+        GetTaskByIdQuery query = new(Guid.NewGuid(), Guid.Empty);
 
         // Act
         TestValidationResult<GetTaskByIdQuery> result = this._validator.TestValidate(query);
@@ -54,7 +54,7 @@ public class GetTaskByIdQueryValidatorTests
     public void Should_Not_Have_Error_When_UserId_And_TaskId_Are_Provided()
     {
         // Arrange
-        GetTaskByIdQuery query = new GetTaskByIdQuery(Guid.NewGuid(), Guid.NewGuid());
+        GetTaskByIdQuery query = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         TestValidationResult<GetTaskByIdQuery> result = this._validator.TestValidate(query);

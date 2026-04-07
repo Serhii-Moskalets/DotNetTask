@@ -54,7 +54,7 @@ public class RemoveTagFromTaskCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
 
-        RemoveTagFromTaskCommand command = new RemoveTagFromTaskCommand(Guid.NewGuid(), Guid.NewGuid());
+        RemoveTagFromTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -75,7 +75,7 @@ public class RemoveTagFromTaskCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
 
         task.SetTag(null);
 
@@ -88,7 +88,7 @@ public class RemoveTagFromTaskCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        RemoveTagFromTaskCommand command = new RemoveTagFromTaskCommand(Guid.NewGuid(), Guid.NewGuid());
+        RemoveTagFromTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -107,7 +107,7 @@ public class RemoveTagFromTaskCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
 
         task.SetTag(Guid.NewGuid());
 
@@ -122,7 +122,7 @@ public class RemoveTagFromTaskCommandHandlerTests
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        RemoveTagFromTaskCommand command = new RemoveTagFromTaskCommand(Guid.NewGuid(), Guid.NewGuid());
+        RemoveTagFromTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

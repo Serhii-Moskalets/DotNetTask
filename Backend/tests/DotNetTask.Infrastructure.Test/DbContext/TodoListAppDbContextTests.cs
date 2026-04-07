@@ -48,7 +48,7 @@ public class DotNetTaskDbContextTests
         context.Add(user);
         context.SaveChanges();
 
-        TaskListEntity taskList = new TaskListEntity(user.Id, TaskListTitle);
+        TaskListEntity taskList = new(user.Id, TaskListTitle);
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
@@ -66,11 +66,11 @@ public class DotNetTaskDbContextTests
     {
         using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        TaskListEntity taskList = new TaskListEntity(Guid.NewGuid(), TaskListTitle);
+        TaskListEntity taskList = new(Guid.NewGuid(), TaskListTitle);
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
-        TaskEntity task = new TaskEntity(Guid.NewGuid(), taskList.Id, TaskTitle);
+        TaskEntity task = new(Guid.NewGuid(), taskList.Id, TaskTitle);
         context.Tasks.Add(task);
         context.SaveChanges();
 
@@ -93,7 +93,7 @@ public class DotNetTaskDbContextTests
         context.Add(user);
         context.SaveChanges();
 
-        TagEntity tag = new TagEntity(TagName.Create("Tag"), user.Id);
+        TagEntity tag = new(TagName.Create("Tag"), user.Id);
         context.Tags.Add(tag);
         context.SaveChanges();
 
@@ -115,15 +115,15 @@ public class DotNetTaskDbContextTests
         context.Add(user);
         context.SaveChanges();
 
-        TaskListEntity taskList = new TaskListEntity(user.Id, TaskListTitle);
+        TaskListEntity taskList = new(user.Id, TaskListTitle);
         context.TaskLists.Add(taskList);
         context.SaveChanges();
 
-        TaskEntity task = new TaskEntity(user.Id, taskList.Id, TaskTitle);
+        TaskEntity task = new(user.Id, taskList.Id, TaskTitle);
         context.Tasks.Add(task);
         context.SaveChanges();
 
-        CommentEntity comment = new CommentEntity(task.Id, user.Id, CommentContent.Create("Comment"));
+        CommentEntity comment = new(task.Id, user.Id, CommentContent.Create("Comment"));
         context.Comments.Add(comment);
         context.SaveChanges();
 
@@ -144,7 +144,7 @@ public class DotNetTaskDbContextTests
         Guid userId = Guid.NewGuid();
         Guid taskId = Guid.NewGuid();
 
-        UserTaskAccessEntity access = new UserTaskAccessEntity(taskId, userId);
+        UserTaskAccessEntity access = new(taskId, userId);
         context.UserTaskAccesses.Add(access);
         context.SaveChanges();
 

@@ -18,7 +18,7 @@ public class DeleteTaskAccessesByUserCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        DeleteTaskAccessesByUserCommand command = new DeleteTaskAccessesByUserCommand(Guid.Empty);
+        DeleteTaskAccessesByUserCommand command = new(Guid.Empty);
         TestValidationResult<DeleteTaskAccessesByUserCommand> result = this._validator.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.UserId)
@@ -31,7 +31,7 @@ public class DeleteTaskAccessesByUserCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_UserId_Is_Valid()
     {
-        DeleteTaskAccessesByUserCommand command = new DeleteTaskAccessesByUserCommand(Guid.NewGuid());
+        DeleteTaskAccessesByUserCommand command = new(Guid.NewGuid());
         TestValidationResult<DeleteTaskAccessesByUserCommand> result = this._validator.TestValidate(command);
 
         result.ShouldNotHaveValidationErrorFor(x => x.UserId);

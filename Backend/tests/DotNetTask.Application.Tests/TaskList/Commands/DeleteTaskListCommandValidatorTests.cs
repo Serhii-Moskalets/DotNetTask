@@ -19,7 +19,7 @@ public class DeleteTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        DeleteTaskListCommand command = new DeleteTaskListCommand(Guid.NewGuid(), Guid.Empty);
+        DeleteTaskListCommand command = new(Guid.NewGuid(), Guid.Empty);
 
         TestValidationResult<DeleteTaskListCommand> result = this._validator.TestValidate(command);
 
@@ -33,7 +33,7 @@ public class DeleteTaskListCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskListId_Is_Empty()
     {
-        DeleteTaskListCommand command = new DeleteTaskListCommand(Guid.Empty, Guid.NewGuid());
+        DeleteTaskListCommand command = new(Guid.Empty, Guid.NewGuid());
 
         TestValidationResult<DeleteTaskListCommand> result = this._validator.TestValidate(command);
 
@@ -47,7 +47,7 @@ public class DeleteTaskListCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Valid_Command()
     {
-        DeleteTaskListCommand command = new DeleteTaskListCommand(Guid.NewGuid(), Guid.NewGuid());
+        DeleteTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         TestValidationResult<DeleteTaskListCommand> result = this._validator.TestValidate(command);
 

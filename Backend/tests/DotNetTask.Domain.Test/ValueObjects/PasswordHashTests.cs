@@ -53,7 +53,7 @@ public class PasswordHashTests
     public void ToString_Should_ReturnRawValue()
     {
         // Arrange
-        string rawHash = new string('a', 64);
+        string rawHash = new('a', 64);
         PasswordHash passwordHash = PasswordHash.Create(rawHash);
 
         // Act
@@ -70,7 +70,7 @@ public class PasswordHashTests
     public void PasswordHashes_WithSameValue_Should_BeEqual()
     {
         // Arrange
-        string rawHash = new string('b', 64);
+        string rawHash = new('b', 64);
         PasswordHash hash1 = PasswordHash.Create(rawHash);
         PasswordHash hash2 = PasswordHash.Create(rawHash);
 

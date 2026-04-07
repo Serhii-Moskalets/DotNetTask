@@ -23,7 +23,7 @@ public class TagMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TagEntity entity = new TagEntity(TagName.Create("Work"), userId);
+        TagEntity entity = new(TagName.Create("Work"), userId);
         Guid tagId = Guid.NewGuid();
         typeof(TagEntity).GetProperty(nameof(TagEntity.Id))?.SetValue(entity, tagId);
 
@@ -44,7 +44,7 @@ public class TagMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        List<TagEntity> entities = new List<TagEntity>
+        List<TagEntity> entities = new()
         {
             new(TagName.Create("Urgent"), userId),
             new(TagName.Create("Personal"), userId),
@@ -69,7 +69,7 @@ public class TagMapperTests
     public void Map_EmptyCollection_ShouldReturnEmptyList()
     {
         // Arrange
-        List<TagEntity> entities = new List<TagEntity>();
+        List<TagEntity> entities = new();
 
         // Act
         IReadOnlyCollection<TagDto> result = TagMapper.Map(entities);

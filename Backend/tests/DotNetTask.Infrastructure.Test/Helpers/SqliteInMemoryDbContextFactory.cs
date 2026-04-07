@@ -26,14 +26,14 @@ public static class SqliteInMemoryDbContextFactory
     /// </returns>
     public static DotNetTaskDbContext Create()
     {
-        SqliteConnection connection = new SqliteConnection("DataSource=:memory:");
+        SqliteConnection connection = new("DataSource=:memory:");
         connection.Open();
 
         DbContextOptions<DotNetTaskDbContext> options = new DbContextOptionsBuilder<DotNetTaskDbContext>()
             .UseSqlite(connection)
             .Options;
 
-        DotNetTaskDbContext context = new DotNetTaskDbContext(options);
+        DotNetTaskDbContext context = new(options);
         context.Database.EnsureCreated();
 
         return context;

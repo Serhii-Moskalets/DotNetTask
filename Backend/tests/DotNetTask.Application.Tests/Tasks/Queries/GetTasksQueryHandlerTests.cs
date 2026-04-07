@@ -48,13 +48,13 @@ public class GetTasksQueryHandlerTests
         // Arrange
         Guid userId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
-        GetTasksQuery query = new GetTasksQuery(userId, taskListId)
+        GetTasksQuery query = new(userId, taskListId)
         {
             Page = 1,
             PageSize = 10,
         };
 
-        List<TaskEntity> entities = new List<TaskEntity>
+        List<TaskEntity> entities = new()
         {
             new(userId, taskListId, TaskTitle.Create("Task 1")),
             new(userId, taskListId, TaskTitle.Create("Task 2")),
@@ -94,7 +94,7 @@ public class GetTasksQueryHandlerTests
     public async Task Handle_ShouldCallRepository_WithExactQueryParameters()
     {
         // Arrange
-        GetTasksQuery query = new GetTasksQuery(
+        GetTasksQuery query = new(
             UserId: Guid.NewGuid(),
             TaskListId: Guid.NewGuid(),
             TaskStatuses: [StatusTask.NotStarted],

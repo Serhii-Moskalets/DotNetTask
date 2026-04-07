@@ -53,7 +53,7 @@ public class DeleteTaskAccessByIdCommandHandlerTests
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
         Guid ownerId = Guid.NewGuid();
-        DeleteTaskAccessByIdCommand command = new DeleteTaskAccessByIdCommand(taskId, userId, ownerId);
+        DeleteTaskAccessByIdCommand command = new(taskId, userId, ownerId);
 
         this._taskRepoMock.Setup(r => r.IsTaskOwnerAsync(taskId, ownerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
@@ -82,7 +82,7 @@ public class DeleteTaskAccessByIdCommandHandlerTests
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
         Guid ownerId = Guid.NewGuid();
-        DeleteTaskAccessByIdCommand command = new DeleteTaskAccessByIdCommand(taskId, userId, ownerId);
+        DeleteTaskAccessByIdCommand command = new(taskId, userId, ownerId);
 
         this._taskRepoMock.Setup(r => r.IsTaskOwnerAsync(taskId, ownerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);

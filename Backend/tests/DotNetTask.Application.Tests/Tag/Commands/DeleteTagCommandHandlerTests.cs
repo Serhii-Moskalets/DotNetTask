@@ -48,7 +48,7 @@ public class DeleteTagCommandHandlerTests
         this._tagRepoMock.Setup(r => r.GetTagByIdForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
                    .ReturnsAsync((TagEntity?)null);
 
-        DeleteTagCommand command = new DeleteTagCommand(Guid.NewGuid(), Guid.NewGuid());
+        DeleteTagCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -69,7 +69,7 @@ public class DeleteTagCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TagEntity tagEntity = new TagEntity(TagName.Create("Tag"), userId);
+        TagEntity tagEntity = new(TagName.Create("Tag"), userId);
 
         this._tagRepoMock.Setup(r => r.GetTagByIdForUserAsync(tagEntity.Id, userId, false, It.IsAny<CancellationToken>()))
                    .ReturnsAsync(tagEntity);
@@ -78,7 +78,7 @@ public class DeleteTagCommandHandlerTests
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        DeleteTagCommand command = new DeleteTagCommand(tagEntity.Id, userId);
+        DeleteTagCommand command = new(tagEntity.Id, userId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

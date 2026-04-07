@@ -51,7 +51,7 @@ public class CreateCommentCommandHandlerTests
              .Setup(s => s.HasAccessAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
              .ReturnsAsync(false);
 
-        CreateCommentCommand command = new CreateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), "Text");
+        CreateCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Text");
 
         // Act
         Result<Guid> result = await this._handler.Handle(command, CancellationToken.None);
@@ -74,7 +74,7 @@ public class CreateCommentCommandHandlerTests
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
         string text = "Valid comment";
-        CreateCommentCommand command = new CreateCommentCommand(taskId, userId, text);
+        CreateCommentCommand command = new(taskId, userId, text);
 
         this._taskAccessMock
             .Setup(s => s.HasAccessAsync(taskId, userId, It.IsAny<CancellationToken>()))

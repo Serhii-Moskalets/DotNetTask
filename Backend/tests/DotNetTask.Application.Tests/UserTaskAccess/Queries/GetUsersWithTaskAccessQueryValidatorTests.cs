@@ -18,7 +18,7 @@ public class GetUsersWithTaskAccessQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
-        GetUsersWithTaskAccessQuery query = new GetUsersWithTaskAccessQuery(Guid.Empty, Guid.NewGuid());
+        GetUsersWithTaskAccessQuery query = new(Guid.Empty, Guid.NewGuid());
         TestValidationResult<GetUsersWithTaskAccessQuery> result = this._validator.TestValidate(query);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
@@ -30,7 +30,7 @@ public class GetUsersWithTaskAccessQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        GetUsersWithTaskAccessQuery query = new GetUsersWithTaskAccessQuery(Guid.NewGuid(), Guid.Empty);
+        GetUsersWithTaskAccessQuery query = new(Guid.NewGuid(), Guid.Empty);
         TestValidationResult<GetUsersWithTaskAccessQuery> result = this._validator.TestValidate(query);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
@@ -42,7 +42,7 @@ public class GetUsersWithTaskAccessQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_All_Fields_Are_Valid()
     {
-        GetUsersWithTaskAccessQuery query = new GetUsersWithTaskAccessQuery(Guid.NewGuid(), Guid.NewGuid());
+        GetUsersWithTaskAccessQuery query = new(Guid.NewGuid(), Guid.NewGuid());
         TestValidationResult<GetUsersWithTaskAccessQuery> result = this._validator.TestValidate(query);
         result.ShouldNotHaveAnyValidationErrors();
     }

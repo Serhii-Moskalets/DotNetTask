@@ -20,7 +20,7 @@ public class DeleteTagCommandValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        DeleteTagCommand command = new DeleteTagCommand(TagId: Guid.NewGuid(), UserId: Guid.Empty);
+        DeleteTagCommand command = new(TagId: Guid.NewGuid(), UserId: Guid.Empty);
 
         // Act
         TestValidationResult<DeleteTagCommand> result = this._validator.TestValidate(command);
@@ -37,7 +37,7 @@ public class DeleteTagCommandValidatorTests
     public void Should_Have_Error_When_TagId_Is_Empty()
     {
         // Arrange
-        DeleteTagCommand command = new DeleteTagCommand(TagId: Guid.Empty, UserId: Guid.NewGuid());
+        DeleteTagCommand command = new(TagId: Guid.Empty, UserId: Guid.NewGuid());
 
         // Act
         TestValidationResult<DeleteTagCommand> result = this._validator.TestValidate(command);
@@ -54,7 +54,7 @@ public class DeleteTagCommandValidatorTests
     public void Should_Not_Have_Error_When_UserId_And_TagId_Are_Valid()
     {
         // Arrange
-        DeleteTagCommand command = new DeleteTagCommand(TagId: Guid.NewGuid(), UserId: Guid.NewGuid());
+        DeleteTagCommand command = new(TagId: Guid.NewGuid(), UserId: Guid.NewGuid());
 
         // Act
         TestValidationResult<DeleteTagCommand> result = this._validator.TestValidate(command);

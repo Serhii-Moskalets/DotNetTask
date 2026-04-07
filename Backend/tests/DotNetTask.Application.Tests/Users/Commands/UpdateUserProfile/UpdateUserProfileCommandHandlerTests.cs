@@ -40,7 +40,7 @@ public class UpdateUserProfileCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand("NewName", null, user.Id);
+        UpdateUserProfileCommand command = new("NewName", null, user.Id);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -64,7 +64,7 @@ public class UpdateUserProfileCommandHandlerTests
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand(UserEntityFactory.FirstName, UserEntityFactory.LastName, user.Id);
+        UpdateUserProfileCommand command = new(UserEntityFactory.FirstName, UserEntityFactory.LastName, user.Id);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -90,7 +90,7 @@ public class UpdateUserProfileCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand("Name", "LastName", userId);
+        UpdateUserProfileCommand command = new("Name", "LastName", userId);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserEntity?)null);
@@ -113,7 +113,7 @@ public class UpdateUserProfileCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        UpdateUserProfileCommand command = new UpdateUserProfileCommand(null, "NewLastName", userId);
+        UpdateUserProfileCommand command = new(null, "NewLastName", userId);
         UserEntity user = UserEntityFactory.Create();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))

@@ -26,7 +26,7 @@ public class TaskAccessForOwnerMapperTests
 
         UserEntity user = UserEntityFactory.Create();
 
-        UserTaskAccessEntity entity = new UserTaskAccessEntity(taskId, user.Id)
+        UserTaskAccessEntity entity = new(taskId, user.Id)
         {
             User = user,
         };
@@ -52,7 +52,7 @@ public class TaskAccessForOwnerMapperTests
     {
         // Arrange
         Guid taskId = Guid.NewGuid();
-        List<UserTaskAccessEntity> entities = new List<UserTaskAccessEntity>
+        List<UserTaskAccessEntity> entities = new()
         {
             new(taskId, Guid.NewGuid())
             {
@@ -85,7 +85,7 @@ public class TaskAccessForOwnerMapperTests
     public void Map_EmptyCollection_ShouldReturnEmptyList()
     {
         // Arrange
-        List<UserTaskAccessEntity> entities = new List<UserTaskAccessEntity>();
+        List<UserTaskAccessEntity> entities = new();
 
         // Act
         IReadOnlyCollection<UserBriefDto> result = TaskAccessForOwnerMapper.Map(entities);

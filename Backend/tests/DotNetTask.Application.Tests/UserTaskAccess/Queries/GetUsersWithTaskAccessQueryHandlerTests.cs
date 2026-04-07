@@ -51,7 +51,7 @@ public class GetUsersWithTaskAccessQueryHandlerTests
         // Arrange
         Guid taskId = Guid.NewGuid();
         Guid userId = Guid.NewGuid();
-        GetUsersWithTaskAccessQuery query = new GetUsersWithTaskAccessQuery(taskId, userId);
+        GetUsersWithTaskAccessQuery query = new(taskId, userId);
 
         this._tasksRepoMock.Setup(r => r.GetTaskByIdForUserAsync(taskId, userId, true, It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
@@ -74,13 +74,13 @@ public class GetUsersWithTaskAccessQueryHandlerTests
     {
         // Arrange
         Guid ownerId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(ownerId, Guid.NewGuid(), TaskTitle.Create("Task"));
-        GetUsersWithTaskAccessQuery query = new GetUsersWithTaskAccessQuery(task.Id, ownerId);
+        TaskEntity task = new(ownerId, Guid.NewGuid(), TaskTitle.Create("Task"));
+        GetUsersWithTaskAccessQuery query = new(task.Id, ownerId);
 
         this._tasksRepoMock.Setup(r => r.GetTaskByIdForUserAsync(task.Id, ownerId, true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        List<UserTaskAccessEntity> sharedUsers = new List<UserTaskAccessEntity>
+        List<UserTaskAccessEntity> sharedUsers = new()
         {
             new(task.Id, Guid.NewGuid()) { User = UserEntityFactory.Create() },
             new(task.Id, Guid.NewGuid()) { User = UserEntityFactory.Create("rick", "rickky", "rick@test.com") },

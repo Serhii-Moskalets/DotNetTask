@@ -20,7 +20,7 @@ public class GetTagsQueryValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        GetTagsQuery query = new GetTagsQuery(Guid.Empty);
+        GetTagsQuery query = new(Guid.Empty);
 
         // Act
         TestValidationResult<GetTagsQuery> result = this._validator.TestValidate(query);
@@ -37,7 +37,7 @@ public class GetTagsQueryValidatorTests
     public void Should_Not_Have_Error_When_UserId_Is_Valid()
     {
         // Arrange
-        GetTagsQuery query = new GetTagsQuery(Guid.NewGuid());
+        GetTagsQuery query = new(Guid.NewGuid());
 
         // Act
         TestValidationResult<GetTagsQuery> result = this._validator.TestValidate(query);
@@ -55,7 +55,7 @@ public class GetTagsQueryValidatorTests
     [InlineData(-1)]
     public void Should_Have_Error_When_Page_Is_Invalid(int page)
     {
-        GetTagsQuery query = new GetTagsQuery(Guid.NewGuid(), page, 10);
+        GetTagsQuery query = new(Guid.NewGuid(), page, 10);
 
         TestValidationResult<GetTagsQuery> result = this._validator.TestValidate(query);
 
@@ -72,7 +72,7 @@ public class GetTagsQueryValidatorTests
     [InlineData(101)]
     public void Should_Have_Error_When_PageSize_Is_Invalid(int pageSize)
     {
-        GetTagsQuery query = new GetTagsQuery(Guid.NewGuid(), 1, pageSize);
+        GetTagsQuery query = new(Guid.NewGuid(), 1, pageSize);
 
         TestValidationResult<GetTagsQuery> result = this._validator.TestValidate(query);
 
@@ -88,7 +88,7 @@ public class GetTagsQueryValidatorTests
     public void Should_Not_Have_Error_When_Pagination_Is_Valid()
     {
         // Arrange
-        GetTagsQuery query = new GetTagsQuery(Guid.NewGuid(), Page: 1, PageSize: 50);
+        GetTagsQuery query = new(Guid.NewGuid(), Page: 1, PageSize: 50);
 
         // Act
         TestValidationResult<GetTagsQuery> result = this._validator.TestValidate(query);

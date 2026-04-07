@@ -20,7 +20,7 @@ public class UpdateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        UpdateCommentCommand command = new UpdateCommentCommand(Guid.NewGuid(), Guid.Empty, "Some text");
+        UpdateCommentCommand command = new(Guid.NewGuid(), Guid.Empty, "Some text");
 
         TestValidationResult<UpdateCommentCommand> result = this._validator.TestValidate(command);
 
@@ -34,7 +34,7 @@ public class UpdateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_CommentId_Is_Empty()
     {
-        UpdateCommentCommand command = new UpdateCommentCommand(Guid.Empty, Guid.NewGuid(), "Some text");
+        UpdateCommentCommand command = new(Guid.Empty, Guid.NewGuid(), "Some text");
 
         TestValidationResult<UpdateCommentCommand> result = this._validator.TestValidate(command);
 
@@ -48,7 +48,7 @@ public class UpdateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_NewText_Is_Empty()
     {
-        UpdateCommentCommand command = new UpdateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
+        UpdateCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
 
         TestValidationResult<UpdateCommentCommand> result = this._validator.TestValidate(command);
 
@@ -62,8 +62,8 @@ public class UpdateCommentCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_NewText_Exceeds_MaxLength()
     {
-        string longText = new string('a', CommentContent.MaxLength + 1);
-        UpdateCommentCommand command = new UpdateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), longText);
+        string longText = new('a', CommentContent.MaxLength + 1);
+        UpdateCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid(), longText);
 
         TestValidationResult<UpdateCommentCommand> result = this._validator.TestValidate(command);
 
@@ -77,7 +77,7 @@ public class UpdateCommentCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
-        UpdateCommentCommand command = new UpdateCommentCommand(Guid.NewGuid(), Guid.NewGuid(), "Valid comment");
+        UpdateCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Valid comment");
 
         TestValidationResult<UpdateCommentCommand> result = this._validator.TestValidate(command);
 

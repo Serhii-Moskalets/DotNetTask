@@ -47,7 +47,7 @@ public class GetTagsQueryHandlerTests
         Guid userId = Guid.NewGuid();
         int page = 1;
         int pageSize = 10;
-        List<TagEntity> tagEntities = new List<TagEntity>
+        List<TagEntity> tagEntities = new()
         {
             new(TagName.Create("Tag1"), userId),
             new(TagName.Create("Tag2"), userId),
@@ -57,7 +57,7 @@ public class GetTagsQueryHandlerTests
             .Setup(r => r.GetTagsAsync(userId, page, pageSize, It.IsAny<CancellationToken>()))
             .ReturnsAsync((tagEntities, tagEntities.Count));
 
-        GetTagsQuery query = new GetTagsQuery(userId, page, pageSize);
+        GetTagsQuery query = new(userId, page, pageSize);
 
         // Act
         Result<PagedResultDto<TagDto>> result = await this._handler.Handle(query, CancellationToken.None);
@@ -87,7 +87,7 @@ public class GetTagsQueryHandlerTests
             .Setup(r => r.GetTagsAsync(userId, page, pageSize, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<TagEntity>(), 0));
 
-        GetTagsQuery query = new GetTagsQuery(userId, page, pageSize);
+        GetTagsQuery query = new(userId, page, pageSize);
 
         // Act
         Result<PagedResultDto<TagDto>> result = await this._handler.Handle(query, CancellationToken.None);

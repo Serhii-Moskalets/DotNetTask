@@ -21,7 +21,7 @@ public class ChangeEmailCommandValidatorTests
     public void Should_Not_Have_Error_When_Command_Is_Valid()
     {
         // Arrange
-        ChangeEmailCommand command = new ChangeEmailCommand(ValidEmail, Guid.NewGuid());
+        ChangeEmailCommand command = new(ValidEmail, Guid.NewGuid());
 
         // Act & Assert
         TestValidationResult<ChangeEmailCommand> result = this._validator.TestValidate(command);
@@ -35,7 +35,7 @@ public class ChangeEmailCommandValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        ChangeEmailCommand command = new ChangeEmailCommand(ValidEmail, Guid.Empty);
+        ChangeEmailCommand command = new(ValidEmail, Guid.Empty);
 
         // Act & Assert
         TestValidationResult<ChangeEmailCommand> result = this._validator.TestValidate(command);
@@ -53,7 +53,7 @@ public class ChangeEmailCommandValidatorTests
     public void Should_Have_Error_When_Email_Is_Empty(string? email)
     {
         // Arrange
-        ChangeEmailCommand command = new ChangeEmailCommand(email!, Guid.NewGuid());
+        ChangeEmailCommand command = new(email!, Guid.NewGuid());
 
         // Act & Assert
         TestValidationResult<ChangeEmailCommand> result = this._validator.TestValidate(command);
@@ -71,7 +71,7 @@ public class ChangeEmailCommandValidatorTests
     public void Should_Have_Error_When_Email_Format_Is_Incorrect(string invalidEmail)
     {
         // Arrange
-        ChangeEmailCommand command = new ChangeEmailCommand(invalidEmail, Guid.NewGuid());
+        ChangeEmailCommand command = new(invalidEmail, Guid.NewGuid());
 
         // Act & Assert
         TestValidationResult<ChangeEmailCommand> result = this._validator.TestValidate(command);

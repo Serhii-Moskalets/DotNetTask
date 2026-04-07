@@ -23,9 +23,9 @@ public class BaseRepositoryTests
     public async Task AddAsync_Should_Add_Entity_And_GetByIdAsync_Should_Return_Entity()
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
-        TagEntity entity = new TagEntity(TagName, Guid.NewGuid());
+        TagEntity entity = new(TagName, Guid.NewGuid());
         await repo.AddAsync(entity);
         await context.SaveChangesAsync();
 
@@ -42,9 +42,9 @@ public class BaseRepositoryTests
     public async Task DeleteAsync_Should_Remove_Entity()
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
-        TagEntity entity = new TagEntity(
+        TagEntity entity = new(
             TagName,
             Guid.NewGuid());
 
@@ -87,7 +87,7 @@ public class BaseRepositoryTests
     public async Task ExistsAsync_Should_Return_False_For_NonExisting_Entity()
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
         bool exists = await repo.ExistsAsync(Guid.NewGuid());
         exists.Should().BeFalse();

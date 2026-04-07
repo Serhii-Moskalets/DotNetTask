@@ -20,7 +20,7 @@ public class GetTaskByTitleQueryValidatorTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(
+        GetTaskByTitleQuery query = new(
             UserId: Guid.Empty,
             Text: "test");
 
@@ -38,7 +38,7 @@ public class GetTaskByTitleQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_UserId_Is_Valid()
     {
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(
+        GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: "test");
 
@@ -53,7 +53,7 @@ public class GetTaskByTitleQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Text_Is_Null()
     {
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(
+        GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: null);
 
@@ -73,7 +73,7 @@ public class GetTaskByTitleQueryValidatorTests
     [InlineData("   ")]
     public void Should_Not_Have_Error_When_Text_Is_Empty_Or_Whitespace(string text)
     {
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(
+        GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: text);
 
@@ -88,7 +88,7 @@ public class GetTaskByTitleQueryValidatorTests
     [Fact]
     public void Should_Have_Error_When_Text_Exceeds_100_Characters()
     {
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(
+        GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: new string('a', CommonPolicy.MaxSearchTextLength + 1));
 
@@ -104,7 +104,7 @@ public class GetTaskByTitleQueryValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_Text_Is_Exactly_100_Characters()
     {
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(
+        GetTaskByTitleQuery query = new(
             UserId: Guid.NewGuid(),
             Text: new string('a', CommonPolicy.MaxSearchTextLength));
 
@@ -122,7 +122,7 @@ public class GetTaskByTitleQueryValidatorTests
     [InlineData(-1)]
     public void Should_Have_Error_When_Page_Is_Invalid(int page)
     {
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(Guid.NewGuid(), "test", page, 10);
+        GetTaskByTitleQuery query = new(Guid.NewGuid(), "test", page, 10);
 
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 
@@ -139,7 +139,7 @@ public class GetTaskByTitleQueryValidatorTests
     [InlineData(101)]
     public void Should_Have_Error_When_PageSize_Is_Invalid(int pageSize)
     {
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(Guid.NewGuid(), "test", 1, pageSize);
+        GetTaskByTitleQuery query = new(Guid.NewGuid(), "test", 1, pageSize);
 
         TestValidationResult<GetTaskByTitleQuery> result = this._validator.TestValidate(query);
 

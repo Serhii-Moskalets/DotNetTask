@@ -45,7 +45,7 @@ public class GetAllTaskListQueryHandlerTests
         Guid userId = Guid.NewGuid();
         int page = 1;
         int pageSize = 10;
-        List<TaskListEntity> entities = new List<TaskListEntity>
+        List<TaskListEntity> entities = new()
         {
             new(userId, TaskListTitle.Create("List 1")),
             new(userId, TaskListTitle.Create("List 2")),
@@ -55,7 +55,7 @@ public class GetAllTaskListQueryHandlerTests
             .Setup(r => r.GetTaskListsAsync(userId, page, pageSize, It.IsAny<CancellationToken>()))
             .ReturnsAsync((entities, entities.Count));
 
-        GetTaskListsQuery query = new GetTaskListsQuery(userId);
+        GetTaskListsQuery query = new(userId);
 
         // Act
         TinyResult.Result<PagedResultDto<TaskListDto>> result = await this._handler.Handle(query, CancellationToken.None);
@@ -90,7 +90,7 @@ public class GetAllTaskListQueryHandlerTests
             .Setup(r => r.GetTaskListsAsync(userId, page, pageSize, It.IsAny<CancellationToken>()))
             .ReturnsAsync((new List<TaskListEntity>(), 0));
 
-        GetTaskListsQuery query = new GetTaskListsQuery(userId, page, pageSize);
+        GetTaskListsQuery query = new(userId, page, pageSize);
 
         // Act
         TinyResult.Result<PagedResultDto<TaskListDto>> result = await this._handler.Handle(query, CancellationToken.None);

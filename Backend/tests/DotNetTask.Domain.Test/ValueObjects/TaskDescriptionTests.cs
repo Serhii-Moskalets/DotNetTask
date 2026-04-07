@@ -67,7 +67,7 @@ public class TaskDescriptionTests
     public void Create_ShouldThrow_WhenValueExceedsMaxLength()
     {
         // Arrange
-        string tooLong = new string('a', TaskDescription.MaxLength + 1);
+        string tooLong = new('a', TaskDescription.MaxLength + 1);
 
         // Act
         Action act = () => TaskDescription.Create(tooLong);
@@ -152,7 +152,7 @@ public class TaskDescriptionTests
     public void Create_Should_Work_When_LengthIsExactlyMaxLength()
     {
         // Arrange
-        string value = new string('a', TaskDescription.MaxLength);
+        string value = new('a', TaskDescription.MaxLength);
 
         // Act
         TaskDescription result = TaskDescription.Create(value);

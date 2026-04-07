@@ -20,7 +20,7 @@ public class GetUserProfileQueryValidatorTests
     public void Should_Not_Have_Error_When_Query_IsValid()
     {
         // Arrange
-        GetUserProfileQuery command = new GetUserProfileQuery(Guid.NewGuid());
+        GetUserProfileQuery command = new(Guid.NewGuid());
 
         // Act & Assert
         TestValidationResult<GetUserProfileQuery> result = this._validator.TestValidate(command);
@@ -34,7 +34,7 @@ public class GetUserProfileQueryValidatorTests
     public void Should_Have_Error_When_UserId_IsEmpty()
     {
         // Arrange
-        GetUserProfileQuery command = new GetUserProfileQuery(Guid.Empty);
+        GetUserProfileQuery command = new(Guid.Empty);
 
         // Act & Assert
         TestValidationResult<GetUserProfileQuery> result = this._validator.TestValidate(command);

@@ -39,7 +39,7 @@ public class GetUserProfileQueryHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        GetUserProfileQuery query = new GetUserProfileQuery(userId);
+        GetUserProfileQuery query = new(userId);
 
         this._unitOfWorkMock.Setup(u => u.Users.GetByIdAsync(It.IsAny<Guid>(), default))
                        .ReturnsAsync((UserEntity?)null);
@@ -63,7 +63,7 @@ public class GetUserProfileQueryHandlerTests
         // Arrange
         UserEntity userEntity = UserEntityFactory.Create();
 
-        GetUserProfileQuery query = new GetUserProfileQuery(userEntity.Id);
+        GetUserProfileQuery query = new(userEntity.Id);
 
         this._unitOfWorkMock.Setup(u => u.Users.GetByIdAsync(It.IsAny<Guid>(), true, It.IsAny<CancellationToken>()))
                        .ReturnsAsync(userEntity);

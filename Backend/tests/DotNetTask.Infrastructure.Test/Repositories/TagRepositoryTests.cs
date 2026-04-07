@@ -25,7 +25,7 @@ public class TagRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
         Guid userId = Guid.NewGuid();
 
         // Act
@@ -45,9 +45,9 @@ public class TagRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
         Guid userId = Guid.NewGuid();
-        TagEntity tag = new TagEntity(TagName, userId);
+        TagEntity tag = new(TagName, userId);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();
@@ -69,7 +69,7 @@ public class TagRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
         Guid userId = Guid.NewGuid();
 
         // Act
@@ -90,7 +90,7 @@ public class TagRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
         Guid userId = Guid.NewGuid();
 
         for (int i = 1; i <= 15; i++)
@@ -120,12 +120,12 @@ public class TagRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
         Guid userId = Guid.NewGuid();
 
-        TagEntity tagOld = new TagEntity(TagName.Create("Oldest"), userId) { CreatedDate = DateTime.UtcNow.AddMinutes(-10) };
-        TagEntity tagMiddle = new TagEntity(TagName.Create("Middle"), userId) { CreatedDate = DateTime.UtcNow.AddMinutes(-5) };
-        TagEntity tagNew = new TagEntity(TagName.Create("Newest"), userId) { CreatedDate = DateTime.UtcNow };
+        TagEntity tagOld = new(TagName.Create("Oldest"), userId) { CreatedDate = DateTime.UtcNow.AddMinutes(-10) };
+        TagEntity tagMiddle = new(TagName.Create("Middle"), userId) { CreatedDate = DateTime.UtcNow.AddMinutes(-5) };
+        TagEntity tagNew = new(TagName.Create("Newest"), userId) { CreatedDate = DateTime.UtcNow };
 
         context.Tags.AddRange(tagMiddle, tagOld, tagNew);
         await context.SaveChangesAsync();
@@ -151,10 +151,10 @@ public class TagRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
         Guid ownerId = Guid.NewGuid();
         Guid strangerId = Guid.NewGuid();
-        TagEntity tag = new TagEntity(TagName, ownerId);
+        TagEntity tag = new(TagName, ownerId);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();
@@ -179,10 +179,10 @@ public class TagRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
         Guid userId_1 = Guid.NewGuid();
         Guid userId_2 = Guid.NewGuid();
-        TagEntity tag = new TagEntity(TagName, userId_1);
+        TagEntity tag = new(TagName, userId_1);
 
         await repo.AddAsync(tag);
         await context.SaveChangesAsync();

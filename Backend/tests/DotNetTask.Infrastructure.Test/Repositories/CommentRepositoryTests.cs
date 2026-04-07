@@ -23,7 +23,7 @@ public class CommentRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        CommentRepository repo = new CommentRepository(context);
+        CommentRepository repo = new(context);
         Guid taskId = Guid.NewGuid();
 
         // Act
@@ -44,14 +44,14 @@ public class CommentRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        CommentRepository repo = new CommentRepository(context);
+        CommentRepository repo = new(context);
 
         UserEntity user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
         await context.SaveChangesAsync();
 
         Guid taskId = Guid.NewGuid();
-        CommentEntity comment = new CommentEntity(taskId, user.Id, CommentContent.Create("Comment"));
+        CommentEntity comment = new(taskId, user.Id, CommentContent.Create("Comment"));
         await repo.AddAsync(comment);
         await context.SaveChangesAsync();
 
@@ -74,7 +74,7 @@ public class CommentRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        CommentRepository repo = new CommentRepository(context);
+        CommentRepository repo = new(context);
         UserEntity user = UserEntityFactory.Create();
         await context.Users.AddAsync(user);
 
@@ -82,7 +82,7 @@ public class CommentRepositoryTests
 
         for (int i = 1; i <= 5; i++)
         {
-            CommentEntity comment = new CommentEntity(taskId, user.Id, CommentContent.Create($"Text_{i}"));
+            CommentEntity comment = new(taskId, user.Id, CommentContent.Create($"Text_{i}"));
             await repo.AddAsync(comment);
         }
 

@@ -21,7 +21,7 @@ public class CreateTagCommandValidatorTests
     public void Validate_ShouldHaveError_WhenNameIsEmpty()
     {
         // Arrange
-        CreateTagCommand command = new CreateTagCommand(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
+        CreateTagCommand command = new(Guid.NewGuid(), Guid.NewGuid(), string.Empty);
 
         // Act
         TestValidationResult<CreateTagCommand> result = this._validator.TestValidate(command);
@@ -38,8 +38,8 @@ public class CreateTagCommandValidatorTests
     public void Validate_ShouldHaveError_WhenNameIsTooLong()
     {
         // Arrange
-        string longName = new string('a', TagName.MaxLength + 1);
-        CreateTagCommand command = new CreateTagCommand(Guid.NewGuid(), Guid.NewGuid(), longName);
+        string longName = new('a', TagName.MaxLength + 1);
+        CreateTagCommand command = new(Guid.NewGuid(), Guid.NewGuid(), longName);
 
         // Act
         TestValidationResult<CreateTagCommand> result = this._validator.TestValidate(command);
@@ -56,7 +56,7 @@ public class CreateTagCommandValidatorTests
     public void Validate_ShouldNotHaveError_WhenNameIsValid()
     {
         // Arrange
-        CreateTagCommand command = new CreateTagCommand(Guid.NewGuid(), Guid.NewGuid(), "Tag");
+        CreateTagCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "Tag");
 
         // Act
         TestValidationResult<CreateTagCommand> result = this._validator.TestValidate(command);

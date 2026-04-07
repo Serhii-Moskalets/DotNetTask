@@ -57,7 +57,7 @@ public class UpdateTaskListCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskListEntity)null!);
 
-        UpdateTaskListCommand command = new UpdateTaskListCommand(Guid.NewGuid(), Guid.NewGuid(), "NewTitle");
+        UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "NewTitle");
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -76,12 +76,12 @@ public class UpdateTaskListCommandHandlerTests
     public async Task Handle_ShouldReturnSuccess_WhenTitleIsUnchanged()
     {
         // Arrange
-        TaskListEntity taskList = new TaskListEntity(Guid.NewGuid(), Title);
+        TaskListEntity taskList = new(Guid.NewGuid(), Title);
 
         this._uowMock.Setup(u => u.TaskLists.GetTaskListByIdForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
                .ReturnsAsync(taskList);
 
-        UpdateTaskListCommand command = new UpdateTaskListCommand(taskList.Id, Guid.NewGuid(), Title.Value);
+        UpdateTaskListCommand command = new(taskList.Id, Guid.NewGuid(), Title.Value);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -106,17 +106,17 @@ public class UpdateTaskListCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskListEntity taskList = new TaskListEntity(Guid.NewGuid(), Title);
+        TaskListEntity taskList = new(Guid.NewGuid(), Title);
         string newTitle = "NewTitle";
         TaskListTitle uniqueTitle = TaskListTitle.Create("NewTitle Unique");
 
-        Mock<IUnitOfWork> uowMock = new Mock<IUnitOfWork>();
+        Mock<IUnitOfWork> uowMock = new();
         uowMock.Setup(u => u.TaskLists.GetTaskListByIdForUserAsync(taskList.Id, userId, false, It.IsAny<CancellationToken>()))
                 .ReturnsAsync(taskList);
 
         uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        Mock<IUniqueValueService> serviceMock = new Mock<IUniqueValueService>();
+        Mock<IUniqueValueService> serviceMock = new();
         serviceMock.Setup(s => s.GetUniqueValueAsync<TaskListTitle>(
                 It.Is<string>(t => t == newTitle),
                 It.IsAny<Func<string, TaskListTitle>>(),
@@ -124,9 +124,9 @@ public class UpdateTaskListCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(uniqueTitle);
 
-        UpdateTaskListCommandHandler handler = new UpdateTaskListCommandHandler(uowMock.Object, serviceMock.Object);
+        UpdateTaskListCommandHandler handler = new(uowMock.Object, serviceMock.Object);
 
-        UpdateTaskListCommand command = new UpdateTaskListCommand(taskList.Id, userId, "NewTitle");
+        UpdateTaskListCommand command = new(taskList.Id, userId, "NewTitle");
 
         // Act
         Result<bool> result = await handler.Handle(command, CancellationToken.None);

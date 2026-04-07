@@ -21,7 +21,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
-        UpdateTaskCommand command = new UpdateTaskCommand(
+        UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
                 TaskId = Guid.Empty,
@@ -40,7 +40,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        UpdateTaskCommand command = new UpdateTaskCommand(
+        UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
                 TaskId = Guid.NewGuid(),
@@ -59,8 +59,8 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Title_TooLong()
     {
-        string longTitle = new string('A', TaskTitle.MaxLength + 1);
-        UpdateTaskCommand command = new UpdateTaskCommand(
+        string longTitle = new('A', TaskTitle.MaxLength + 1);
+        UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
                 TaskId = Guid.NewGuid(),
@@ -79,8 +79,8 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Description_TooLong()
     {
-        string longDescription = new string('B', TaskDescription.MaxLength + 1);
-        UpdateTaskCommand command = new UpdateTaskCommand(
+        string longDescription = new('B', TaskDescription.MaxLength + 1);
+        UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
                 TaskId = Guid.NewGuid(),
@@ -100,7 +100,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_DueDate_IsInPast()
     {
-        UpdateTaskCommand command = new UpdateTaskCommand(
+        UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
                 TaskId = Guid.NewGuid(),
@@ -120,7 +120,7 @@ public class UpdateTaskCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_CommandIsValid()
     {
-        UpdateTaskCommand command = new UpdateTaskCommand(
+        UpdateTaskCommand command = new(
             new UpdateTaskDto
             {
                 TaskId = Guid.NewGuid(),

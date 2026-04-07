@@ -20,7 +20,7 @@ public class ChangeTaskStatusCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
-        ChangeTaskStatusCommand command = new ChangeTaskStatusCommand(Guid.Empty, Guid.NewGuid(), StatusTask.Done);
+        ChangeTaskStatusCommand command = new(Guid.Empty, Guid.NewGuid(), StatusTask.Done);
         TestValidationResult<ChangeTaskStatusCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
             .WithErrorMessage(TaskPolicy.IdRequiredMessage);
@@ -32,7 +32,7 @@ public class ChangeTaskStatusCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        ChangeTaskStatusCommand command = new ChangeTaskStatusCommand(Guid.NewGuid(), Guid.Empty, StatusTask.Done);
+        ChangeTaskStatusCommand command = new(Guid.NewGuid(), Guid.Empty, StatusTask.Done);
         TestValidationResult<ChangeTaskStatusCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
@@ -44,7 +44,7 @@ public class ChangeTaskStatusCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_Status_Is_Invalid()
     {
-        ChangeTaskStatusCommand command = new ChangeTaskStatusCommand(
+        ChangeTaskStatusCommand command = new(
             Guid.NewGuid(),
             Guid.NewGuid(),
             (StatusTask)999);
@@ -61,7 +61,7 @@ public class ChangeTaskStatusCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Errors_When_Command_Is_Valid()
     {
-        ChangeTaskStatusCommand command = new ChangeTaskStatusCommand(
+        ChangeTaskStatusCommand command = new(
             Guid.NewGuid(),
             Guid.NewGuid(),
             StatusTask.Done);

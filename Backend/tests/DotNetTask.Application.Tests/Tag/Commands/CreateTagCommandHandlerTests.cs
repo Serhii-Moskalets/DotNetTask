@@ -54,8 +54,8 @@ public class CreateTagCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), TaskTitle.Create("Title"));
-        CreateTagCommand command = new CreateTagCommand(userId, task.Id, "Tag");
+        TaskEntity task = new(userId, Guid.NewGuid(), TaskTitle.Create("Title"));
+        CreateTagCommand command = new(userId, task.Id, "Tag");
         TagName expectedTagName = TagName.Create("Tag");
 
         this._uniqueNameServiceMock
@@ -101,7 +101,7 @@ public class CreateTagCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        CreateTagCommand command = new CreateTagCommand(userId, Guid.NewGuid(), "Tag");
+        CreateTagCommand command = new(userId, Guid.NewGuid(), "Tag");
 
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(

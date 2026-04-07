@@ -54,7 +54,7 @@ public class DeleteCommentCommandHandlerTests
             .Setup(u => u.GetByIdAsync(It.IsAny<Guid>(), true, It.IsAny<CancellationToken>()))
             .ReturnsAsync((CommentEntity?)null);
 
-        DeleteCommentCommand command = new DeleteCommentCommand(Guid.NewGuid(), Guid.NewGuid());
+        DeleteCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -74,14 +74,14 @@ public class DeleteCommentCommandHandlerTests
     public async Task HandleAsync_ShouldReturnFailure_WhenUserHasNoPermission()
     {
         // Arrange
-        CommentEntity comment = new CommentEntity(Guid.NewGuid(), Guid.NewGuid(), this._content);
+        CommentEntity comment = new(Guid.NewGuid(), Guid.NewGuid(), this._content);
 
         this._uowMock.Setup(u => u.Comments.GetByIdAsync(It.IsAny<Guid>(), true, It.IsAny<CancellationToken>()))
                .ReturnsAsync(comment);
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(comment.TaskId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync(false);
 
-        DeleteCommentCommand command = new DeleteCommentCommand(comment.Id, Guid.NewGuid());
+        DeleteCommentCommand command = new(comment.Id, Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -102,13 +102,13 @@ public class DeleteCommentCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        CommentEntity comment = new CommentEntity(Guid.NewGuid(), userId, this._content);
+        CommentEntity comment = new(Guid.NewGuid(), userId, this._content);
 
         this._commentsRepoMock
             .Setup(u => u.GetByIdAsync(comment.Id, true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(comment);
 
-        DeleteCommentCommand command = new DeleteCommentCommand(comment.Id, userId);
+        DeleteCommentCommand command = new(comment.Id, userId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -129,7 +129,7 @@ public class DeleteCommentCommandHandlerTests
         // Arrange
         Guid commentOwnerId = Guid.NewGuid();
         Guid taskOwnerId = Guid.NewGuid();
-        CommentEntity comment = new CommentEntity(Guid.NewGuid(), commentOwnerId, this._content);
+        CommentEntity comment = new(Guid.NewGuid(), commentOwnerId, this._content);
 
         this._commentsRepoMock
              .Setup(u => u.GetByIdAsync(comment.Id, true, It.IsAny<CancellationToken>()))
@@ -139,7 +139,7 @@ public class DeleteCommentCommandHandlerTests
             .Setup(t => t.IsTaskOwnerAsync(comment.TaskId, taskOwnerId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        DeleteCommentCommand command = new DeleteCommentCommand(comment.Id, taskOwnerId);
+        DeleteCommentCommand command = new(comment.Id, taskOwnerId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

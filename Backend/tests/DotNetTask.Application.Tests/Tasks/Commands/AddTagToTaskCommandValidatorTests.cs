@@ -18,7 +18,7 @@ public class AddTagToTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
-        AddTagToTaskCommand command = new AddTagToTaskCommand(Guid.Empty, Guid.NewGuid(), Guid.NewGuid());
+        AddTagToTaskCommand command = new(Guid.Empty, Guid.NewGuid(), Guid.NewGuid());
         TestValidationResult<AddTagToTaskCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
@@ -30,7 +30,7 @@ public class AddTagToTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        AddTagToTaskCommand command = new AddTagToTaskCommand(Guid.NewGuid(), Guid.Empty, Guid.NewGuid());
+        AddTagToTaskCommand command = new(Guid.NewGuid(), Guid.Empty, Guid.NewGuid());
         TestValidationResult<AddTagToTaskCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
@@ -42,7 +42,7 @@ public class AddTagToTaskCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TagId_Is_Empty()
     {
-        AddTagToTaskCommand command = new AddTagToTaskCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty);
+        AddTagToTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty);
         TestValidationResult<AddTagToTaskCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TagId)
               .WithErrorMessage(TagPolicy.IdRequiredMessage);
@@ -54,7 +54,7 @@ public class AddTagToTaskCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_All_Fields_Are_Valid()
     {
-        AddTagToTaskCommand command = new AddTagToTaskCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        AddTagToTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         TestValidationResult<AddTagToTaskCommand> result = this._validator.TestValidate(command);
         result.ShouldNotHaveAnyValidationErrors();
     }

@@ -73,7 +73,7 @@ public class TagNameTests
     public void Create_ShouldThrow_WhenValueExceedsMaxLength()
     {
         // Arrange
-        string tooLong = new string('a', TagName.MaxLength + 1);
+        string tooLong = new('a', TagName.MaxLength + 1);
 
         // Act
         Action act = () => TagName.Create(tooLong);
@@ -128,7 +128,7 @@ public class TagNameTests
     public void Create_Should_Work_When_LengthIsExactlyMaxLength()
     {
         // Arrange
-        string value = new string('a', TagName.MaxLength);
+        string value = new('a', TagName.MaxLength);
 
         // Act
         TagName result = TagName.Create(value);

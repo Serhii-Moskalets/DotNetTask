@@ -28,7 +28,7 @@ public class TaskMapperTests
         // Arrange
         Guid userId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
-        TaskEntity entity = new TaskEntity(userId, taskListId, Title, DateTime.UtcNow.AddDays(1), Description);
+        TaskEntity entity = new(userId, taskListId, Title, DateTime.UtcNow.AddDays(1), Description);
 
         // Act
         TaskDto dto = TaskMapper.Map(entity);
@@ -51,7 +51,7 @@ public class TaskMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity entity = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity entity = new(userId, Guid.NewGuid(), Title);
 
         // Act
         TaskBriefDto dto = TaskMapper.MapToBrief(entity);
@@ -71,7 +71,7 @@ public class TaskMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        List<TaskEntity> entities = new List<TaskEntity>
+        List<TaskEntity> entities = new()
         {
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 1")),
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 2")),
@@ -97,7 +97,7 @@ public class TaskMapperTests
 
         UserEntity user = UserEntityFactory.Create();
 
-        CommentEntity entity = new CommentEntity(taskId, user.Id, CommentContent.Create("Content"), user);
+        CommentEntity entity = new(taskId, user.Id, CommentContent.Create("Content"), user);
 
         // Act
         CommentDto dto = TaskMapper.Map(entity);

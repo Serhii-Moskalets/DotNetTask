@@ -50,7 +50,7 @@ public class GetTaskByTitleQueryHandlerTests
         int page = 1;
         int pageSize = 10;
 
-        List<TaskEntity> taskEntities = new List<TaskEntity>
+        List<TaskEntity> taskEntities = new()
         {
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 1"), DateTime.UtcNow.AddDays(1)),
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 2"), DateTime.UtcNow.AddDays(2)),
@@ -60,7 +60,7 @@ public class GetTaskByTitleQueryHandlerTests
             .Setup(r => r.SearchByTitleAsync(userId, text, page, pageSize, It.IsAny<CancellationToken>()))
             .ReturnsAsync((taskEntities, taskEntities.Count));
 
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(userId, text, page, pageSize);
+        GetTaskByTitleQuery query = new(userId, text, page, pageSize);
 
         // Act
         Result<PagedResultDto<TaskBriefDto>> result = await this._handler.Handle(query, CancellationToken.None);
@@ -91,7 +91,7 @@ public class GetTaskByTitleQueryHandlerTests
     public async Task Handle_ShouldReturnEmptyPagedResult_WhenTextIsNullOrEmptyOrWhitespace(string? searchText)
     {
         // Arrange
-        GetTaskByTitleQuery query = new GetTaskByTitleQuery(Guid.NewGuid(), searchText, 1, 10);
+        GetTaskByTitleQuery query = new(Guid.NewGuid(), searchText, 1, 10);
 
         // Act
         Result<PagedResultDto<TaskBriefDto>> result = await this._handler.Handle(query, CancellationToken.None);

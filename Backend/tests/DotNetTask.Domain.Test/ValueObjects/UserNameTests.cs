@@ -87,7 +87,7 @@ public class UserNameTests
     [Fact]
     public void Create_Should_Work_When_LengthIsMin()
     {
-        string value = new string('A', UserName.MinLength);
+        string value = new('A', UserName.MinLength);
 
         UserName result = UserName.Create(value);
 
@@ -104,7 +104,7 @@ public class UserNameTests
     [Fact]
     public void Create_Should_Work_When_LengthIsMax()
     {
-        string value = new string('A', UserName.MaxLength);
+        string value = new('A', UserName.MaxLength);
 
         UserName result = UserName.Create(value);
 

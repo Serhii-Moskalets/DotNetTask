@@ -20,7 +20,7 @@ public class RemoveTagFromTaskCommandTests
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
         // Arrange
-        RemoveTagFromTaskCommand command = new RemoveTagFromTaskCommand(TaskId: Guid.Empty, UserId: Guid.NewGuid());
+        RemoveTagFromTaskCommand command = new(TaskId: Guid.Empty, UserId: Guid.NewGuid());
 
         // Act
         TestValidationResult<RemoveTagFromTaskCommand> result = this._validator.TestValidate(command);
@@ -37,7 +37,7 @@ public class RemoveTagFromTaskCommandTests
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
         // Arrange
-        RemoveTagFromTaskCommand command = new RemoveTagFromTaskCommand(TaskId: Guid.NewGuid(), UserId: Guid.Empty);
+        RemoveTagFromTaskCommand command = new(TaskId: Guid.NewGuid(), UserId: Guid.Empty);
 
         // Act
         TestValidationResult<RemoveTagFromTaskCommand> result = this._validator.TestValidate(command);
@@ -54,7 +54,7 @@ public class RemoveTagFromTaskCommandTests
     public void Should_Not_Have_Error_When_TaskId_And_UserId_Are_Valid()
     {
         // Arrange
-        RemoveTagFromTaskCommand command = new RemoveTagFromTaskCommand(TaskId: Guid.NewGuid(), UserId: Guid.NewGuid());
+        RemoveTagFromTaskCommand command = new(TaskId: Guid.NewGuid(), UserId: Guid.NewGuid());
 
         // Act
         TestValidationResult<RemoveTagFromTaskCommand> result = this._validator.TestValidate(command);

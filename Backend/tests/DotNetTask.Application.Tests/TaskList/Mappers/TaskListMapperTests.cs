@@ -21,7 +21,7 @@ public class TaskListMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskListEntity entity = new TaskListEntity(userId, TaskListTitle.Create("My Awesome List"));
+        TaskListEntity entity = new(userId, TaskListTitle.Create("My Awesome List"));
 
         // Act
         TaskListDto dto = TaskListMapper.Map(entity);
@@ -42,8 +42,8 @@ public class TaskListMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        List<TaskListEntity> entities = new List<TaskListEntity>
-    {
+        List<TaskListEntity> entities = new()
+        {
         new(userId, TaskListTitle.Create("List 1")),
         new(userId, TaskListTitle.Create("List 2")),
         new(userId, TaskListTitle.Create("List 3")),

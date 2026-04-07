@@ -18,7 +18,7 @@ public class DeleteTaskAccessByIdCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_TaskId_Is_Empty()
     {
-        DeleteTaskAccessByIdCommand command = new DeleteTaskAccessByIdCommand(Guid.Empty, Guid.NewGuid(), Guid.NewGuid());
+        DeleteTaskAccessByIdCommand command = new(Guid.Empty, Guid.NewGuid(), Guid.NewGuid());
         TestValidationResult<DeleteTaskAccessByIdCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.TaskId)
               .WithErrorMessage(TaskPolicy.IdRequiredMessage);
@@ -30,7 +30,7 @@ public class DeleteTaskAccessByIdCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_UserId_Is_Empty()
     {
-        DeleteTaskAccessByIdCommand command = new DeleteTaskAccessByIdCommand(Guid.NewGuid(), Guid.Empty, Guid.NewGuid());
+        DeleteTaskAccessByIdCommand command = new(Guid.NewGuid(), Guid.Empty, Guid.NewGuid());
         TestValidationResult<DeleteTaskAccessByIdCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.UserId)
               .WithErrorMessage(UserPolicy.IdRequiredMessage);
@@ -42,7 +42,7 @@ public class DeleteTaskAccessByIdCommandValidatorTests
     [Fact]
     public void Should_Have_Error_When_OwnerId_Is_Empty()
     {
-        DeleteTaskAccessByIdCommand command = new DeleteTaskAccessByIdCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty);
+        DeleteTaskAccessByIdCommand command = new(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty);
         TestValidationResult<DeleteTaskAccessByIdCommand> result = this._validator.TestValidate(command);
         result.ShouldHaveValidationErrorFor(x => x.OwnerId)
               .WithErrorMessage(UserTaskAccessPolicy.OwnerIdRequired);
@@ -54,7 +54,7 @@ public class DeleteTaskAccessByIdCommandValidatorTests
     [Fact]
     public void Should_Not_Have_Error_When_All_Fields_Are_Valid()
     {
-        DeleteTaskAccessByIdCommand command = new DeleteTaskAccessByIdCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
+        DeleteTaskAccessByIdCommand command = new(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
         TestValidationResult<DeleteTaskAccessByIdCommand> result = this._validator.TestValidate(command);
         result.ShouldNotHaveAnyValidationErrors();
     }

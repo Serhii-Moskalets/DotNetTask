@@ -56,13 +56,13 @@ public class UpdateTaskCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync((TaskEntity?)null);
 
-        UpdateTaskDto dto = new UpdateTaskDto
+        UpdateTaskDto dto = new()
         {
             TaskId = Guid.NewGuid(),
             Title = "New Title",
         };
 
-        UpdateTaskCommand command = new UpdateTaskCommand(dto, Guid.NewGuid());
+        UpdateTaskCommand command = new(dto, Guid.NewGuid());
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -85,7 +85,7 @@ public class UpdateTaskCommandHandlerTests
         Guid userId = Guid.NewGuid();
         Guid taskListId = Guid.NewGuid();
 
-        TaskEntity task = new TaskEntity(userId, taskListId, Title);
+        TaskEntity task = new(userId, taskListId, Title);
 
         this._taskRepoMock.Setup(
             r =>
@@ -98,7 +98,7 @@ public class UpdateTaskCommandHandlerTests
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        UpdateTaskDto dto = new UpdateTaskDto
+        UpdateTaskDto dto = new()
         {
             TaskId = task.Id,
             Title = "New Title",
@@ -106,7 +106,7 @@ public class UpdateTaskCommandHandlerTests
             DueDate = DateTime.UtcNow.AddDays(1),
         };
 
-        UpdateTaskCommand command = new UpdateTaskCommand(dto, userId);
+        UpdateTaskCommand command = new(dto, userId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -131,7 +131,7 @@ public class UpdateTaskCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
 
         this._taskRepoMock.Setup(
             r =>
@@ -142,7 +142,7 @@ public class UpdateTaskCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        UpdateTaskDto dto = new UpdateTaskDto
+        UpdateTaskDto dto = new()
         {
             TaskId = task.Id,
             Title = Title.Value,
@@ -150,7 +150,7 @@ public class UpdateTaskCommandHandlerTests
             DueDate = task.DueDate,
         };
 
-        UpdateTaskCommand command = new UpdateTaskCommand(dto, userId);
+        UpdateTaskCommand command = new(dto, userId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -170,7 +170,7 @@ public class UpdateTaskCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
 
         this._taskRepoMock.Setup(
             r =>
@@ -181,7 +181,7 @@ public class UpdateTaskCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        UpdateTaskDto dto = new UpdateTaskDto
+        UpdateTaskDto dto = new()
         {
             TaskId = task.Id,
             Title = null,
@@ -189,7 +189,7 @@ public class UpdateTaskCommandHandlerTests
             DueDate = task.DueDate,
         };
 
-        UpdateTaskCommand command = new UpdateTaskCommand(dto, userId);
+        UpdateTaskCommand command = new(dto, userId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
@@ -209,7 +209,7 @@ public class UpdateTaskCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
         TaskDescription newDescription = TaskDescription.Create("New Description");
         DateTime newDueDate = DateTime.UtcNow.AddDays(2);
 
@@ -224,7 +224,7 @@ public class UpdateTaskCommandHandlerTests
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        UpdateTaskDto dto = new UpdateTaskDto
+        UpdateTaskDto dto = new()
         {
             TaskId = task.Id,
             Title = null,
@@ -232,7 +232,7 @@ public class UpdateTaskCommandHandlerTests
             DueDate = newDueDate,
         };
 
-        UpdateTaskCommand command = new UpdateTaskCommand(dto, userId);
+        UpdateTaskCommand command = new(dto, userId);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

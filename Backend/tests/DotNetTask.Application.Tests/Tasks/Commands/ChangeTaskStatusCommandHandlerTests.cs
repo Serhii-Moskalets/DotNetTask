@@ -47,7 +47,7 @@ public class ChangeTaskStatusCommandHandlerTests
     public async Task Handle_ShouldReturnFailure_WhenTaskNotFound()
     {
         // Arrange
-        ChangeTaskStatusCommand command = new ChangeTaskStatusCommand(Guid.NewGuid(), Guid.NewGuid(), StatusTask.InProgress);
+        ChangeTaskStatusCommand command = new(Guid.NewGuid(), Guid.NewGuid(), StatusTask.InProgress);
 
         this._taskRepoMock.Setup(r => r.GetTaskByIdForUserAsync(
                 It.IsAny<Guid>(),
@@ -82,9 +82,9 @@ public class ChangeTaskStatusCommandHandlerTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        TaskEntity task = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity task = new(userId, Guid.NewGuid(), Title);
 
-        ChangeTaskStatusCommand command = new ChangeTaskStatusCommand(task.Id, userId, task.Status);
+        ChangeTaskStatusCommand command = new(task.Id, userId, task.Status);
 
         this._taskRepoMock
             .Setup(r => r.GetTaskByIdForUserAsync(task.Id, userId, false, It.IsAny<CancellationToken>()))
@@ -109,7 +109,7 @@ public class ChangeTaskStatusCommandHandlerTests
         Guid userId = Guid.NewGuid();
         StatusTask newStatus = StatusTask.InProgress;
 
-        TaskEntity taskEntity = new TaskEntity(userId, Guid.NewGuid(), Title);
+        TaskEntity taskEntity = new(userId, Guid.NewGuid(), Title);
 
         this._taskRepoMock.Setup(r => r.GetTaskByIdForUserAsync(
             It.IsAny<Guid>(),
@@ -120,7 +120,7 @@ public class ChangeTaskStatusCommandHandlerTests
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        ChangeTaskStatusCommand command = new ChangeTaskStatusCommand(Guid.NewGuid(), userId, newStatus);
+        ChangeTaskStatusCommand command = new(Guid.NewGuid(), userId, newStatus);
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

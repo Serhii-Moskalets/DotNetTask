@@ -29,7 +29,7 @@ public class UserRepositoryTests
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         UserEntity user = UserEntityFactory.Create();
 
         await context.Users.AddAsync(user);
@@ -53,7 +53,7 @@ public class UserRepositoryTests
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         UserEntity user = UserEntityFactory.Create();
 
         await context.Users.AddAsync(user);
@@ -77,7 +77,7 @@ public class UserRepositoryTests
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         UserEntity userEntity = UserEntityFactory.Create();
 
         await context.Users.AddAsync(userEntity);
@@ -101,7 +101,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         // Act
         UserEntity? saved = await repo.GetByEmailAsync(Email.Create("john@example.com"));
@@ -122,7 +122,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         Email email = Email.Create("track@test.com");
         UserEntity user = UserEntityFactory.Create(email: email.Value);
 
@@ -152,7 +152,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         Email email = Email.Create("notrack@test.com");
         UserEntity user = UserEntityFactory.Create(email: email.Value);
 
@@ -179,7 +179,7 @@ public class UserRepositoryTests
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
 
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
         UserEntity userEntity = UserEntityFactory.Create();
 
         await context.Users.AddAsync(userEntity);
@@ -203,7 +203,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         // Act
         UserEntity? saved = await repo.GetByUserNameAsync(UserName.Create("user"));
@@ -222,7 +222,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         UserEntity user = UserEntityFactory.Create();
 
@@ -248,7 +248,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         // Act
         (string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)? result = await repo.GetUsersSecurityInfoAsync(Guid.NewGuid());
@@ -267,7 +267,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         SecurityToken token = SecurityToken.Create("current-secret-code", TimeSpan.FromHours(1), UserTokenType.PasswordReset, CurrentTime);
 
@@ -295,7 +295,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         SecurityToken token = SecurityToken.Create("revert-secret-code", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 
@@ -323,7 +323,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         SecurityToken token = SecurityToken.Create("same-code", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 
@@ -349,7 +349,7 @@ public class UserRepositoryTests
     {
         // Arrange
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new UserRepository(context);
+        UserRepository repo = new(context);
 
         SecurityToken token = SecurityToken.Create("track-token", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
 

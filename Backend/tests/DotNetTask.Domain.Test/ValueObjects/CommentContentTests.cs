@@ -77,7 +77,7 @@ public class CommentContentTests
     public void Create_ShouldThrow_WhenValueExceedsMaxLength()
     {
         // Arrange
-        string tooLong = new string('a', CommentContent.MaxLength + 1);
+        string tooLong = new('a', CommentContent.MaxLength + 1);
 
         // Act
         Action act = () => CommentContent.Create(tooLong);
@@ -95,7 +95,7 @@ public class CommentContentTests
     public void Create_Should_Work_When_LengthIsExactlyMaxLength()
     {
         // Arrange
-        string value = new string('a', CommentContent.MaxLength);
+        string value = new('a', CommentContent.MaxLength);
 
         // Act
         CommentContent result = CommentContent.Create(value);
