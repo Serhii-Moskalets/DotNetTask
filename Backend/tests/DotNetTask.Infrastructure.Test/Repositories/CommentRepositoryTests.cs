@@ -4,6 +4,7 @@ using DotNetTask.Domain.ValueObjects;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 using DotNetTask.Infrastructure.Persistence.Repositories;
 using DotNetTask.Infrastructure.Test.Helpers;
+using FluentAssertions;
 
 namespace DotNetTask.Infrastructure.Test.Repositories;
 
@@ -29,8 +30,8 @@ public class CommentRepositoryTests
         (IReadOnlyCollection<CommentEntity>? items, int totalCount) = await repo.GetCommentsByTaskIdAsync(taskId, 1, 10);
 
         // Assert
-        Assert.Empty(items);
-        Assert.Equal(0, totalCount);
+        items.Should().BeEmpty();
+        totalCount.Should().Be(0);
     }
 
     /// <summary>
@@ -59,8 +60,8 @@ public class CommentRepositoryTests
 
         // Assert
         CommentEntity result = items.First();
-        Assert.NotNull(result.User);
-        Assert.Equal(UserEntityFactory.UserName, result.User.UserName.Value);
+        result.User.Should().NotBeNull();
+        result.User.UserName.Value.Should().Be(UserEntityFactory.UserName);
     }
 
     /// <summary>
@@ -90,8 +91,8 @@ public class CommentRepositoryTests
         (IReadOnlyCollection<CommentEntity>? items, int totalCount) = await repo.GetCommentsByTaskIdAsync(taskId, page: 2, pageSize: 2);
 
         // Assert
-        Assert.Equal(5, totalCount);
-        Assert.Equal(2, items.Count);
-        Assert.Equal("Text_3", items.First().Content.Value);
+        totalCount.Should().Be(5);
+        items.Count.Should().Be(2);
+        items.First().Content.Value.Should().Be("Text_3");
     }
 }

@@ -107,9 +107,11 @@ public class EmailChangeRequestedDomainEventHandlerTests
 
         EmailChangeRequestedDomainEvent domainEvent = new(user, confirmToken, revertToken);
 
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
-            this._sut.Handle(domainEvent, CancellationToken.None));
+        // Act
+        Func<Task> act = async () => await this._sut.Handle(domainEvent, CancellationToken.None);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>();
     }
 
     /// <summary>

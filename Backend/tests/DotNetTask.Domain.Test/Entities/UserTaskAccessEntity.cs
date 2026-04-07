@@ -1,4 +1,5 @@
 using DotNetTask.Domain.Entities;
+using FluentAssertions;
 
 namespace DotNetTask.Domain.Test.Entities;
 
@@ -19,7 +20,7 @@ public class UserTaskAccessEntityTest
 
         UserTaskAccessEntity access = new UserTaskAccessEntity(taskId, userId);
 
-        Assert.Equal(taskId, access.TaskId);
-        Assert.Equal(userId, access.UserId);
+        access.TaskId.Should().Be(taskId);
+        access.UserId.Should().Be(userId);
     }
 }

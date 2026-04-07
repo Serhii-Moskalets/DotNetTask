@@ -3,7 +3,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.UserTaskAccess.Commands.DeleteTaskAccessById;
 using DotNetTask.Domain.Constants;
-
+using FluentAssertions;
 using Moq;
 
 using TinyResult;
@@ -62,9 +62,9 @@ public class DeleteTaskAccessByIdCommandHandlerTests
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal(UserTaskAccessPolicy.AccessDeniedMessage, result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.AccessDeniedMessage);
 
         this._accessRepoMock.Verify(r => r.DeleteByIdAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()), Times.Never);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
@@ -93,7 +93,7 @@ public class DeleteTaskAccessByIdCommandHandlerTests
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._accessRepoMock.Verify(r => r.DeleteByIdAsync(taskId, userId, It.IsAny<CancellationToken>()), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

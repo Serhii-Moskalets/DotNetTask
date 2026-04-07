@@ -5,7 +5,7 @@ using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
-
+using FluentAssertions;
 using Moq;
 
 using TinyResult;
@@ -53,9 +53,9 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.ValidationError, result.Error!.Code);
-        Assert.Equal(UserTaskAccessPolicy.AccessDeniedMessage, result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.AccessDeniedMessage);
     }
 
     /// <summary>
@@ -78,9 +78,9 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal(UserTaskAccessPolicy.UserNotFoundMessage, result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.UserNotFoundMessage);
     }
 
     /// <summary>
@@ -107,9 +107,9 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.InvalidOperation, result.Error!.Code);
-        Assert.Equal(UserTaskAccessPolicy.DeleteFailedMessage, result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.DeleteFailedMessage);
     }
 
     /// <summary>
@@ -139,7 +139,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._uowMock.Verify(u => u.UserTaskAccesses.DeleteByIdAsync(command.TaskId, user.Id, It.IsAny<CancellationToken>()), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }

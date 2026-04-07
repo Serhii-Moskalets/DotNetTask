@@ -5,7 +5,7 @@ using DotNetTask.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
-
+using FluentAssertions;
 using Moq;
 
 using TinyResult;
@@ -69,8 +69,8 @@ public class CreateUserTaskAccessCommandHandlerTests
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(ErrorCode.ValidationError, result.Error!.Code);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(ErrorCode.ValidationError);
         this._accessRepoMock.Verify(r => r.AddAsync(It.IsAny<UserTaskAccessEntity>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -101,7 +101,7 @@ public class CreateUserTaskAccessCommandHandlerTests
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
+        result.IsSuccess.Should().BeTrue();
         this._accessRepoMock.Verify(
             r =>
             r.AddAsync(

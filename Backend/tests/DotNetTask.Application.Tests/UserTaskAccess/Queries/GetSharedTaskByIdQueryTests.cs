@@ -7,7 +7,7 @@ using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
-
+using FluentAssertions;
 using Moq;
 
 using TinyResult;
@@ -57,9 +57,9 @@ public class GetSharedTaskByIdQueryHandlerTests
         Result<TaskDto> result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.False(result.IsSuccess);
-        Assert.Equal(TinyResult.Enums.ErrorCode.NotFound, result.Error!.Code);
-        Assert.Equal(TaskPolicy.NotFoundMessage, result.Error.Message);
+        result.IsSuccess.Should().BeFalse();
+        result.Error!.Code.Should().Be(TinyResult.Enums.ErrorCode.NotFound);
+        result.Error.Message.Should().Be(TaskPolicy.NotFoundMessage);
     }
 
     /// <summary>
@@ -88,10 +88,10 @@ public class GetSharedTaskByIdQueryHandlerTests
         Result<TaskDto> result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
 
         TaskDto mapped = TaskAccessForUserMapper.Map(taskAccess);
-        Assert.Equal(mapped.Id, result.Value!.Id);
+        result.Value!.Id.Should().Be(mapped.Id);
     }
 }

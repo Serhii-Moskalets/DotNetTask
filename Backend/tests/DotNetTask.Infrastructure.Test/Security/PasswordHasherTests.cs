@@ -1,4 +1,5 @@
 using DotNetTask.Infrastructure.Security;
+using FluentAssertions;
 
 namespace DotNetTask.Infrastructure.Test.Security;
 
@@ -23,9 +24,9 @@ public class PasswordHasherTests
         string hash = this._hasher.HashPassword(password);
 
         // Assert
-        Assert.NotNull(hash);
-        Assert.Equal(60, hash.Length);
-        Assert.True(this._hasher.VerifyPassword(password, hash));
+        hash.Should().NotBeNull();
+        hash.Length.Should().Be(60);
+        this._hasher.VerifyPassword(password, hash).Should().BeTrue();
     }
 
     /// <summary>
@@ -37,10 +38,14 @@ public class PasswordHasherTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("  ")]
-    public void HashPassword_ShouldThrowException_WhenPasswordIsInvalid(string? invalidPassword) =>
+    public void HashPassword_ShouldThrowException_WhenPasswordIsInvalid(string? invalidPassword)
+    {
+        // Act
+        Action act = () => this._hasher.HashPassword(invalidPassword!);
 
-        // Act & Assert
-        Assert.ThrowsAny<ArgumentException>(() => this._hasher.HashPassword(invalidPassword!));
+        // Assert
+        act.Should().Throw<ArgumentException>();
+    }
 
     /// <summary>
     /// Verifies that <see cref="PasswordHasher.VerifyPassword"/> returns <c>false</c>
@@ -57,7 +62,7 @@ public class PasswordHasherTests
         bool result = this._hasher.VerifyPassword("WrongPasswrod", hash);
 
         // Assert
-        Assert.False(result);
+        result.Should().BeFalse();
     }
 
     /// <summary>
@@ -71,9 +76,11 @@ public class PasswordHasherTests
     [InlineData("  ")]
     public void VerifyPassword_ShouldThrowException_WhenHashIsInvalid(string? invalidHash)
     {
-        // Act & Assert
-        Assert.ThrowsAny<ArgumentException>(() =>
-            this._hasher.VerifyPassword("password", invalidHash!));
+        // Act
+        Action act = () => this._hasher.VerifyPassword("password", invalidHash!);
+
+        // Assert
+        act.Should().Throw<ArgumentException>();
     }
 
     /// <summary>
@@ -87,8 +94,10 @@ public class PasswordHasherTests
     [InlineData("  ")]
     public void VerifyPassword_ShouldThrowException_WhenPasswordIsInvalid(string? invalidPassword)
     {
-        // Act & Assert
-        Assert.ThrowsAny<ArgumentException>(() =>
-            this._hasher.VerifyPassword(invalidPassword!, "hash"));
+        // Act
+        Action act = () => this._hasher.VerifyPassword(invalidPassword!, "hash");
+
+        // Assert
+        act.Should().Throw<ArgumentException>();
     }
 }

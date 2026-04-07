@@ -3,6 +3,7 @@ using DotNetTask.Domain.ValueObjects;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 using DotNetTask.Infrastructure.Persistence.Repositories;
 using DotNetTask.Infrastructure.Test.Helpers;
+using FluentAssertions;
 
 namespace DotNetTask.Infrastructure.Test.Repositories;
 
@@ -29,8 +30,8 @@ public class BaseRepositoryTests
         await context.SaveChangesAsync();
 
         TagEntity? saved = await repo.GetByIdAsync(entity.Id);
-        Assert.NotNull(saved);
-        Assert.Equal(TagName.Value, saved.Name.Value);
+        saved.Should().NotBeNull();
+        saved.Name.Value.Should().Be(TagName.Value);
     }
 
     /// <summary>
@@ -54,7 +55,7 @@ public class BaseRepositoryTests
         await context.SaveChangesAsync();
 
         TagEntity? saved = await repo.GetByIdAsync(entity.Id);
-        Assert.Null(saved);
+        saved.Should().BeNull();
     }
 
     /// <summary>
@@ -65,9 +66,9 @@ public class BaseRepositoryTests
     public async Task ExistsAsync_Should_Return_True_For_Existing_Entity()
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
-        TagEntity entity = new TagEntity(
+        TagEntity entity = new(
             TagName,
             Guid.NewGuid());
 
@@ -75,7 +76,7 @@ public class BaseRepositoryTests
         await context.SaveChangesAsync();
 
         bool exists = await repo.ExistsAsync(entity.Id);
-        Assert.True(exists);
+        exists.Should().BeTrue();
     }
 
     /// <summary>
@@ -89,7 +90,7 @@ public class BaseRepositoryTests
         TagRepository repo = new TagRepository(context);
 
         bool exists = await repo.ExistsAsync(Guid.NewGuid());
-        Assert.False(exists);
+        exists.Should().BeFalse();
     }
 
     /// <summary>
@@ -100,10 +101,10 @@ public class BaseRepositoryTests
     public async Task DeleteAsync_Should_Handle_Null_Entity()
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
         Exception exception = await Record.ExceptionAsync(() => repo.DeleteAsync(null!));
-        Assert.Null(exception);
+        exception.Should().BeNull();
     }
 
     /// <summary>
@@ -115,9 +116,13 @@ public class BaseRepositoryTests
     public async Task AddAsync_Should_Throw_ArgumentNullException_When_Entity_Is_Null()
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
-        await Assert.ThrowsAsync<ArgumentNullException>(() => repo.AddAsync(null!));
+        // Act
+        Func<Task> act = () => repo.AddAsync(null!);
+
+        // Assert
+        await act.Should().ThrowAsync<ArgumentNullException>();
     }
 
     /// <summary>
@@ -131,15 +136,15 @@ public class BaseRepositoryTests
     public async Task GetByIdAsync_Should_Respect_AsNoTracking_Flag(bool asNoTracking)
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
-        TagEntity entity = new TagEntity(TagName, Guid.NewGuid());
+        TagEntity entity = new(TagName, Guid.NewGuid());
         await repo.AddAsync(entity);
         await context.SaveChangesAsync();
 
         TagEntity? saved = await repo.GetByIdAsync(entity.Id, asNoTracking);
-        Assert.NotNull(saved);
-        Assert.Equal(TagName.Value, saved.Name.Value);
+        saved.Should().NotBeNull();
+        saved.Name.Value.Should().Be(TagName.Value);
     }
 
     /// <summary>
@@ -150,10 +155,10 @@ public class BaseRepositoryTests
     public async Task Repository_Should_Handle_Multiple_Entities()
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
-        TagEntity entity1 = new TagEntity(TagName.Create("Tag_1"), Guid.NewGuid());
-        TagEntity entity2 = new TagEntity(TagName.Create("Tag_2"), Guid.NewGuid());
+        TagEntity entity1 = new(TagName.Create("Tag_1"), Guid.NewGuid());
+        TagEntity entity2 = new(TagName.Create("Tag_2"), Guid.NewGuid());
 
         await repo.AddAsync(entity1);
         await repo.AddAsync(entity2);
@@ -162,10 +167,10 @@ public class BaseRepositoryTests
         TagEntity? saved1 = await repo.GetByIdAsync(entity1.Id);
         TagEntity? saved2 = await repo.GetByIdAsync(entity2.Id);
 
-        Assert.NotNull(saved1);
-        Assert.NotNull(saved2);
-        Assert.Equal("Tag_1", saved1.Name.Value);
-        Assert.Equal("Tag_2", saved2.Name.Value);
+        saved1.Should().NotBeNull();
+        saved2.Should().NotBeNull();
+        saved1.Name.Value.Should().Be("Tag_1");
+        saved2.Name.Value.Should().Be("Tag_2");
     }
 
     /// <summary>
@@ -176,12 +181,12 @@ public class BaseRepositoryTests
     public async Task AddAsync_Should_Not_Persist_Without_SaveChanges()
     {
         await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        TagRepository repo = new TagRepository(context);
+        TagRepository repo = new(context);
 
-        TagEntity entity = new TagEntity(TagName, Guid.NewGuid());
+        TagEntity entity = new(TagName, Guid.NewGuid());
         await repo.AddAsync(entity);
 
         TagEntity? saved = await repo.GetByIdAsync(entity.Id);
-        Assert.Null(saved);
+        saved.Should().BeNull();
     }
 }

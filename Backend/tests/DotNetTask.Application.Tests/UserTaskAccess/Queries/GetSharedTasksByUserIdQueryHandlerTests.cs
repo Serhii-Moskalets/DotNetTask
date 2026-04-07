@@ -5,7 +5,7 @@ using DotNetTask.Application.UserTaskAccess.Queries.GetSharedTasksByUserId;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
-
+using FluentAssertions;
 using Moq;
 
 using TinyResult;
@@ -54,10 +54,10 @@ public class GetSharedTasksByUserIdQueryHandlerTests
         Result<PagedResultDto<TaskDto>> result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.NotNull(result.Value);
-        Assert.Empty(result.Value.Items);
-        Assert.Equal(0, result.Value.TotalCount);
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.Items.Should().BeEmpty();
+        result.Value.TotalCount.Should().Be(0);
     }
 
     /// <summary>
@@ -85,10 +85,10 @@ public class GetSharedTasksByUserIdQueryHandlerTests
         Result<PagedResultDto<TaskDto>> result = await this._handler.Handle(query, CancellationToken.None);
 
         // Assert
-        Assert.True(result.IsSuccess);
-        Assert.Single(result.Value!.Items);
-        Assert.Equal(1, result.Value.TotalCount);
-        Assert.Equal(query.Page, result.Value.Page);
-        Assert.Equal(task1.Id, result.Value.Items.First().Id);
+        result.IsSuccess.Should().BeTrue();
+        result.Value!.Items.Should().ContainSingle();
+        result.Value.TotalCount.Should().Be(1);
+        result.Value.Page.Should().Be(query.Page);
+        result.Value.Items.First().Id.Should().Be(task1.Id);
     }
 }

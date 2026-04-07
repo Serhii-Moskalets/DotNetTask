@@ -3,7 +3,7 @@ using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 using DotNetTask.Infrastructure.Test.Helpers;
-
+using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 
 namespace DotNetTask.Infrastructure.Test.DbContext;
@@ -30,9 +30,9 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         UserEntity? savedUser = context.Users.FirstOrDefault(u => u.UserName.Value == UserEntityFactory.UserName);
-        Assert.NotNull(savedUser);
-        Assert.Equal("john@example.com", savedUser.Email.Value);
-        Assert.Equal("John", savedUser.FirstName.Value);
+        savedUser.Should().NotBeNull();
+        savedUser.Email.Value.Should().Be("john@example.com");
+        savedUser.FirstName.Value.Should().Be("John");
     }
 
     /// <summary>
@@ -53,8 +53,8 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         TaskListEntity? savedTaskList = context.TaskLists.FirstOrDefault(tl => tl.OwnerId == user.Id);
-        Assert.NotNull(savedTaskList);
-        Assert.Equal(TaskListTitle, savedTaskList.Title);
+        savedTaskList.Should().NotBeNull();
+        savedTaskList.Title.Should().Be(TaskListTitle);
     }
 
     /// <summary>
@@ -75,9 +75,9 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         TaskEntity? savedTask = context.Tasks.Include(t => t.TaskList).FirstOrDefault();
-        Assert.NotNull(savedTask);
-        Assert.Equal(TaskTitle, savedTask.Title);
-        Assert.Equal(taskList.Id, savedTask.TaskListId);
+        savedTask.Should().NotBeNull();
+        savedTask.Title.Should().Be(TaskTitle);
+        savedTask.TaskListId.Should().Be(taskList.Id);
     }
 
     /// <summary>
@@ -98,8 +98,8 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         TagEntity? savedTag = context.Tags.FirstOrDefault(c => c.Id == tag.Id);
-        Assert.NotNull(savedTag);
-        Assert.Equal("Tag", savedTag.Name.Value);
+        savedTag.Should().NotBeNull();
+        savedTag.Name.Value.Should().Be("Tag");
     }
 
     /// <summary>
@@ -128,8 +128,8 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         CommentEntity? savedComment = context.Comments.FirstOrDefault(c => c.Id == comment.Id);
-        Assert.NotNull(savedComment);
-        Assert.Equal("Comment", savedComment.Content.Value);
+        savedComment.Should().NotBeNull();
+        savedComment.Content.Value.Should().Be("Comment");
     }
 
     /// <summary>
@@ -149,8 +149,8 @@ public class DotNetTaskDbContextTests
         context.SaveChanges();
 
         UserTaskAccessEntity? savedAccess = context.UserTaskAccesses.FirstOrDefault();
-        Assert.NotNull(savedAccess);
-        Assert.Equal(userId, savedAccess.UserId);
-        Assert.Equal(taskId, savedAccess.TaskId);
+        savedAccess.Should().NotBeNull();
+        savedAccess.UserId.Should().Be(userId);
+        savedAccess.TaskId.Should().Be(taskId);
     }
 }
