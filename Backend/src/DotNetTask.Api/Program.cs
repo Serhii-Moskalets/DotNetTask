@@ -5,6 +5,7 @@ using DotNetTask.Application.Common.Extensions;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Exceptions;
 using DotNetTask.Infrastructure.Extensions;
+using DotNetTask.Infrastructure.Notifications.Settings;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.IdentityModel.Tokens;
@@ -144,9 +145,26 @@ try
     builder.Services.AddHealthChecks()
         .AddNpgSql(connectionString);
 
+    FrontendSettings frontendSettings = builder.Configuration
+        .GetSection(FrontendSettings.SectionName)
+        .Get<FrontendSettings>() ?? throw new InvalidOperationException("Failed to bind FrontendSettings.");
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("Frontend", policy =>
+        {
+            policy
+                .WithOrigins(frontendSettings.BaseUrl)
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+    });
+
     WebApplication app = builder.Build();
 
     app.UseForwardedHeaders();
+
+    app.UseCors("Frontend");
 
     app.UseExceptionHandler();
 
