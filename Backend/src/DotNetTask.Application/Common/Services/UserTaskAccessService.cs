@@ -1,5 +1,6 @@
 using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
+using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 
 using TinyResult;
@@ -39,24 +40,24 @@ public class UserTaskAccessService : IUserTaskAccessService
     {
         if (sharedUser is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Cannot grant access to this task.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.UserNotFoundMessage);
         }
 
         TaskEntity? task = await this._unitOfWork.Tasks.GetByIdAsync(taskId, cancellationToken: cancellationToken);
 
         if (task is null || task.OwnerId != ownerId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Current user haven't access for this task.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
         }
 
         if (task.OwnerId == sharedUser.Id)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Task cannot be shared with its owner.");
+            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.CannotShareWithOwnerMessage);
         }
 
         if (await this.HasAccessAsync(taskId, sharedUser.Id, cancellationToken))
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, "Task already shared with this user.");
+            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.AlreadySharedMessage);
         }
 
         return await Result<bool>.SuccessAsync(true);

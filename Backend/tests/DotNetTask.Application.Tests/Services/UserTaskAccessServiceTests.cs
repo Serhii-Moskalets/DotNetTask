@@ -1,5 +1,6 @@
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Common.Services;
+using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
@@ -54,7 +55,7 @@ public class UserTaskAccessServiceTests
         result.IsSuccess.Should().BeFalse();
         result.Error.Should().NotBeNull();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Contain("Cannot grant access to this task.");
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.UserNotFoundMessage);
     }
 
     /// <summary>
@@ -91,7 +92,7 @@ public class UserTaskAccessServiceTests
         Guid taskId = Guid.NewGuid();
         Guid ownerId = Guid.NewGuid();
         UserEntity sharedUser = UserEntityFactory.Create();
-        TaskEntity task = new TaskEntity(Guid.NewGuid(), Guid.NewGuid(), Title);
+        TaskEntity task = new(Guid.NewGuid(), Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
@@ -115,7 +116,7 @@ public class UserTaskAccessServiceTests
         Guid taskId = Guid.NewGuid();
         UserEntity sharedUser = UserEntityFactory.Create();
         Guid ownerId = sharedUser.Id;
-        TaskEntity task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
+        TaskEntity task = new(ownerId, Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
@@ -126,7 +127,7 @@ public class UserTaskAccessServiceTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(ErrorCode.ValidationError);
-        result.Error.Message.Should().Contain("cannot be shared with its owner");
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.CannotShareWithOwnerMessage);
     }
 
     /// <summary>
@@ -140,7 +141,7 @@ public class UserTaskAccessServiceTests
         Guid ownerId = Guid.NewGuid();
         Guid taskId = Guid.NewGuid();
         UserEntity sharedUser = UserEntityFactory.Create();
-        TaskEntity task = new TaskEntity(ownerId, Guid.NewGuid(), Title);
+        TaskEntity task = new(ownerId, Guid.NewGuid(), Title);
 
         this._unitOfWorkMock.Setup(u => u.Tasks.GetByIdAsync(taskId, It.IsAny<bool>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
@@ -154,7 +155,7 @@ public class UserTaskAccessServiceTests
         // Assert
         result.IsSuccess.Should().BeFalse();
         result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
-        result.Error.Message.Should().Contain("already shared with this user");
+        result.Error.Message.Should().Be(UserTaskAccessPolicy.AlreadySharedMessage);
     }
 
     /// <summary>
