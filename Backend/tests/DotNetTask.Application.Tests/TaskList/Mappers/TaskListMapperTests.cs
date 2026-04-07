@@ -42,12 +42,12 @@ public class TaskListMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        List<TaskListEntity> entities = new()
-        {
+        List<TaskListEntity> entities =
+        [
         new(userId, TaskListTitle.Create("List 1")),
         new(userId, TaskListTitle.Create("List 2")),
         new(userId, TaskListTitle.Create("List 3")),
-    };
+    ];
 
         // Act
         IReadOnlyCollection<TaskListDto> result = TaskListMapper.Map(entities);

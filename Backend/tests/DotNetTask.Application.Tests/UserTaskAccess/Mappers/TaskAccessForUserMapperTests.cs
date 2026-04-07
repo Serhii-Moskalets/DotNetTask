@@ -58,11 +58,11 @@ public class TaskAccessForUserMapperTests
         TaskEntity task1 = new(ownerId, Guid.NewGuid(), TaskTitle.Create("Task 1"));
         TaskEntity task2 = new(ownerId, Guid.NewGuid(), TaskTitle.Create("Task 2"));
 
-        List<UserTaskAccessEntity> entities = new()
-        {
+        List<UserTaskAccessEntity> entities =
+        [
             new(task1.Id, userId) { Task = task1 },
             new(task2.Id, userId) { Task = task2 },
-        };
+        ];
 
         // Act
         IReadOnlyCollection<TaskDto> result = TaskAccessForUserMapper.Map(entities);
@@ -80,7 +80,7 @@ public class TaskAccessForUserMapperTests
     public void Map_EmptyCollection_ShouldReturnEmptyList()
     {
         // Arrange
-        List<UserTaskAccessEntity> entities = new();
+        List<UserTaskAccessEntity> entities = [];
 
         // Act
         IReadOnlyCollection<TaskDto> result = TaskAccessForUserMapper.Map(entities);

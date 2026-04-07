@@ -80,11 +80,11 @@ public class GetUsersWithTaskAccessQueryHandlerTests
         this._tasksRepoMock.Setup(r => r.GetTaskByIdForUserAsync(task.Id, ownerId, true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(task);
 
-        List<UserTaskAccessEntity> sharedUsers = new()
-        {
+        List<UserTaskAccessEntity> sharedUsers =
+        [
             new(task.Id, Guid.NewGuid()) { User = UserEntityFactory.Create() },
             new(task.Id, Guid.NewGuid()) { User = UserEntityFactory.Create("rick", "rickky", "rick@test.com") },
-        };
+        ];
 
         this._userTaskAccessRepoMock.Setup(r => r.GetUserTaskAccessByTaskIdAsync(
                 task.Id,

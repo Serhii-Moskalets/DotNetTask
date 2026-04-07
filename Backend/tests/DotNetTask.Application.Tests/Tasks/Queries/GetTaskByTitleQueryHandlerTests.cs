@@ -50,11 +50,11 @@ public class GetTaskByTitleQueryHandlerTests
         int page = 1;
         int pageSize = 10;
 
-        List<TaskEntity> taskEntities = new()
-        {
+        List<TaskEntity> taskEntities =
+        [
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 1"), DateTime.UtcNow.AddDays(1)),
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 2"), DateTime.UtcNow.AddDays(2)),
-        };
+        ];
 
         this._taskRepoMock
             .Setup(r => r.SearchByTitleAsync(userId, text, page, pageSize, It.IsAny<CancellationToken>()))

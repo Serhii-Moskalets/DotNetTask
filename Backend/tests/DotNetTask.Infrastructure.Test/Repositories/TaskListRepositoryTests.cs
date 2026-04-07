@@ -76,12 +76,12 @@ public class TaskListRepositoryTests
         TaskListRepository repo = new(context);
         Guid userId = Guid.NewGuid();
 
-        List<TaskListEntity> taskLists = new()
-        {
+        List<TaskListEntity> taskLists =
+        [
             new (userId, TaskListTitleA),
             new (userId, TaskListTitleB),
             new (userId, TaskListTitleC),
-        };
+        ];
 
         await context.AddRangeAsync(taskLists);
         await context.SaveChangesAsync();

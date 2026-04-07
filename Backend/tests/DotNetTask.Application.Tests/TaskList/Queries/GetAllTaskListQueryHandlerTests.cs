@@ -45,11 +45,11 @@ public class GetAllTaskListQueryHandlerTests
         Guid userId = Guid.NewGuid();
         int page = 1;
         int pageSize = 10;
-        List<TaskListEntity> entities = new()
-        {
+        List<TaskListEntity> entities =
+        [
             new(userId, TaskListTitle.Create("List 1")),
             new(userId, TaskListTitle.Create("List 2")),
-        };
+        ];
 
         this._taskListRepoMock
             .Setup(r => r.GetTaskListsAsync(userId, page, pageSize, It.IsAny<CancellationToken>()))

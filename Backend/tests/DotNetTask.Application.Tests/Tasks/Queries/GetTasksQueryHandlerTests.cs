@@ -54,11 +54,11 @@ public class GetTasksQueryHandlerTests
             PageSize = 10,
         };
 
-        List<TaskEntity> entities = new()
-        {
+        List<TaskEntity> entities =
+        [
             new(userId, taskListId, TaskTitle.Create("Task 1")),
             new(userId, taskListId, TaskTitle.Create("Task 2")),
-        };
+        ];
 
         this._taskRepositoryMock
             .Setup(r => r.GetTasksAsync(

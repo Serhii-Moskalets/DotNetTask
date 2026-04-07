@@ -47,11 +47,11 @@ public class GetTagsQueryHandlerTests
         Guid userId = Guid.NewGuid();
         int page = 1;
         int pageSize = 10;
-        List<TagEntity> tagEntities = new()
-        {
+        List<TagEntity> tagEntities =
+        [
             new(TagName.Create("Tag1"), userId),
             new(TagName.Create("Tag2"), userId),
-        };
+        ];
 
         this._tagRepoMock
             .Setup(r => r.GetTagsAsync(userId, page, pageSize, It.IsAny<CancellationToken>()))

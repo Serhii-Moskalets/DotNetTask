@@ -71,11 +71,11 @@ public class TaskMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        List<TaskEntity> entities = new()
-        {
+        List<TaskEntity> entities =
+        [
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 1")),
             new(userId, Guid.NewGuid(), TaskTitle.Create("Task 2")),
-        };
+        ];
 
         // Act
         IReadOnlyCollection<TaskBriefDto> dtos = TaskMapper.MapToBrief(entities);

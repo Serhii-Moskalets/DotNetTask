@@ -50,11 +50,11 @@ public class CommentMapperTests
         // Arrange
         Guid taskId = Guid.NewGuid();
         UserEntity user = UserEntityFactory.Create();
-        List<CommentEntity> entities = new()
-        {
+        List<CommentEntity> entities =
+        [
             new(taskId, user.Id, this._content, user),
             new(taskId, user.Id, CommentContent.Create("Content_2"), user),
-        };
+        ];
 
         // Act
         IReadOnlyCollection<CommentDto> result = CommentMapper.Map(entities);

@@ -519,7 +519,7 @@ public class UserTaskAccessRepositoryTests
         TaskEntity task = new(owner.Id, taskList.Id, TaskTitle1);
         await context.Tasks.AddAsync(task);
 
-        string[] userNames = new[] { "Zebra", "Alice", "Charlie", "Bob" };
+        string[] userNames = ["Zebra", "Alice", "Charlie", "Bob"];
         foreach (string? name in userNames)
         {
             UserEntity user = UserEntityFactory.Create(name, name.ToLower(), $"{name}@ex.com");

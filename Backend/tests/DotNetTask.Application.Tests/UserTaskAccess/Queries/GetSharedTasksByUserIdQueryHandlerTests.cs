@@ -72,10 +72,10 @@ public class GetSharedTasksByUserIdQueryHandlerTests
         GetSharedTasksByUserIdQuery query = new(userId, 1, 10);
 
         TaskEntity task1 = new(userId, Guid.NewGuid(), TaskTitle.Create("Task"));
-        List<UserTaskAccessEntity> entities = new()
-        {
+        List<UserTaskAccessEntity> entities =
+        [
             new(task1.Id, userId) { Task = task1, User = UserEntityFactory.Create() },
-        };
+        ];
 
         this._userTaskAccessRepoMock
             .Setup(r => r.GetSharedTasksByUserIdAsync(userId, query.Page, query.PageSize, It.IsAny<CancellationToken>()))

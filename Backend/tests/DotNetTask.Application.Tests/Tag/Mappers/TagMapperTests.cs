@@ -44,12 +44,12 @@ public class TagMapperTests
     {
         // Arrange
         Guid userId = Guid.NewGuid();
-        List<TagEntity> entities = new()
-        {
+        List<TagEntity> entities =
+        [
             new(TagName.Create("Urgent"), userId),
             new(TagName.Create("Personal"), userId),
             new(TagName.Create("Study"), userId),
-        };
+        ];
 
         // Act
         IReadOnlyCollection<TagDto> result = TagMapper.Map(entities);
@@ -69,7 +69,7 @@ public class TagMapperTests
     public void Map_EmptyCollection_ShouldReturnEmptyList()
     {
         // Arrange
-        List<TagEntity> entities = new();
+        List<TagEntity> entities = [];
 
         // Act
         IReadOnlyCollection<TagDto> result = TagMapper.Map(entities);

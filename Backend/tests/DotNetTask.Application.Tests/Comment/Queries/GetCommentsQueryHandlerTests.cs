@@ -83,11 +83,11 @@ public class GetCommentsQueryHandlerTests
         int pageSize = 10;
 
         UserEntity author = UserEntityFactory.Create();
-        List<CommentEntity> comments = new()
-        {
+        List<CommentEntity> comments =
+        [
             new(taskId, author.Id, CommentContent.Create("Comment_1"), author),
             new(taskId, author.Id, CommentContent.Create("Comment_2"), author),
-        };
+        ];
 
         this._taskAccessMock
             .Setup(s => s.HasAccessAsync(taskId, userId, It.IsAny<CancellationToken>()))
