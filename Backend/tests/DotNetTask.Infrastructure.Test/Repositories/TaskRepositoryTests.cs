@@ -224,6 +224,47 @@ public class TaskRepositoryTests
         // Assert
         result.Should().BeNull();
     }
+
+    /// <summary>
+    /// Verifies that deleting a range of tasks returns the correct count and removes the specified tasks from the data
+    /// store.
+    /// </summary>
+    /// <remarks>This test ensures that the repository's DeleteRangeAsync method deletes only the specified
+    /// tasks and that the number of deleted tasks matches the expected count.</remarks>
+    /// <returns>A task that represents the asynchronous test operation.</returns>
+    [Fact]
+    public async Task DeleteRangeTask_ShouldReturnCorrect_When_DeletesTasksSuccessfully()
+    {
+        // Arrange
+        await this.InitializeAsync();
+
+        TaskEntity[] tasks =
+        [
+            new TaskEntity(this._user1.Id, this._taskList.Id, TaskTitle.Create("Apple")),
+            new TaskEntity(this._user1.Id, this._taskList.Id, TaskTitle.Create("Application")),
+            new TaskEntity(this._user1.Id, this._taskList.Id, TaskTitle.Create("Banana")),
+        ];
+
+        foreach (TaskEntity? task in tasks)
+        {
+            await this._repo.AddAsync(task);
+        }
+
+        await this._context.SaveChangesAsync();
+
+        Guid[] taskIdsToDelete = tasks.Take(2).Select(t => t.Id).ToArray();
+        int expectedCount = taskIdsToDelete.Length;
+
+        // Act
+        int deletedTask = await this._repo.DeleteRangeAsync(taskIdsToDelete);
+
+        // Assert
+        deletedTask.Should().Be(expectedCount);
+
+        List<TaskEntity> remainingTasks = this._context.Tasks.Where(t => taskIdsToDelete.Contains(t.Id)).ToList();
+        remainingTasks.Should().BeEmpty();
+    }
+
     /// <summary>
     /// Asynchronously initializes the test data by creating and saving users and a task list to the database context.
     /// </summary>

@@ -86,6 +86,15 @@ public interface ITaskRepository : IRepository<TaskEntity>
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Deletes the tasks with the specified identifiers from the data store.
+    /// </summary>
+    /// <param name="taskIds">A collection of task identifiers representing the tasks to delete. Each identifier must correspond to an
+    /// existing task.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of tasks deleted.</returns>
+    Task<int> DeleteRangeAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Deletes all overdue tasks within a specific task list.
     /// </summary>
     /// <param name="taskListId">The unique identifier of the task list.</param>
