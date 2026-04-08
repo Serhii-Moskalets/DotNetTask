@@ -127,8 +127,8 @@ public class TaskRepository(DotNetTaskDbContext context)
                 : tasksQuery.OrderByDescending(t => t.DueDate),
 
             TaskSortBy.Title => ascending
-                ? tasksQuery.OrderBy(t => t.Title.Value)
-                : tasksQuery.OrderByDescending(t => t.Title.Value),
+                ? tasksQuery.OrderBy(t => t.Title)
+                : tasksQuery.OrderByDescending(t => t.Title),
 
             TaskSortBy.Status => ascending
                 ? tasksQuery.OrderBy(t => t.Status)
@@ -163,7 +163,8 @@ public class TaskRepository(DotNetTaskDbContext context)
         CancellationToken cancellationToken = default)
     {
         IQueryable<TaskEntity> query = this.DbSet.AsNoTracking()
-        .Where(x => x.OwnerId == userId && EF.Functions.Like(x.Title.Value, $"%{searchText}%"));
+        .Where(x => x.OwnerId == userId
+            && EF.Functions.Like((string)(object)x.Title, $"%{searchText}%"));
 
         int totalCount = await query.CountAsync(cancellationToken);
 
@@ -199,5 +200,7 @@ public class TaskRepository(DotNetTaskDbContext context)
     /// <returns>
     /// A task that returns <c>true</c> if the user is the owner of the task; otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> IsTaskOwnerAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default) => await this.DbSet.AsNoTracking().AnyAsync(x => x.Id == taskId && x.OwnerId == userId, cancellationToken);
+    public async Task<bool> IsTaskOwnerAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default)
+        => await this.DbSet.AsNoTracking()
+            .AnyAsync(x => x.Id == taskId && x.OwnerId == userId, cancellationToken);
 }
