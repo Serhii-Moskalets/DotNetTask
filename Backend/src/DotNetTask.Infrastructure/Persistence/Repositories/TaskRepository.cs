@@ -213,4 +213,19 @@ public class TaskRepository(DotNetTaskDbContext context)
     public async Task<bool> IsTaskOwnerAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default)
         => await this.DbSet.AsNoTracking()
             .AnyAsync(x => x.Id == taskId && x.OwnerId == userId, cancellationToken);
+
+    /// <summary>
+    /// Counts the number of tasks from a specified collection that belong to a particular user.
+    /// </summary>
+    /// <param name="taskIds">A collection of task identifiers to check.</param>
+    /// <param name="userId">The unique identifier of the user who must own the tasks.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains the number of tasks that match the provided IDs and belong to the specified user.
+    /// </returns>
+    public async Task<int> CountOwnedTasksAsync(IEnumerable<Guid> taskIds, Guid userId, CancellationToken cancellationToken = default)
+        => await this.DbSet.AsNoTracking()
+            .Where(x => taskIds.Contains(x.Id) && x.OwnerId == userId)
+            .CountAsync(cancellationToken);
 }

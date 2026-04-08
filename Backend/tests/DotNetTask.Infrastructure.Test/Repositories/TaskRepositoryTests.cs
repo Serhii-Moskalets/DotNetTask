@@ -266,6 +266,54 @@ public class TaskRepositoryTests
     }
 
     /// <summary>
+    /// Verifies that <see cref="TaskRepository.CountOwnedTasksAsync"/> correctly filters and counts tasks
+    /// belonging to a specific user from a given collection of task identifiers.
+    /// </summary>
+    /// <remarks>
+    /// This test ensures that:
+    /// <list type="bullet">
+    /// <item>Only tasks owned by the specified <c>userId</c> are included in the count.</item>
+    /// <item>Tasks belonging to other users are correctly excluded, even if their IDs are provided in the input collection.</item>
+    /// <item>The repository correctly handles queries involving multiple IDs and cross-user data isolation.</item>
+    /// </list>
+    /// </remarks>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task CountOwnedTasks_ShouldReturnCorrectCount()
+    {
+        // Arrange
+        await this.InitializeAsync();
+        TaskEntity[] tasks =
+        [
+            new TaskEntity(this._user1.Id, this._taskList.Id, TaskTitle.Create("Task_1")),
+            new TaskEntity(this._user1.Id, this._taskList.Id, TaskTitle.Create("Task_2")),
+            new TaskEntity(this._user2.Id, this._taskList.Id, TaskTitle.Create("Task_3")),
+        ];
+
+        foreach (TaskEntity? task in tasks)
+        {
+            await this._repo.AddAsync(task);
+        }
+
+        await this._context.SaveChangesAsync();
+
+        List<Guid> taskIds =
+        [
+            tasks[0].Id,
+            tasks[1].Id,
+            tasks[2].Id,
+        ];
+
+        // Act
+        int user1Count = await this._repo.CountOwnedTasksAsync(taskIds, this._user1.Id);
+        int user2Count = await this._repo.CountOwnedTasksAsync(taskIds, this._user2.Id);
+
+        // Assert
+        user1Count.Should().Be(2);
+        user2Count.Should().Be(1);
+    }
+
+    /// <summary>
     /// Asynchronously initializes the test data by creating and saving users and a task list to the database context.
     /// </summary>
     /// <returns>A task that represents the asynchronous initialization operation.</returns>

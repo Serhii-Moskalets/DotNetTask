@@ -66,6 +66,21 @@ public interface ITaskRepository : IRepository<TaskEntity>
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Counts the number of tasks from a specified collection that belong to a particular user.
+    /// </summary>
+    /// <param name="taskIds">A collection of task identifiers to check.</param>
+    /// <param name="userId">The unique identifier of the user who must own the tasks.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains the number of tasks that match the provided IDs and belong to the specified user.
+    /// </returns>
+    Task<int> CountOwnedTasksAsync(
+        IEnumerable<Guid> taskIds,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Retrieves a task entity by its identifier for a specific user.
     /// Includes the Tag and Comments (with User) related entities.
     /// </summary>
