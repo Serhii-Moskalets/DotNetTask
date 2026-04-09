@@ -24,7 +24,7 @@ public class DeleteCommentCommandHandler(IUnitOfWork unitOfWork)
     /// <returns>Success if deleted; otherwise, a failure result.</returns>
     public async Task<Result<bool>> Handle(DeleteCommentCommand command, CancellationToken cancellationToken)
     {
-        CommentEntity? comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, asNoTracking: true, cancellationToken);
+        CommentEntity? comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, asNoTracking: false, cancellationToken);
         if (comment is null)
         {
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
@@ -38,7 +38,7 @@ public class DeleteCommentCommandHandler(IUnitOfWork unitOfWork)
             return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, CommentPolicy.DeleteAccessDeniedMessage);
         }
 
-        await this.UnitOfWork.Comments.DeleteAsync(comment, cancellationToken);
+        this.UnitOfWork.Comments.Delete(comment);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);

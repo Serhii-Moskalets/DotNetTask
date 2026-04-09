@@ -32,7 +32,7 @@ public class DeleteTaskCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
-        await this.UnitOfWork.Tasks.DeleteAsync(task, cancellationToken);
+        this.UnitOfWork.Tasks.Delete(task);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);

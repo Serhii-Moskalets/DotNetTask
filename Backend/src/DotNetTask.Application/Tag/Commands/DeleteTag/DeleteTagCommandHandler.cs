@@ -37,7 +37,7 @@ public class DeleteTagCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
         }
 
-        await this.UnitOfWork.Tags.DeleteAsync(tag, cancellationToken);
+        this.UnitOfWork.Tags.Delete(tag);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);

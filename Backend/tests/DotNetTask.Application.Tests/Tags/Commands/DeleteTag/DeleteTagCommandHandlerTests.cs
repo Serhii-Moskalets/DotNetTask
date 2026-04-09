@@ -73,8 +73,6 @@ public class DeleteTagCommandHandlerTests
 
         this._tagRepoMock.Setup(r => r.GetTagByIdForUserAsync(tagEntity.Id, userId, false, It.IsAny<CancellationToken>()))
                    .ReturnsAsync(tagEntity);
-        this._tagRepoMock.Setup(r => r.DeleteAsync(tagEntity, It.IsAny<CancellationToken>()))
-                   .Returns(Task.CompletedTask);
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
@@ -85,7 +83,7 @@ public class DeleteTagCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        this._tagRepoMock.Verify(r => r.DeleteAsync(tagEntity, It.IsAny<CancellationToken>()), Times.Once);
+        this._tagRepoMock.Verify(r => r.Delete(tagEntity), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

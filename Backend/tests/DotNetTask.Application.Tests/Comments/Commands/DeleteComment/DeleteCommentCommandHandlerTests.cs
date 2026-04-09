@@ -76,7 +76,7 @@ public class DeleteCommentCommandHandlerTests
         // Arrange
         CommentEntity comment = new(Guid.NewGuid(), Guid.NewGuid(), this._content);
 
-        this._uowMock.Setup(u => u.Comments.GetByIdAsync(It.IsAny<Guid>(), true, It.IsAny<CancellationToken>()))
+        this._uowMock.Setup(u => u.Comments.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<bool>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync(comment);
         this._uowMock.Setup(u => u.Tasks.IsTaskOwnerAsync(comment.TaskId, It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
                .ReturnsAsync(false);
@@ -105,8 +105,9 @@ public class DeleteCommentCommandHandlerTests
         CommentEntity comment = new(Guid.NewGuid(), userId, this._content);
 
         this._commentsRepoMock
-            .Setup(u => u.GetByIdAsync(comment.Id, true, It.IsAny<CancellationToken>()))
+            .Setup(u => u.GetByIdAsync(comment.Id, asNoTracking: false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(comment);
+        this._commentsRepoMock.Setup(u => u.Delete(comment));
 
         DeleteCommentCommand command = new(comment.Id, userId);
 
@@ -115,7 +116,7 @@ public class DeleteCommentCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        this._commentsRepoMock.Verify(r => r.DeleteAsync(comment, It.IsAny<CancellationToken>()), Times.Once);
+        this._commentsRepoMock.Verify(r => r.Delete(comment), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -132,7 +133,7 @@ public class DeleteCommentCommandHandlerTests
         CommentEntity comment = new(Guid.NewGuid(), commentOwnerId, this._content);
 
         this._commentsRepoMock
-             .Setup(u => u.GetByIdAsync(comment.Id, true, It.IsAny<CancellationToken>()))
+             .Setup(u => u.GetByIdAsync(comment.Id, asNoTracking: false, It.IsAny<CancellationToken>()))
              .ReturnsAsync(comment);
 
         this._taskRepoMock
@@ -146,7 +147,7 @@ public class DeleteCommentCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        this._commentsRepoMock.Verify(r => r.DeleteAsync(comment, It.IsAny<CancellationToken>()), Times.Once);
+        this._commentsRepoMock.Verify(r => r.Delete(comment), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -69,7 +69,6 @@ public class DeleteTaskListCommandHandlerTests
 
         this._taskListRepoMock.Setup(r => r.GetTaskListByIdForUserAsync(It.IsAny<Guid>(), It.IsAny<Guid>(), false, It.IsAny<CancellationToken>()))
                         .ReturnsAsync(taskList);
-        this._taskListRepoMock.Setup(r => r.DeleteAsync(taskList, It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
@@ -80,7 +79,7 @@ public class DeleteTaskListCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        this._taskListRepoMock.Verify(r => r.DeleteAsync(taskList, It.IsAny<CancellationToken>()), Times.Once);
+        this._taskListRepoMock.Verify(r => r.Delete(taskList), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

@@ -57,7 +57,7 @@ public class BaseRepositoryTests
         await context.SaveChangesAsync();
 
         // Act
-        await repo.DeleteAsync(entity);
+        repo.Delete(entity);
         await context.SaveChangesAsync();
 
         TagEntity? saved = await repo.GetByIdAsync(entity.Id);
@@ -110,21 +110,20 @@ public class BaseRepositoryTests
     }
 
     /// <summary>
-    /// Tests that deleting a null entity does not throw an exception.
+    /// Tests that deleting a null entity throws an <see cref="ArgumentNullException"/>.
     /// </summary>
-    /// <returns>A task representing the asynchronous test execution.</returns>
     [Fact]
-    public async Task DeleteAsync_Should_Handle_Null_Entity()
+    public void Delete_Should_ThrowError_When_Null_Entity()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
+        using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
         TagRepository repo = new(context);
 
         // Act
-        Exception exception = await Record.ExceptionAsync(() => repo.DeleteAsync(null!));
+        Action result = () => repo.Delete(null!);
 
         // Assert
-        exception.Should().BeNull();
+        result.Should().Throw<ArgumentNullException>();
     }
 
     /// <summary>

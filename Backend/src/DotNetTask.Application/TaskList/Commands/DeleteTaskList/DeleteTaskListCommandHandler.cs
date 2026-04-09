@@ -36,7 +36,7 @@ public class DeleteTaskListCommandHandler(
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
-        await this.UnitOfWork.TaskLists.DeleteAsync(taskList, cancellationToken);
+        this.UnitOfWork.TaskLists.Delete(taskList);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
         return await Result<bool>.SuccessAsync(true);

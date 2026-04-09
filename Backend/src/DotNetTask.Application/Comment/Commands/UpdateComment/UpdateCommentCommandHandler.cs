@@ -25,7 +25,7 @@ public class UpdateCommentCommandHandler(IUnitOfWork unitOfWork)
     /// <returns>Success if updated; otherwise, a failure result.</returns>
     public async Task<Result<bool>> Handle(UpdateCommentCommand command, CancellationToken cancellationToken)
     {
-        CommentEntity? comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, false, cancellationToken);
+        CommentEntity? comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, asNoTracking: false, cancellationToken);
         if (comment is null)
         {
             return await Result<bool>.FailureAsync(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);

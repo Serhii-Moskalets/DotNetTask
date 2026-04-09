@@ -92,7 +92,7 @@ public class DeleteTaskCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
 
-        this._taskRepoMock.Verify(r => r.DeleteAsync(task, It.IsAny<CancellationToken>()), Times.Once);
+        this._taskRepoMock.Verify(r => r.Delete(task), Times.Once);
         this._uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }
