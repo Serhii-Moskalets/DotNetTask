@@ -3,6 +3,7 @@ using DotNetTask.Application.Common.Dtos;
 using DotNetTask.Application.Tasks.Commands.AddTagToTask;
 using DotNetTask.Application.Tasks.Commands.ChangeTaskStatus;
 using DotNetTask.Application.Tasks.Commands.CreateTask;
+using DotNetTask.Application.Tasks.Commands.DeleteRangeTasks;
 using DotNetTask.Application.Tasks.Commands.DeleteTask;
 using DotNetTask.Application.Tasks.Commands.RemoveTagFromTask;
 using DotNetTask.Application.Tasks.Commands.UpdateTask;
@@ -165,9 +166,25 @@ public class TasksController : BaseController
     }
 
     /// <summary>
+    /// Deletes a batch of tasks.
+    /// </summary>
+    /// <param name="request">An object containing the identifiers of the tasks to delete. Cannot be null.</param>
+    /// <returns>
+    /// Returns <see cref="OkObjectResult"/> containing the count of deleted tasks if the operation succeeds;
+    /// otherwise, a <see cref="BadRequestObjectResult"/>.
+    /// </returns>
+    [HttpDelete("batch")]
+    public async Task<IActionResult> DeleteRangeTasks([FromBody] DeleteRangeTasksRequest request)
+    {
+        DeleteRangeTasksCommand command = new(request.TaskIds, this.CurrentUserId);
+        Result<int> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        return this.HandleResult(result);
+    }
+
+    /// <summary>
     /// Adds a tag to the specified task.
     /// </summary>
-    /// <param name="taskId">The task identifier..</param>
+    /// <param name="taskId">The task identifier.</param>
     /// <param name="tagId">The tag identifier.</param>
     /// <returns>
     /// Returns <see cref="NoContentResult"/> if the operation succeeds;
