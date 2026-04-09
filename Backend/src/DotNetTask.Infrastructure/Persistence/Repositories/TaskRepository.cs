@@ -127,8 +127,8 @@ public class TaskRepository(DotNetTaskDbContext context)
                 : tasksQuery.OrderByDescending(t => t.DueDate),
 
             TaskSortBy.Title => ascending
-                ? tasksQuery.OrderBy(t => t.Title.Value)
-                : tasksQuery.OrderByDescending(t => t.Title.Value),
+                ? tasksQuery.OrderBy(t => t.Title)
+                : tasksQuery.OrderByDescending(t => t.Title),
 
             TaskSortBy.Status => ascending
                 ? tasksQuery.OrderBy(t => t.Status)
@@ -163,7 +163,8 @@ public class TaskRepository(DotNetTaskDbContext context)
         CancellationToken cancellationToken = default)
     {
         IQueryable<TaskEntity> query = this.DbSet.AsNoTracking()
-        .Where(x => x.OwnerId == userId && EF.Functions.Like(x.Title.Value, $"%{searchText}%"));
+        .Where(x => x.OwnerId == userId
+            && EF.Functions.Like((string)(object)x.Title, $"%{searchText}%"));
 
         int totalCount = await query.CountAsync(cancellationToken);
 
@@ -175,6 +176,16 @@ public class TaskRepository(DotNetTaskDbContext context)
 
         return (items, totalCount);
     }
+
+    /// <summary>
+    /// Deletes the tasks with the specified identifiers from the data store.
+    /// </summary>
+    /// <param name="taskIds">A collection of task identifiers representing the tasks to delete. Each identifier must correspond to an
+    /// existing task.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of tasks deleted.</returns>
+    public async Task<int> DeleteRangeAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default)
+        => await this.DbSet.Where(t => taskIds.Contains(t.Id)).ExecuteDeleteAsync(cancellationToken);
 
     /// <summary>
     /// Deletes all overdue tasks within a specific task list.
@@ -199,5 +210,22 @@ public class TaskRepository(DotNetTaskDbContext context)
     /// <returns>
     /// A task that returns <c>true</c> if the user is the owner of the task; otherwise, <c>false</c>.
     /// </returns>
-    public async Task<bool> IsTaskOwnerAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default) => await this.DbSet.AsNoTracking().AnyAsync(x => x.Id == taskId && x.OwnerId == userId, cancellationToken);
+    public async Task<bool> IsTaskOwnerAsync(Guid taskId, Guid userId, CancellationToken cancellationToken = default)
+        => await this.DbSet.AsNoTracking()
+            .AnyAsync(x => x.Id == taskId && x.OwnerId == userId, cancellationToken);
+
+    /// <summary>
+    /// Counts the number of tasks from a specified collection that belong to a particular user.
+    /// </summary>
+    /// <param name="taskIds">A collection of task identifiers to check.</param>
+    /// <param name="userId">The unique identifier of the user who must own the tasks.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains the number of tasks that match the provided IDs and belong to the specified user.
+    /// </returns>
+    public async Task<int> CountOwnedTasksAsync(IEnumerable<Guid> taskIds, Guid userId, CancellationToken cancellationToken = default)
+        => await this.DbSet.AsNoTracking()
+            .Where(x => taskIds.Contains(x.Id) && x.OwnerId == userId)
+            .CountAsync(cancellationToken);
 }

@@ -9,13 +9,15 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Comment.Commands.UpdateComment;
 
 /// <summary>
 /// Handles updating the text of an existing comment.
 /// </summary>
 public class UpdateCommentCommandHandler(IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<UpdateCommentCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<UpdateCommentCommand, Result<Unit>>
 {
     /// <summary>
     /// Updates the comment if the user is the owner and validation passes.
@@ -23,22 +25,22 @@ public class UpdateCommentCommandHandler(IUnitOfWork unitOfWork)
     /// <param name="command">The comment ID, user ID, and new text.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>Success if updated; otherwise, a failure result.</returns>
-    public async Task<Result<bool>> Handle(UpdateCommentCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(UpdateCommentCommand command, CancellationToken cancellationToken)
     {
-        CommentEntity? comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, false, cancellationToken);
+        CommentEntity? comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, asNoTracking: false, cancellationToken);
         if (comment is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
         }
 
         if (comment.UserId != command.UserId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, CommentPolicy.UpdateAccessDeniedMessage);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, CommentPolicy.UpdateAccessDeniedMessage);
         }
 
         CommentContent newContent = CommentContent.Create(command.NewContent);
 
-        Result<bool> result = comment.Update(newContent);
+        Result<Unit> result = comment.Update(newContent);
         if (!result.IsSuccess)
         {
             return result;
@@ -46,6 +48,6 @@ public class UpdateCommentCommandHandler(IUnitOfWork unitOfWork)
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

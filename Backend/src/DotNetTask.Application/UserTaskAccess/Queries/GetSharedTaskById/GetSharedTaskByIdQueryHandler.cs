@@ -37,12 +37,12 @@ public class GetSharedTaskByIdQueryHandler(IUnitOfWork unitOfWork)
 
         if (access is null)
         {
-            return await Result<TaskDto>.FailureAsync(
+            return Result<TaskDto>.Failure(
                 TinyResult.Enums.ErrorCode.NotFound,
                 TaskPolicy.NotFoundMessage);
         }
 
-        return await Result<TaskDto>.SuccessAsync(
+        return Result<TaskDto>.Success(
             TaskAccessForUserMapper.Map(access));
     }
 }

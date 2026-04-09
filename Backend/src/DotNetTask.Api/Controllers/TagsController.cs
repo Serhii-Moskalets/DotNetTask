@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Api.Controllers;
 
 /// <summary>
@@ -72,7 +74,7 @@ public class TagsController : BaseController
     public async Task<IActionResult> DeleteTag([FromRoute] Guid tagId)
     {
         DeleteTagCommand command = new(tagId, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 }

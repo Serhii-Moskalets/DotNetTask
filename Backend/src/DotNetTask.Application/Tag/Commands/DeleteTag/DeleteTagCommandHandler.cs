@@ -8,6 +8,8 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Tag.Commands.DeleteTag;
 
 /// <summary>
@@ -15,7 +17,7 @@ namespace DotNetTask.Application.Tag.Commands.DeleteTag;
 /// </summary>
 public class DeleteTagCommandHandler(
     IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<DeleteTagCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<DeleteTagCommand, Result<Unit>>
 {
     /// <summary>
     /// Processes the command to delete a user's tag.
@@ -28,18 +30,18 @@ public class DeleteTagCommandHandler(
     /// A <see cref="Result{T}"/> indicating success if the tag was deleted,
     /// or failure if the tag was not found or the user is not the owner.
     /// </returns>
-    public async Task<Result<bool>> Handle(DeleteTagCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(DeleteTagCommand command, CancellationToken cancellationToken)
     {
         TagEntity? tag = await this.UnitOfWork.Tags
             .GetTagByIdForUserAsync(command.TagId, command.UserId, asNoTracking: false, cancellationToken);
         if (tag is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
         }
 
-        await this.UnitOfWork.Tags.DeleteAsync(tag, cancellationToken);
+        this.UnitOfWork.Tags.Delete(tag);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

@@ -2,6 +2,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.ChangeEmail;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
@@ -63,12 +64,10 @@ public class ChangeEmailCommandHandlerTests
             .Returns(GeneratedToken);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        result.Value.Should().BeTrue();
-
         user.CurrentToken.Should().NotBeNull();
         user.CurrentToken!.Value.Should().Be(GeneratedToken);
         user.CurrentToken.Metadata.Should().Be(command.NewEmail);
@@ -90,7 +89,7 @@ public class ChangeEmailCommandHandlerTests
             .ReturnsAsync((UserEntity?)null);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -118,7 +117,7 @@ public class ChangeEmailCommandHandlerTests
             .ReturnsAsync(true);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -144,7 +143,7 @@ public class ChangeEmailCommandHandlerTests
             .ReturnsAsync(user);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();

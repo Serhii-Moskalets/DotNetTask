@@ -41,6 +41,6 @@ public class GetSharedTasksByUserIdQueryHandler(IUnitOfWork unitOfWork)
 
         PagedResultDto<TaskDto> result = items.ToPagedResult(totalCount, query.Page, query.PageSize, TaskAccessForUserMapper.Map);
 
-        return await Result<PagedResultDto<TaskDto>>.SuccessAsync(result);
+        return Result<PagedResultDto<TaskDto>>.Success(result);
     }
 }

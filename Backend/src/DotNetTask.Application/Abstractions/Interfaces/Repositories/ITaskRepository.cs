@@ -66,6 +66,21 @@ public interface ITaskRepository : IRepository<TaskEntity>
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Counts the number of tasks from a specified collection that belong to a particular user.
+    /// </summary>
+    /// <param name="taskIds">A collection of task identifiers to check.</param>
+    /// <param name="userId">The unique identifier of the user who must own the tasks.</param>
+    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
+    /// <returns>
+    /// A task that represents the asynchronous operation.
+    /// The task result contains the number of tasks that match the provided IDs and belong to the specified user.
+    /// </returns>
+    Task<int> CountOwnedTasksAsync(
+        IEnumerable<Guid> taskIds,
+        Guid userId,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Retrieves a task entity by its identifier for a specific user.
     /// Includes the Tag and Comments (with User) related entities.
     /// </summary>
@@ -84,6 +99,15 @@ public interface ITaskRepository : IRepository<TaskEntity>
         Guid userId,
         bool asNoTracking = true,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Deletes the tasks with the specified identifiers from the data store.
+    /// </summary>
+    /// <param name="taskIds">A collection of task identifiers representing the tasks to delete. Each identifier must correspond to an
+    /// existing task.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of tasks deleted.</returns>
+    Task<int> DeleteRangeAsync(IEnumerable<Guid> taskIds, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Deletes all overdue tasks within a specific task list.

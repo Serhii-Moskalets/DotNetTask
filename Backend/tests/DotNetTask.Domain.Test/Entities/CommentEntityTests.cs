@@ -1,3 +1,4 @@
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Exceptions;
@@ -75,7 +76,7 @@ public class CommentEntityTests
         CommentContent newContent = CommentContent.Create("Updated text");
 
         // Act
-        Result<bool> result = comment.Update(newContent);
+        Result<Unit> result = comment.Update(newContent);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -93,7 +94,7 @@ public class CommentEntityTests
         CommentEntity comment = new(Guid.NewGuid(), Guid.NewGuid(), this._validContent);
 
         // Act
-        Result<bool> result = comment.Update(this._validContent);
+        Result<Unit> result = comment.Update(this._validContent);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

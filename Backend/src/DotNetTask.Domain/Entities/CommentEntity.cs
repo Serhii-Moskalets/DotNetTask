@@ -74,21 +74,21 @@ public class CommentEntity : BaseEntity
     /// <summary>
     /// Updates the text content of the comment.
     /// </summary>
-    /// <param name="content">The new text content of the comment.</param>
+    /// <param name="content">The new <see cref="CommentContent"/> to be applied.</param>
     /// <returns>
-    /// A <see cref="Result{Boolean}"/> indicating success (true) if the content was updated,
-    /// or a failure if the new content is the same as the current one.
+    /// A <see cref="Result{Unit}"/> indicating that the update was successful,
+    /// or a failure result if no changes were detected.
     /// </returns>
-    public Result<bool> Update(CommentContent content)
+    public Result<Unit> Update(CommentContent content)
     {
         if (this.Content == content)
         {
-            return Result<bool>.Failure(
+            return Result<Unit>.Failure(
                 TinyResult.Enums.ErrorCode.InvalidOperation,
                 CommentPolicy.NoChangesDetectedMessage);
         }
 
         this.Content = content;
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

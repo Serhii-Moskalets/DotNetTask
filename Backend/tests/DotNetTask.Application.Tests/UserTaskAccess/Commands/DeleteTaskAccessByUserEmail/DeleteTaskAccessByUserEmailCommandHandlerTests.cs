@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.UserTaskAccess.Commands.DeleteTaskAccessByUserEmail;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
@@ -50,7 +51,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
                        .ReturnsAsync(false);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -75,7 +76,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
                        .ReturnsAsync((UserEntity?)null);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -104,7 +105,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
                        .ReturnsAsync(0);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -136,7 +137,7 @@ public class DeleteTaskAccessByUserEmailCommandHandlerTests
                        .ReturnsAsync(1);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

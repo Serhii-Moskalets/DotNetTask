@@ -8,6 +8,8 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.TaskList.Commands.DeleteTaskList;
 
 /// <summary>
@@ -16,7 +18,7 @@ namespace DotNetTask.Application.TaskList.Commands.DeleteTaskList;
 /// </summary>
 public class DeleteTaskListCommandHandler(
     IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<DeleteTaskListCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<DeleteTaskListCommand, Result<Unit>>
 {
     /// <summary>
     /// Handles the command to delete a task list.
@@ -27,18 +29,18 @@ public class DeleteTaskListCommandHandler(
     /// A <see cref="Result{T}"/> containing <c>true</c> if the task list was successfully deleted;
     /// otherwise, a failure result with an appropriate error code.
     /// </returns>
-    public async Task<Result<bool>> Handle(DeleteTaskListCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(DeleteTaskListCommand command, CancellationToken cancellationToken)
     {
         TaskListEntity? taskList = await this.UnitOfWork.TaskLists
             .GetTaskListByIdForUserAsync(command.TaskListId, command.UserId, asNoTracking: false, cancellationToken);
         if (taskList is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
-        await this.UnitOfWork.TaskLists.DeleteAsync(taskList, cancellationToken);
+        this.UnitOfWork.TaskLists.Delete(taskList);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

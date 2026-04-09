@@ -40,7 +40,7 @@ public class LoginUserCommandHandler(
 
         if (user is null || !this._passwordHasher.VerifyPassword(command.Password, user.PasswordHash.Value))
         {
-            return await Result<LoginResponse>.FailureAsync(
+            return Result<LoginResponse>.Failure(
                 ErrorCode.ValidationError, UserPolicy.InvalidCredentialsMessage);
         }
 

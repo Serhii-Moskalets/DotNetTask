@@ -8,6 +8,8 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Tasks.Commands.RemoveTagFromTask;
 
 /// <summary>
@@ -15,30 +17,33 @@ namespace DotNetTask.Application.Tasks.Commands.RemoveTagFromTask;
 /// </summary>
 public class RemoveTagFromTaskCommandHandler(
     IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<RemoveTagFromTaskCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<RemoveTagFromTaskCommand, Result<Unit>>
 {
     /// <summary>
     /// Handles the removal of a tag for a specific task and user.
     /// </summary>
     /// <param name="command">The <see cref="RemoveTagFromTaskCommand"/> containing the task and user identifiers.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.</param>
-    /// <returns>A <see cref="Result{Boolean}"/> indicating success or failure of the operation.</returns>
-    public async Task<Result<bool>> Handle(RemoveTagFromTaskCommand command, CancellationToken cancellationToken)
+    /// <returns>
+    /// A <see cref="Result{Unit}"/> indicating successful completion,
+    /// or a failure result if the task is not found.
+    /// </returns>
+    public async Task<Result<Unit>> Handle(RemoveTagFromTaskCommand command, CancellationToken cancellationToken)
     {
-        TaskEntity? task = await this.UnitOfWork.Tasks.GetTaskByIdForUserAsync(command.TaskId, command.UserId, false, cancellationToken);
+        TaskEntity? task = await this.UnitOfWork.Tasks.GetTaskByIdForUserAsync(command.TaskId, command.UserId, asNoTracking: false, cancellationToken);
         if (task is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         if (task.TagId is null)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<Unit>.Success(Unit.Value);
         }
 
         task.SetTag(null);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

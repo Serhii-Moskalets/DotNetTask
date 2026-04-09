@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Api.Controllers;
 
 /// <summary>
@@ -81,7 +83,7 @@ public class CommentsController : BaseController
     public async Task<IActionResult> DeleteComment([FromRoute] Guid commentId)
     {
         DeleteCommentCommand command = new(commentId, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -98,7 +100,7 @@ public class CommentsController : BaseController
     public async Task<IActionResult> UpdateComment([FromRoute] Guid commentId, [FromBody] CommentTextRequest request)
     {
         UpdateCommentCommand command = new(commentId, this.CurrentUserId, request.Content);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 }

@@ -9,6 +9,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.ResetPassword;
 
 /// <summary>
@@ -23,7 +25,7 @@ public class ResetPasswordCommandHandler(
     IUnitOfWork unitOfWork,
     ITokenGenerator tokenGenerator,
     IClock clock)
-    : HandlerBase(unitOfWork), IRequestHandler<ResetPasswordCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<ResetPasswordCommand, Result<Unit>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
     private readonly IClock _clock = clock;
@@ -34,10 +36,10 @@ public class ResetPasswordCommandHandler(
     /// <param name="command">The command containing the user's email address.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.</param>
     /// <returns>
-    /// A <see cref="Result{Boolean}"/> indicating success (true).
-    /// To prevent email enumeration, it returns success even if the user is not found.
+    /// A <see cref="Result{Unit}"/> indicating that the process has been initiated.
+    /// Always returns success to maintain privacy and security regarding user existence.
     /// </returns>
-    public async Task<Result<bool>> Handle(ResetPasswordCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(ResetPasswordCommand command, CancellationToken cancellationToken)
     {
         UserEntity? user = await this.UnitOfWork.Users.GetByEmailAsync(
             Email.Create(command.Email),
@@ -46,7 +48,7 @@ public class ResetPasswordCommandHandler(
 
         if (user is null)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<Unit>.Success(Unit.Value);
         }
 
         string token = this._tokenGenerator.GenerateSecureToken();
@@ -56,6 +58,6 @@ public class ResetPasswordCommandHandler(
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

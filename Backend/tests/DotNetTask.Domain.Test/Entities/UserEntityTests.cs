@@ -1,3 +1,4 @@
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Enums;
 using DotNetTask.Domain.Exceptions;
@@ -78,7 +79,7 @@ public class UserEntityTests
         UserEntity user = UserEntityFactory.Create();
 
         // Act
-        Result<bool> result = user.ResendEmailVerification(TokenValue, Duration, CurrentTime);
+        Result<Unit> result = user.ResendEmailVerification(TokenValue, Duration, CurrentTime);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -101,7 +102,7 @@ public class UserEntityTests
         user.ConfirmEmailVerification(TokenValue, CurrentTime.AddMinutes(5));
 
         // Act
-        Result<bool> result = user.ResendEmailVerification("new_token", Duration, CurrentTime);
+        Result<Unit> result = user.ResendEmailVerification("new_token", Duration, CurrentTime);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -143,7 +144,7 @@ public class UserEntityTests
         fakeClock.Advance(TimeSpan.FromMinutes(2));
 
         // Act
-        Result<bool> result = user.ConfirmEmailVerification(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailVerification(TokenValue, fakeClock.UtcNow);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -161,7 +162,7 @@ public class UserEntityTests
         UserEntity user = UserEntityFactory.Create();
 
         // Act
-        Result<bool> result = user.ConfirmEmailVerification(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailVerification(TokenValue, fakeClock.UtcNow);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -226,7 +227,7 @@ public class UserEntityTests
         fakeClock.Advance(TimeSpan.FromMinutes(2));
 
         // Act
-        Result<bool> result = user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -244,7 +245,7 @@ public class UserEntityTests
         UserEntity user = UserEntityFactory.Create();
 
         // Act
-        Result<bool> result = user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -387,7 +388,7 @@ public class UserEntityTests
         fakeClock.Advance(TimeSpan.FromMinutes(2));
 
         // Act
-        Result<bool> result = user.RevertEmailChange(RevertToken, fakeClock.UtcNow, ResetToken, TimeSpan.FromHours(1));
+        Result<Unit> result = user.RevertEmailChange(RevertToken, fakeClock.UtcNow, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -406,7 +407,7 @@ public class UserEntityTests
         DateTime expiredTime = DateTime.UtcNow;
 
         // Act
-        Result<bool> result = user.RevertEmailChange(RevertToken, expiredTime, ResetToken, TimeSpan.FromHours(1));
+        Result<Unit> result = user.RevertEmailChange(RevertToken, expiredTime, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -455,7 +456,7 @@ public class UserEntityTests
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
         // Act
-        Result<bool> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, fakeClock.UtcNow);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -475,7 +476,7 @@ public class UserEntityTests
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
         // Act
-        Result<bool> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, expiredTime);
+        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, expiredTime);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -628,7 +629,7 @@ public class UserEntityTests
         UserName oldUserName = UserName.Create(CurrentUserName);
 
         // Act
-        Result<bool> result = user.ChangeUserName(oldUserName);
+        Result<Unit> result = user.ChangeUserName(oldUserName);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -646,7 +647,7 @@ public class UserEntityTests
         user.RequestEmailVerification(TokenValue, Duration, CurrentTime);
 
         // Act
-        Result<bool> result = user.ConfirmEmailVerification("invalidtoken", DateTime.UtcNow);
+        Result<Unit> result = user.ConfirmEmailVerification("invalidtoken", DateTime.UtcNow);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

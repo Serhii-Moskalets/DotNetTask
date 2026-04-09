@@ -78,15 +78,9 @@ public abstract class BaseRepository<TEntity> : IRepository<TEntity>
     /// Deletes an entity from the repository.
     /// </summary>
     /// <param name="entity">The entity to delete.</param>
-    /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
-    /// <returns>A task representing the asynchronous delete operation.</returns>
-    public virtual async Task DeleteAsync(TEntity entity, CancellationToken cancellationToken = default)
+    public virtual void Delete(TEntity entity)
     {
-        if (entity is null)
-        {
-            return;
-        }
-
+        ArgumentNullException.ThrowIfNull(entity);
         this.DbSet.Remove(entity);
     }
 

@@ -16,6 +16,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Api.Controllers;
 
 /// <summary>
@@ -57,7 +59,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> ResendEmailVerification()
     {
         ResendEmailVerificationCommand command = new(this.CurrentUserId, this.ClientIp);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -78,7 +80,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> ChangeEmail([FromBody] ChangeEmailRequest request)
     {
         ChangeEmailCommand command = new(request.NewEmail, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -96,7 +98,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> ConfirmEmailChange([FromQuery] string token)
     {
         ConfirmEmailChangeCommand command = new(token, this.ClientIp);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -133,7 +135,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> UpdatePassword([FromBody] UpdatePasswordRequest request)
     {
         UpdatePasswordCommand command = new(request.CurrentPassword, request.NewPassword, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -150,7 +152,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> UpdateUsername([FromBody] UpdateUsernameRequest request)
     {
         UpdateUsernameCommand command = new(request.NewUsername, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -167,7 +169,7 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> UpdateUserProfile([FromBody] UpdateUserProfileRequest request)
     {
         UpdateUserProfileCommand command = new(request.NewFirstName, request.NewLastName, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 }

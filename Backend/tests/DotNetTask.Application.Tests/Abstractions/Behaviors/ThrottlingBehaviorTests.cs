@@ -7,6 +7,8 @@ using Microsoft.Extensions.Options;
 using Moq;
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Tests.Abstractions.Behaviors;
 
 /// <summary>
@@ -74,14 +76,14 @@ public class ThrottlingBehaviorTests
                 It.IsAny<TimeSpan>()))
             .ReturnsAsync(true);
 
-        Result<bool> expectedResponse = Result<bool>.Success(true);
+        Result<Unit> expectedResponse = Result<Unit>.Success(Unit.Value);
 
-        Task<Result<bool>> Next(CancellationToken _) => Task.FromResult(expectedResponse);
+        Task<Result<Unit>> Next(CancellationToken _) => Task.FromResult(expectedResponse);
 
-        ThrottlingBehavior<IThrottledRequest, Result<bool>> behavior = this.CreateBehavior<Result<bool>>();
+        ThrottlingBehavior<IThrottledRequest, Result<Unit>> behavior = this.CreateBehavior<Result<Unit>>();
 
         // Act
-        Result<bool> result = await behavior.Handle(request, Next, CancellationToken.None);
+        Result<Unit> result = await behavior.Handle(request, Next, CancellationToken.None);
 
         // Assert
         result.Should().Be(expectedResponse);
@@ -115,12 +117,12 @@ public class ThrottlingBehaviorTests
                 It.IsAny<TimeSpan>()))
             .ReturnsAsync(false);
 
-        static Task<Result<bool>> Next(CancellationToken _) => throw new Exception("Should not be called");
+        static Task<Result<Unit>> Next(CancellationToken _) => throw new Exception("Should not be called");
 
-        ThrottlingBehavior<IThrottledRequest, Result<bool>> behavior = this.CreateBehavior<Result<bool>>();
+        ThrottlingBehavior<IThrottledRequest, Result<Unit>> behavior = this.CreateBehavior<Result<Unit>>();
 
         // Act
-        Result<bool> result = await behavior.Handle(requestMock.Object, Next, CancellationToken.None);
+        Result<Unit> result = await behavior.Handle(requestMock.Object, Next, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -209,13 +211,13 @@ public class ThrottlingBehaviorTests
             .ReturnsAsync(true);
 
         bool nextCalled = false;
-        Task<Result<bool>> Next(CancellationToken _)
+        Task<Result<Unit>> Next(CancellationToken _)
         {
             nextCalled = true;
-            return Task.FromResult(Result<bool>.Success(true));
+            return Task.FromResult(Result<Unit>.Success(Unit.Value));
         }
 
-        ThrottlingBehavior<IThrottledRequest, Result<bool>> behavior = this.CreateBehavior<Result<bool>>();
+        ThrottlingBehavior<IThrottledRequest, Result<Unit>> behavior = this.CreateBehavior<Result<Unit>>();
 
         // Act
         await behavior.Handle(request, Next, CancellationToken.None);

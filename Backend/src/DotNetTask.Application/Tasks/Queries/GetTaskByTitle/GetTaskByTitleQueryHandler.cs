@@ -32,7 +32,7 @@ public class GetTaskByTitleQueryHandler(IUnitOfWork unitOfWork)
     {
         if (string.IsNullOrWhiteSpace(query.Text))
         {
-            return await Result<PagedResultDto<TaskBriefDto>>.SuccessAsync(new PagedResultDto<TaskBriefDto>
+            return Result<PagedResultDto<TaskBriefDto>>.Success(new PagedResultDto<TaskBriefDto>
             {
                 Items = Array.Empty<TaskBriefDto>(),
                 TotalCount = 0,
@@ -46,6 +46,6 @@ public class GetTaskByTitleQueryHandler(IUnitOfWork unitOfWork)
 
         PagedResultDto<TaskBriefDto> result = items.ToPagedResult(totalCount, query.Page, query.PageSize, TaskMapper.MapToBrief);
 
-        return await Result<PagedResultDto<TaskBriefDto>>.SuccessAsync(result);
+        return Result<PagedResultDto<TaskBriefDto>>.Success(result);
     }
 }

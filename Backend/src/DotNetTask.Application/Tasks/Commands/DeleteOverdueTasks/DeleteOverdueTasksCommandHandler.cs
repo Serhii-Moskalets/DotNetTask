@@ -23,7 +23,10 @@ public class DeleteOverdueTasksCommandHandler(
     /// </summary>
     /// <param name="command">The <see cref="DeleteOverdueTasksCommand"/> containing task list and user identifiers.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.</param>
-    /// <returns>A <see cref="Result{Boolean}"/> indicating success or failure of the operation.</returns>
+    /// <returns>
+    /// A <see cref="Result{T}"/> containing the count of successfully deleted tasks on success,
+    /// or a failure result if the task list is not found.
+    /// </returns>
     public async Task<Result<int>> Handle(DeleteOverdueTasksCommand command, CancellationToken cancellationToken)
     {
         TaskListEntity? taskList = await this.UnitOfWork.TaskLists
@@ -31,12 +34,12 @@ public class DeleteOverdueTasksCommandHandler(
 
         if (taskList is null)
         {
-            return await Result<int>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
+            return Result<int>.Failure(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         int deletedTasksCount = await this.UnitOfWork.Tasks
             .DeleteOverdueTaskAsync(command.TaskListId, DateTime.UtcNow, cancellationToken);
 
-        return await Result<int>.SuccessAsync(deletedTasksCount);
+        return Result<int>.Success(deletedTasksCount);
     }
 }

@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Comment.Commands.UpdateComment;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.ValueObjects;
@@ -53,7 +54,7 @@ public class UpdateCommentCommandHandlerTests
         UpdateCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "New Text");
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -78,7 +79,7 @@ public class UpdateCommentCommandHandlerTests
         UpdateCommentCommand command = new(comment.Id, Guid.NewGuid(), "New Text");
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -104,7 +105,7 @@ public class UpdateCommentCommandHandlerTests
         UpdateCommentCommand command = new(comment.Id, userId, this._oldContent.Value);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -132,7 +133,7 @@ public class UpdateCommentCommandHandlerTests
         UpdateCommentCommand command = new(comment.Id, userId, "New Text");
 
         // Act
-        Result<bool> result = await handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

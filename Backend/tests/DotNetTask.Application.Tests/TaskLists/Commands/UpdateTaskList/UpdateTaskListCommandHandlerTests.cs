@@ -2,6 +2,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.TaskList.Commands.UpdateTaskList;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.ValueObjects;
@@ -60,7 +61,7 @@ public class UpdateTaskListCommandHandlerTests
         UpdateTaskListCommand command = new(Guid.NewGuid(), Guid.NewGuid(), "NewTitle");
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -84,7 +85,7 @@ public class UpdateTaskListCommandHandlerTests
         UpdateTaskListCommand command = new(taskList.Id, Guid.NewGuid(), Title.Value);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -129,7 +130,7 @@ public class UpdateTaskListCommandHandlerTests
         UpdateTaskListCommand command = new(taskList.Id, userId, "NewTitle");
 
         // Act
-        Result<bool> result = await handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

@@ -9,6 +9,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.RevertEmailChange;
 
 /// <summary>
@@ -38,12 +40,12 @@ public class RevertEmailChangeCommandHandler(
         UserEntity? user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChangeRevert, cancellationToken);
         if (user is null)
         {
-            return await Result<string>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailRevertTokenMessage);
+            return Result<string>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailRevertTokenMessage);
         }
 
         string resetToken = this._tokenGenerator.GenerateSecureToken();
 
-        Result<bool> result = user.RevertEmailChange(command.Token, this._clock.UtcNow, resetToken, TimeSpan.FromMinutes(15));
+        Result<Unit> result = user.RevertEmailChange(command.Token, this._clock.UtcNow, resetToken, TimeSpan.FromMinutes(15));
         if (!result.IsSuccess)
         {
             return Result<string>.Failure(result.Error!.Code, result.Error.Message);
@@ -51,6 +53,6 @@ public class RevertEmailChangeCommandHandler(
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<string>.SuccessAsync(resetToken);
+        return Result<string>.Success(resetToken);
     }
 }

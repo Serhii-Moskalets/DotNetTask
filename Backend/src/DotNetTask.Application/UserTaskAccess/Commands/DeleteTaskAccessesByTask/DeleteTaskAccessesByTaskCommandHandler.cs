@@ -8,13 +8,15 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.UserTaskAccess.Commands.DeleteTaskAccessesByTask;
 
 /// <summary>
 /// Handles the <see cref="DeleteTaskAccessesByTaskCommand"/> to remove all user-task access entries for a specific task.
 /// </summary>
 public class DeleteTaskAccessesByTaskCommandHandler(IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<DeleteTaskAccessesByTaskCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<DeleteTaskAccessesByTaskCommand, Result<Unit>>
 {
     /// <summary>
     /// Processes the command to delete all user-task access entries for a given task.
@@ -27,23 +29,23 @@ public class DeleteTaskAccessesByTaskCommandHandler(IUnitOfWork unitOfWork)
     /// A <see cref="Result{T}"/> indicating success if all accesses were deleted,
     /// or failure if the task was not found or the user is not the task owner.
     /// </returns>
-    public async Task<Result<bool>> Handle(DeleteTaskAccessesByTaskCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(DeleteTaskAccessesByTaskCommand command, CancellationToken cancellationToken)
     {
         TaskEntity? task = await this.UnitOfWork.Tasks.GetTaskByIdForUserAsync(command.TaskId, command.UserId, cancellationToken: cancellationToken);
         if (task is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserTaskAccessPolicy.AccessDeniedMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, UserTaskAccessPolicy.AccessDeniedMessage);
         }
 
         bool exist = await this.UnitOfWork.UserTaskAccesses.ExistsByTaskIdAsync(command.TaskId, cancellationToken);
         if (!exist)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.NoAccessesFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.NoAccessesFoundMessage);
         }
 
         await this.UnitOfWork.UserTaskAccesses.DeleteAllByTaskIdAsync(command.TaskId, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

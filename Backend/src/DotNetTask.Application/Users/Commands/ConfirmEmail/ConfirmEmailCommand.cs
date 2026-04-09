@@ -9,7 +9,7 @@ namespace DotNetTask.Application.Users.Commands.ConfirmEmail;
 /// <param name="Token">The verification token from the email link.</param>
 /// <param name="IpAddress">The IP address of the client making the request, used for security tracking.</param>
 public record ConfirmEmailCommand(string Token, string IpAddress)
-    : ICommand<bool>, IThrottledRequest
+    : ICommand, IThrottledRequest
 {
     /// <inheritdoc/>
     /// <value>Always returns "ConfirmEmail".</value>

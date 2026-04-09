@@ -8,6 +8,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.ConfirmEmailChange;
 
 /// <summary>
@@ -20,7 +22,7 @@ namespace DotNetTask.Application.Users.Commands.ConfirmEmailChange;
 public class ConfirmEmailChangeCommandHandler(
     IUnitOfWork unitOfWork,
     IClock clock)
-    : HandlerBase(unitOfWork), IRequestHandler<ConfirmEmailChangeCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<ConfirmEmailChangeCommand, Result<Unit>>
 {
     private readonly IClock _clock = clock;
 
@@ -30,18 +32,18 @@ public class ConfirmEmailChangeCommandHandler(
     /// <param name="command">The command containing the user ID and the verification token.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.</param>
     /// <returns>
-    /// A <see cref="Result{Boolean}"/> indicating success (true) if the email was successfully changed.
-    /// Returns a failure result if the user is not found.
+    /// A <see cref="Result{Unit}"/> indicating that the email change was successfully applied,
+    /// or a failure result if the token is invalid, expired, or the associated user is not found.
     /// </returns>
-    public async Task<Result<bool>> Handle(ConfirmEmailChangeCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(ConfirmEmailChangeCommand command, CancellationToken cancellationToken)
     {
         UserEntity? user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChange, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailChangeTokenMessage);
+            return Result<Unit>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailChangeTokenMessage);
         }
 
-        Result<bool> result = user.ConfirmEmailChange(command.Token, this._clock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailChange(command.Token, this._clock.UtcNow);
         if (!result.IsSuccess)
         {
             return result;
@@ -49,6 +51,6 @@ public class ConfirmEmailChangeCommandHandler(
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

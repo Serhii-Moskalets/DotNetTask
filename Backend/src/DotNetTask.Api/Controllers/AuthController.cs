@@ -12,6 +12,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Api.Controllers;
 
 /// <summary>
@@ -58,7 +60,7 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> ConfirmEmail([FromQuery] string token)
     {
         ConfirmEmailCommand command = new(token, this.ClientIp);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -90,7 +92,7 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request)
     {
         ResetPasswordCommand command = new(request.Email, this.ClientIp);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -107,7 +109,7 @@ public sealed class AuthController(ISender mediator) : BaseController(mediator)
     public async Task<IActionResult> ResetPassword([FromBody] ConfirmPasswordResetRequest request)
     {
         ConfirmPasswordResetCommand command = new(request.NewPassword, request.Token, this.ClientIp);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 }

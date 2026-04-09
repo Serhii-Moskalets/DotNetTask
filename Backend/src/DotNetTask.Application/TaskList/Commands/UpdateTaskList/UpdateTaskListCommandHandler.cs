@@ -10,6 +10,8 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.TaskList.Commands.UpdateTaskList;
 
 /// <summary>
@@ -19,7 +21,7 @@ namespace DotNetTask.Application.TaskList.Commands.UpdateTaskList;
 public class UpdateTaskListCommandHandler(
     IUnitOfWork unitOfWork,
     IUniqueValueService uniqueNameService)
-    : HandlerBase(unitOfWork), IRequestHandler<UpdateTaskListCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<UpdateTaskListCommand, Result<Unit>>
 {
     /// <summary>
     /// Handles the command to update the title of a task list.
@@ -30,19 +32,19 @@ public class UpdateTaskListCommandHandler(
     /// A <see cref="Result{T}"/> containing <c>true</c> if the task list title was successfully updated;
     /// otherwise, a failure result with an appropriate error code.
     /// </returns>
-    public async Task<Result<bool>> Handle(UpdateTaskListCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(UpdateTaskListCommand command, CancellationToken cancellationToken)
     {
         TaskListEntity? taskList = await this.UnitOfWork.TaskLists
             .GetTaskListByIdForUserAsync(command.TaskListId, command.UserId, asNoTracking: false, cancellationToken);
 
         if (taskList is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         if (taskList.Title.Value == command.NewTitle)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<Unit>.Success(Unit.Value);
         }
 
         TaskListTitle title = await uniqueNameService.GetUniqueValueAsync(
@@ -54,6 +56,6 @@ public class UpdateTaskListCommandHandler(
         taskList.UpdateTitle(title);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

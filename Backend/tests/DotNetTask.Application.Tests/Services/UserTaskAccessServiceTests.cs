@@ -1,5 +1,6 @@
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Common.Services;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
@@ -49,7 +50,7 @@ public class UserTaskAccessServiceTests
         UserEntity? sharedUser = null;
 
         // Act
-        Result<bool> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
+        Result<Unit> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -74,7 +75,7 @@ public class UserTaskAccessServiceTests
             .ReturnsAsync((TaskEntity?)null);
 
         // Act
-        Result<bool> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
+        Result<Unit> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -98,7 +99,7 @@ public class UserTaskAccessServiceTests
             .ReturnsAsync(task);
 
         // Act
-        Result<bool> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
+        Result<Unit> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -122,7 +123,7 @@ public class UserTaskAccessServiceTests
             .ReturnsAsync(task);
 
         // Act
-        Result<bool> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
+        Result<Unit> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -150,7 +151,7 @@ public class UserTaskAccessServiceTests
             .ReturnsAsync(true);
 
         // Act
-        Result<bool> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
+        Result<Unit> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -178,7 +179,7 @@ public class UserTaskAccessServiceTests
             .ReturnsAsync(false);
 
         // Act
-        Result<bool> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
+        Result<Unit> result = await this._service.CanGrantAccessAsync(taskId, ownerId, sharedUser, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

@@ -10,7 +10,7 @@ namespace DotNetTask.Application.Users.Commands.UpdateUserProfile;
 /// <param name="LastName">The new user's last name.</param>
 /// <param name="UserId">The unique identifier of the user to be updated.</param>
 public record UpdateUserProfileCommand(string? FirstName, string? LastName, Guid UserId)
-    : ICommand<bool>, IThrottledRequest
+    : ICommand, IThrottledRequest
 {
     /// <inheritdoc/>
     /// <value>Always returns "UpdateUserProfile".</value>

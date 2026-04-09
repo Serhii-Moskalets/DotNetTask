@@ -11,6 +11,8 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.ChangeEmail;
 
 /// <summary>
@@ -25,7 +27,7 @@ public class ChangeEmailCommandHandler(
     IUnitOfWork unitOfWork,
     ITokenGenerator tokenGenerator,
     IClock clock)
-    : HandlerBase(unitOfWork), IRequestHandler<ChangeEmailCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<ChangeEmailCommand, Result<Unit>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
     private readonly IClock _clock = clock;
@@ -36,28 +38,28 @@ public class ChangeEmailCommandHandler(
     /// <param name="command">The command containing the user ID and the new email address.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.</param>
     /// <returns>
-    /// A <see cref="Result{Boolean}"/> indicating success (true) if the email change was initiated,
-    /// or a failure result if the user was not found or the email is already in use.
+    /// A <see cref="Result{Unit}"/> indicating that the request was successfully created,
+    /// or a failure result if validation fails or the user is not found.
     /// </returns>
-    public async Task<Result<bool>> Handle(ChangeEmailCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(ChangeEmailCommand command, CancellationToken cancellationToken)
     {
         Email newEmail = Email.Create(command.NewEmail);
 
         UserEntity? user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         if (user.Email == newEmail)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
         }
 
         bool emailExist = await this.UnitOfWork.Users.ExistsByEmailAsync(newEmail, cancellationToken);
         if (emailExist)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
         }
 
         string confirmationToken = this._tokenGenerator.GenerateSecureToken();
@@ -67,6 +69,6 @@ public class ChangeEmailCommandHandler(
         user.RequestEmailChange(newEmail, confirmationToken, revertToken, TimeSpan.FromHours(1), now);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return await Result<bool>.SuccessAsync(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

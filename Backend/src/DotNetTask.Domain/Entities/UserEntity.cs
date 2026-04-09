@@ -154,17 +154,17 @@ public class UserEntity : BaseEntity
     /// <param name="duration">How long the new token is valid.</param>
     /// <param name="currentTime">The current UTC time.</param>
     /// <returns>A <see cref="Result{T}"/> indicating whether the request was successfully re-initiated.</returns>
-    public Result<bool> ResendEmailVerification(string token, TimeSpan duration, DateTime currentTime)
+    public Result<Unit> ResendEmailVerification(string token, TimeSpan duration, DateTime currentTime)
     {
         if (this.EmailConfirmed)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage);
         }
 
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification, currentTime);
         this.AddDomainEvent(new VerificationEmailResendEvent(this, this.CurrentToken));
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
@@ -173,16 +173,16 @@ public class UserEntity : BaseEntity
     /// <param name="token">The verification token.</param>
     /// <param name="currentTime">The current UTC time.</param>
     /// <returns>Return booean result true or false.</returns>
-    public Result<bool> ConfirmEmailVerification(string token, DateTime currentTime)
+    public Result<Unit> ConfirmEmailVerification(string token, DateTime currentTime)
     {
         if (this.CurrentToken?.IsValid(token, UserTokenType.EmailVerification, currentTime) is not true)
         {
-            return Result<bool>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailVerificationTokenMessage);
+            return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailVerificationTokenMessage);
         }
 
         this.EmailConfirmed = true;
         this.CurrentToken = null;
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
@@ -233,11 +233,11 @@ public class UserEntity : BaseEntity
     /// <param name="duration">How long the tokens is valid.</param>
     /// <param name="currentTime">The current UTC time.</param>
     /// <returns>Return booean result true or false.</returns>
-    public Result<bool> RequestEmailChange(Email newEmail, string confirmationToken, string revertToken, TimeSpan duration, DateTime currentTime)
+    public Result<Unit> RequestEmailChange(Email newEmail, string confirmationToken, string revertToken, TimeSpan duration, DateTime currentTime)
     {
         if (newEmail == this.Email)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
         }
 
         string oldEmail = this.Email.Value;
@@ -247,7 +247,7 @@ public class UserEntity : BaseEntity
 
         this.AddDomainEvent(new EmailChangeRequestedDomainEvent(this, this.CurrentToken, this.RevertToken));
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
@@ -256,11 +256,11 @@ public class UserEntity : BaseEntity
     /// <param name="token">The change token sent to the new email address.</param>
     /// <param name="currentTime">The current UTC time.</param>
     /// <returns>Return booean result true or false.</returns>
-    public Result<bool> ConfirmEmailChange(string token, DateTime currentTime)
+    public Result<Unit> ConfirmEmailChange(string token, DateTime currentTime)
     {
         if (this.CurrentToken?.IsValid(token, UserTokenType.EmailChange, currentTime) is not true)
         {
-            return Result<bool>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailChangeTokenMessage);
+            return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailChangeTokenMessage);
         }
 
         string pendingEmail = this.CurrentToken.Metadata ?? throw new DomainException(TokenPolicy.MissingPendingEmailMessage);
@@ -272,7 +272,7 @@ public class UserEntity : BaseEntity
 
         this.UpdateSecurityStamp();
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
@@ -283,11 +283,11 @@ public class UserEntity : BaseEntity
     /// <param name="resetToken">TThe unique secure token for password reset.</param>
     /// <param name="duration">The timeframe during which the token remains valid.</param>
     /// <returns>Return booean result true or false.</returns>
-    public Result<bool> RevertEmailChange(string revertToken, DateTime currentTime, string resetToken, TimeSpan duration)
+    public Result<Unit> RevertEmailChange(string revertToken, DateTime currentTime, string resetToken, TimeSpan duration)
     {
         if (this.RevertToken?.IsValid(revertToken, UserTokenType.EmailChangeRevert, currentTime) is not true)
         {
-            return Result<bool>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailRevertTokenMessage);
+            return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailRevertTokenMessage);
         }
 
         string oldEmail = this.RevertToken.Metadata ?? throw new DomainException(TokenPolicy.MissingOriginalEmailMessage);
@@ -301,7 +301,7 @@ public class UserEntity : BaseEntity
         this.CurrentToken = SecurityToken.Create(resetToken, duration, UserTokenType.PasswordReset, currentTime);
         this.RevertToken = null;
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
@@ -324,11 +324,11 @@ public class UserEntity : BaseEntity
     /// <param name="token">The reset token to validate.</param>
     /// <param name="currentTime">The current UTC time.</param>
     /// <returns>Add returns doccumentations.</returns>
-    public Result<bool> ConfirmPasswordReset(PasswordHash newPasswordHash, string token, DateTime currentTime)
+    public Result<Unit> ConfirmPasswordReset(PasswordHash newPasswordHash, string token, DateTime currentTime)
     {
         if (this.CurrentToken?.IsValid(token, UserTokenType.PasswordReset, currentTime) is not true)
         {
-            return Result<bool>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
+            return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
         }
 
         this.UpdateSecurityStamp();
@@ -338,7 +338,7 @@ public class UserEntity : BaseEntity
         this.CurrentToken = null;
         this.EmailConfirmed = true;
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
@@ -393,15 +393,15 @@ public class UserEntity : BaseEntity
     /// </summary>
     /// <param name="userName">The new username.</param>
     /// <returns>Return booean result true or false.</returns>
-    public Result<bool> ChangeUserName(UserName userName)
+    public Result<Unit> ChangeUserName(UserName userName)
     {
         if (this.UserName.Value.Equals(userName.Value, StringComparison.OrdinalIgnoreCase))
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
         }
 
         this.UserName = userName;
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>

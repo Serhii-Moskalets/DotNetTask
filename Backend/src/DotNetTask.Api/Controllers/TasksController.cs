@@ -3,6 +3,7 @@ using DotNetTask.Application.Common.Dtos;
 using DotNetTask.Application.Tasks.Commands.AddTagToTask;
 using DotNetTask.Application.Tasks.Commands.ChangeTaskStatus;
 using DotNetTask.Application.Tasks.Commands.CreateTask;
+using DotNetTask.Application.Tasks.Commands.DeleteRangeTasks;
 using DotNetTask.Application.Tasks.Commands.DeleteTask;
 using DotNetTask.Application.Tasks.Commands.RemoveTagFromTask;
 using DotNetTask.Application.Tasks.Commands.UpdateTask;
@@ -18,6 +19,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 using TinyResult;
+
+using Unit = DotNetTask.Domain.Common.Unit;
 
 namespace DotNetTask.Api.Controllers;
 
@@ -144,7 +147,7 @@ public class TasksController : BaseController
                 DueDate = request.DueDate,
             }, this.CurrentUserId);
 
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -160,14 +163,30 @@ public class TasksController : BaseController
     public async Task<IActionResult> DeleteTask([FromRoute] Guid taskId)
     {
         DeleteTaskCommand command = new(taskId, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
+    }
+
+    /// <summary>
+    /// Deletes a batch of tasks.
+    /// </summary>
+    /// <param name="request">An object containing the identifiers of the tasks to delete. Cannot be null.</param>
+    /// <returns>
+    /// Returns <see cref="OkObjectResult"/> containing the count of deleted tasks if the operation succeeds;
+    /// otherwise, a <see cref="BadRequestObjectResult"/>.
+    /// </returns>
+    [HttpDelete("batch")]
+    public async Task<IActionResult> DeleteRangeTasks([FromBody] DeleteRangeTasksRequest request)
+    {
+        DeleteRangeTasksCommand command = new(request.TaskIds, this.CurrentUserId);
+        Result<int> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        return this.HandleResult(result);
     }
 
     /// <summary>
     /// Adds a tag to the specified task.
     /// </summary>
-    /// <param name="taskId">The task identifier..</param>
+    /// <param name="taskId">The task identifier.</param>
     /// <param name="tagId">The tag identifier.</param>
     /// <returns>
     /// Returns <see cref="NoContentResult"/> if the operation succeeds;
@@ -177,7 +196,7 @@ public class TasksController : BaseController
     public async Task<IActionResult> AddTagToTask([FromRoute] Guid taskId, [FromRoute] Guid tagId)
     {
         AddTagToTaskCommand command = new(taskId, this.CurrentUserId, tagId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -194,7 +213,7 @@ public class TasksController : BaseController
     public async Task<IActionResult> RemoveTagFromTask([FromRoute] Guid taskId)
     {
         RemoveTagFromTaskCommand command = new(taskId, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -211,7 +230,7 @@ public class TasksController : BaseController
     public async Task<IActionResult> ChangeTaskStatus([FromRoute] Guid taskId, [FromRoute] StatusTask status)
     {
         ChangeTaskStatusCommand command = new(taskId, this.CurrentUserId, status);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 }
