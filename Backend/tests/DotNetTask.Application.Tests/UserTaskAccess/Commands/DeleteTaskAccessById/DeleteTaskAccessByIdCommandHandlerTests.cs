@@ -2,6 +2,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.UserTaskAccess.Commands.DeleteTaskAccessById;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using FluentAssertions;
 using Moq;
@@ -59,7 +60,7 @@ public class DeleteTaskAccessByIdCommandHandlerTests
             .ReturnsAsync(false);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -90,7 +91,7 @@ public class DeleteTaskAccessByIdCommandHandlerTests
         this._uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

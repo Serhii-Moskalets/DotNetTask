@@ -2,6 +2,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
@@ -61,12 +62,12 @@ public class CreateUserTaskAccessCommandHandlerTests
         this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        Result<bool> failureResult = Result<bool>.Failure(ErrorCode.ValidationError, "Already shared");
+        Result<Unit> failureResult = Result<Unit>.Failure(ErrorCode.ValidationError, "Already shared");
         this._serviceMock.Setup(s => s.CanGrantAccessAsync(command.TaskId, command.OwnerId, user, It.IsAny<CancellationToken>()))
             .ReturnsAsync(failureResult);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -95,10 +96,10 @@ public class CreateUserTaskAccessCommandHandlerTests
             .ReturnsAsync(user);
 
         this._serviceMock.Setup(s => s.CanGrantAccessAsync(command.TaskId, command.OwnerId, user, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(Result<bool>.Success(true));
+            .ReturnsAsync(Result<Unit>.Success(Unit.Value));
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

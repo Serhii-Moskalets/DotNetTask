@@ -166,34 +166,34 @@ public class TaskEntity : BaseEntity
     /// </summary>
     /// <param name="newStatus">The new status to apply to the task.</param>
     /// <returns>A result indicating success or failure of the status transition.</returns>
-    public Result<bool> ChangeStatus(StatusTask newStatus)
+    public Result<Unit> ChangeStatus(StatusTask newStatus)
     {
         if (!Enum.IsDefined(newStatus))
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, TaskPolicy.InvalidStatusMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, TaskPolicy.InvalidStatusMessage);
         }
 
         if (this.Status == newStatus)
         {
-            return Result<bool>.Success(true);
+            return Result<Unit>.Success(Unit.Value);
         }
 
         if (newStatus == StatusTask.NotStarted && this.Status == StatusTask.Done)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, TaskPolicy.DoneToNotStartedMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, TaskPolicy.DoneToNotStartedMessage);
         }
 
         if (newStatus == StatusTask.NotStarted && this.Status == StatusTask.InProgress)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, TaskPolicy.InProgressToNotStartedMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, TaskPolicy.InProgressToNotStartedMessage);
         }
 
         if (newStatus == StatusTask.Done && this.Status != StatusTask.InProgress)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, TaskPolicy.CompletionRequiresInProgressMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, TaskPolicy.CompletionRequiresInProgressMessage);
         }
 
         this.Status = newStatus;
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

@@ -9,13 +9,15 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.UserTaskAccess.Commands.DeleteTaskAccessByUserEmail;
 
 /// <summary>
 /// Handles the deletion of a user-task access entry based on the task ID and the user's email.
 /// </summary>
 public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<DeleteTaskAccessByUserEmailCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<DeleteTaskAccessByUserEmailCommand, Result<Unit>>
 {
     /// <summary>
     /// Handles the <see cref="DeleteTaskAccessByUserEmailCommand"/> by checking if the access exists,
@@ -27,12 +29,12 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
     /// A <see cref="Result{T}"/> indicating success if the access was deleted,
     /// or failure if the access was not found.
     /// </returns>
-    public async Task<Result<bool>> Handle(DeleteTaskAccessByUserEmailCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(DeleteTaskAccessByUserEmailCommand command, CancellationToken cancellationToken)
     {
         bool hasAccess = await this.UnitOfWork.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, cancellationToken);
         if (!hasAccess)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.AccessDeniedMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.AccessDeniedMessage);
         }
 
         UserEntity? sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(
@@ -42,7 +44,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
 
         if (sharedUser is null)
         {
-            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.UserNotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.UserNotFoundMessage);
         }
 
         int deleted = await this.UnitOfWork.UserTaskAccesses.DeleteByIdAsync(command.TaskId, sharedUser!.Id, cancellationToken);
@@ -50,9 +52,9 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
 
         if (deleted <= 0)
         {
-            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.DeleteFailedMessage);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.DeleteFailedMessage);
         }
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

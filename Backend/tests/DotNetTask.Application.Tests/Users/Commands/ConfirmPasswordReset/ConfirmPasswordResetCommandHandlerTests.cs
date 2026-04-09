@@ -2,6 +2,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.ConfirmPasswordReset;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Enums;
 using DotNetTask.Domain.Exceptions;
@@ -65,7 +66,7 @@ public class ConfirmPasswordResetCommandHandlerTests
             .Returns(NewPasswordHashString);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -95,7 +96,7 @@ public class ConfirmPasswordResetCommandHandlerTests
             .Returns("some-hash");
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -120,7 +121,7 @@ public class ConfirmPasswordResetCommandHandlerTests
             .ReturnsAsync((UserEntity?)null);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

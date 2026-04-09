@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Api.Controllers;
 
 /// <summary>
@@ -111,12 +113,12 @@ public abstract class BaseController : ControllerBase
     }
 
     /// <summary>
-    /// Handles a <see cref="Result{Boolean}"/> by returning <see cref="NoContentResult"/> on success
+    /// Handles a <see cref="Result{Unit}"/> by returning <see cref="NoContentResult"/> on success
     /// or a formatted problem response on failure.
     /// </summary>
     /// <param name="result">The result object to handle.</param>
     /// <returns>An <see cref="IActionResult"/> representing the response.</returns>
-    protected IActionResult HandleNoContent(Result<bool> result)
+    protected IActionResult HandleNoContent(Result<Unit> result)
     {
         if (result.IsSuccess)
         {

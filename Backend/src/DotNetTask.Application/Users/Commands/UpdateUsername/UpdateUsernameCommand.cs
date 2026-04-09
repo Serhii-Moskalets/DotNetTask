@@ -9,7 +9,7 @@ namespace DotNetTask.Application.Users.Commands.UpdateUsername;
 /// <param name="UserName">The current user username.</param>
 /// <param name="UserId">The current user id</param>
 public record UpdateUsernameCommand(string UserName, Guid UserId)
-    : ICommand<bool>, IThrottledRequest
+    : ICommand, IThrottledRequest
 {
     /// <inheritdoc/>
     /// <value>Always returns "UpdateUsername".</value>

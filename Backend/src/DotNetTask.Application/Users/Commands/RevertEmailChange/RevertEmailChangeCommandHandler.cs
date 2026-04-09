@@ -9,6 +9,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.RevertEmailChange;
 
 /// <summary>
@@ -43,7 +45,7 @@ public class RevertEmailChangeCommandHandler(
 
         string resetToken = this._tokenGenerator.GenerateSecureToken();
 
-        Result<bool> result = user.RevertEmailChange(command.Token, this._clock.UtcNow, resetToken, TimeSpan.FromMinutes(15));
+        Result<Unit> result = user.RevertEmailChange(command.Token, this._clock.UtcNow, resetToken, TimeSpan.FromMinutes(15));
         if (!result.IsSuccess)
         {
             return Result<string>.Failure(result.Error!.Code, result.Error.Message);

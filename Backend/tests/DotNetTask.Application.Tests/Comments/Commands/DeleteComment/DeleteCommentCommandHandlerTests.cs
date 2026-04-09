@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Comment.Commands.DeleteComment;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.ValueObjects;
@@ -57,7 +58,7 @@ public class DeleteCommentCommandHandlerTests
         DeleteCommentCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -84,7 +85,7 @@ public class DeleteCommentCommandHandlerTests
         DeleteCommentCommand command = new(comment.Id, Guid.NewGuid());
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -112,7 +113,7 @@ public class DeleteCommentCommandHandlerTests
         DeleteCommentCommand command = new(comment.Id, userId);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -143,7 +144,7 @@ public class DeleteCommentCommandHandlerTests
         DeleteCommentCommand command = new(comment.Id, taskOwnerId);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

@@ -1,5 +1,6 @@
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.UpdateUserProfile;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
@@ -46,7 +47,7 @@ public class UpdateUserProfileCommandHandlerTests
             .ReturnsAsync(user);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -70,7 +71,7 @@ public class UpdateUserProfileCommandHandlerTests
             .ReturnsAsync(user);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -96,7 +97,7 @@ public class UpdateUserProfileCommandHandlerTests
             .ReturnsAsync((UserEntity?)null);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

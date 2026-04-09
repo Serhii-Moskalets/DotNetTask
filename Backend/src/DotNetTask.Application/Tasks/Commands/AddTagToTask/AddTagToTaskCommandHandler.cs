@@ -8,6 +8,8 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Tasks.Commands.AddTagToTask;
 
 /// <summary>
@@ -15,7 +17,7 @@ namespace DotNetTask.Application.Tasks.Commands.AddTagToTask;
 /// </summary>
 public class AddTagToTaskCommandHandler(
     IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<AddTagToTaskCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<AddTagToTaskCommand, Result<Unit>>
 {
     /// <summary>
     /// Handles the <see cref="AddTagToTaskCommand"/>.
@@ -26,35 +28,35 @@ public class AddTagToTaskCommandHandler(
     /// A <see cref="Result{T}"/> indicating success if the tag was added,
     /// or failure if the task was not found.
     /// </returns>
-    public async Task<Result<bool>> Handle(AddTagToTaskCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(AddTagToTaskCommand command, CancellationToken cancellationToken)
     {
         TaskEntity? task = await this.UnitOfWork.Tasks
             .GetTaskByIdForUserAsync(command.TaskId, command.UserId, asNoTracking: false, cancellationToken);
 
         if (task is null)
         {
-            return Result<bool>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         if (task.TagId == command.TagId)
         {
-            return Result<bool>.Success(true);
+            return Result<Unit>.Success(Unit.Value);
         }
 
         TagEntity? tag = await this.UnitOfWork.Tags.GetByIdAsync(command.TagId, true, cancellationToken);
         if (tag is null)
         {
-            return Result<bool>.Failure(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
         }
 
         if (tag.UserId != command.UserId)
         {
-            return Result<bool>.Failure(ErrorCode.InvalidOperation, TagPolicy.DoNotHavePermission);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, TagPolicy.DoNotHavePermission);
         }
 
         task.SetTag(command.TagId);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

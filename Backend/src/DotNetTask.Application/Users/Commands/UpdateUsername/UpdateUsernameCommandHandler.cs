@@ -9,6 +9,8 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.UpdateUsername;
 
 /// <summary>
@@ -16,15 +18,18 @@ namespace DotNetTask.Application.Users.Commands.UpdateUsername;
 /// </summary>
 public class UpdateUsernameCommandHandler(
     IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<UpdateUsernameCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<UpdateUsernameCommand, Result<Unit>>
 {
     /// <summary>
     /// Handles updating the username for current user.
     /// </summary>
     /// <param name="command">The <see cref="UpdateUsernameCommand"/> containing the new username.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.</param>
-    /// <returns>A <see cref="Result{Boolean}"/> indicating success or failure of the operation.</returns>
-    public async Task<Result<bool>> Handle(UpdateUsernameCommand command, CancellationToken cancellationToken)
+    /// <returns>
+    /// A <see cref="Result{Unit}"/> indicating that the username was successfully updated,
+    /// or a failure result if the user was not found, the name is already in use, or validation fails.
+    /// </returns>
+    public async Task<Result<Unit>> Handle(UpdateUsernameCommand command, CancellationToken cancellationToken)
     {
         UserName newUserName = UserName.Create(command.UserName);
 
@@ -32,22 +37,22 @@ public class UpdateUsernameCommandHandler(
 
         if (user is null)
         {
-            return Result<bool>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         if (newUserName == user.UserName)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
         }
 
         if (await this.UnitOfWork.Users.ExistsByUserNameAsync(newUserName, cancellationToken))
         {
-            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserNamePolicy.AlreadyInUseMessage);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, UserNamePolicy.AlreadyInUseMessage);
         }
 
         user.ChangeUserName(newUserName);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

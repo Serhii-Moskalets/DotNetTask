@@ -12,6 +12,8 @@ using Moq;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Api.Tests.Controllers;
 
 /// <summary>
@@ -113,7 +115,7 @@ public static class BaseControllerTests
     {
         // Arrange
         TestController controller = CreateController();
-        Result<bool> result = Result<bool>.Success(true);
+        Result<Unit> result = Result<Unit>.Success(Unit.Value);
 
         // Act
         IActionResult response = controller.HandleNoContent(result);
@@ -131,7 +133,7 @@ public static class BaseControllerTests
         // Arrange
         TestController controller = CreateController();
         Error error = new(ErrorCode.InvalidOperation, "Invalid");
-        Result<bool> result = Result<bool>.Failure(error);
+        Result<Unit> result = Result<Unit>.Failure(error);
 
         // Act
         ObjectResult? response = controller.HandleNoContent(result) as ObjectResult;
@@ -188,7 +190,7 @@ public static class BaseControllerTests
 
         public new IActionResult HandleResult<T>(Result<T> result) => base.HandleResult(result);
 
-        public new IActionResult HandleNoContent(Result<bool> result) => base.HandleNoContent(result);
+        public new IActionResult HandleNoContent(Result<Unit> result) => base.HandleNoContent(result);
 
     }
 }

@@ -9,7 +9,7 @@ namespace DotNetTask.Application.Users.Commands.ResendEmailVerification;
 /// <param name="UserId">The unique identifier of the user whose is being updated.</param>
 /// <param name="IpAddress">The IP address of the client making the request, used for security tracking.</param>
 public record ResendEmailVerificationCommand(Guid UserId, string IpAddress)
-    : ICommand<bool>, IThrottledRequest
+    : ICommand, IThrottledRequest
 {
     /// <inheritdoc/>
     /// <value>Always returns "ResendEmailVerification".</value>

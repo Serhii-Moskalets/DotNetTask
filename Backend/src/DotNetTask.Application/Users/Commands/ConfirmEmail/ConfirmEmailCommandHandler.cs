@@ -8,6 +8,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.ConfirmEmail;
 
 /// <summary>
@@ -16,7 +18,7 @@ namespace DotNetTask.Application.Users.Commands.ConfirmEmail;
 public class ConfirmEmailCommandHandler(
     IUnitOfWork unitOfWork,
     IClock clock)
-    : HandlerBase(unitOfWork), IRequestHandler<ConfirmEmailCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<ConfirmEmailCommand, Result<Unit>>
 {
     private readonly IClock _clock = clock;
 
@@ -26,15 +28,15 @@ public class ConfirmEmailCommandHandler(
     /// <param name="command">The command containing UserId and Token.</param>
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A success result if verified, otherwise a failure.</returns>
-    public async Task<Result<bool>> Handle(ConfirmEmailCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(ConfirmEmailCommand command, CancellationToken cancellationToken)
     {
         UserEntity? user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailVerification, cancellationToken);
         if (user is null)
         {
-            return Result<bool>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailVerificationTokenMessage);
+            return Result<Unit>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailVerificationTokenMessage);
         }
 
-        Result<bool> result = user.ConfirmEmailVerification(command.Token, this._clock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailVerification(command.Token, this._clock.UtcNow);
         if (!result.IsSuccess)
         {
             return result;
@@ -42,6 +44,6 @@ public class ConfirmEmailCommandHandler(
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

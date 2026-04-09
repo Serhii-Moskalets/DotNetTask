@@ -9,7 +9,7 @@ namespace DotNetTask.Application.Users.Commands.ResetPassword;
 /// <param name="Email">The email address of the user.</param>
 /// <param name="IpAddress">The IP address of the client making the request, used for security tracking.</param>
 public record ResetPasswordCommand(string Email, string IpAddress)
-    : ICommand<bool>, IThrottledRequest
+    : ICommand, IThrottledRequest
 {
     /// <inheritdoc/>
     /// <value>Always returns "PasswordReset".</value>

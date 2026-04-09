@@ -1,5 +1,6 @@
 using DotNetTask.Application.Abstractions.Interfaces.Services;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 
@@ -32,7 +33,7 @@ public class UserTaskAccessService : IUserTaskAccessService
     /// A <see cref="Result{T}"/> indicating success if all validation rules pass,
     /// or failure if any rule is violated.
     /// </returns>CanGrantAccess
-    public async Task<Result<bool>> CanGrantAccessAsync(
+    public async Task<Result<Unit>> CanGrantAccessAsync(
         Guid taskId,
         Guid ownerId,
         UserEntity? sharedUser,
@@ -40,27 +41,27 @@ public class UserTaskAccessService : IUserTaskAccessService
     {
         if (sharedUser is null)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.UserNotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.UserNotFoundMessage);
         }
 
         TaskEntity? task = await this._unitOfWork.Tasks.GetByIdAsync(taskId, cancellationToken: cancellationToken);
 
         if (task is null || task.OwnerId != ownerId)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
         }
 
         if (task.OwnerId == sharedUser.Id)
         {
-            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.CannotShareWithOwnerMessage);
+            return Result<Unit>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.CannotShareWithOwnerMessage);
         }
 
         if (await this.HasAccessAsync(taskId, sharedUser.Id, cancellationToken))
         {
-            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.AlreadySharedMessage);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.AlreadySharedMessage);
         }
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>

@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Tasks.Commands.DeleteTask;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.ValueObjects;
@@ -56,7 +57,7 @@ public class DeleteTaskCommandHandlerTests
         DeleteTaskCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -87,7 +88,7 @@ public class DeleteTaskCommandHandlerTests
         DeleteTaskCommand command = new(taskId, ownerId);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

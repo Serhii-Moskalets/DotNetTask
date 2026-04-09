@@ -9,7 +9,7 @@ namespace DotNetTask.Application.Users.Commands.ConfirmEmailChange;
 /// <param name="Token">The token.</param>
 /// <param name="IpAddress">The IP address of the client making the request, used for security tracking.</param>
 public record ConfirmEmailChangeCommand(string Token, string IpAddress)
-    : ICommand<bool>, IThrottledRequest
+    : ICommand, IThrottledRequest
 {
     /// <inheritdoc/>
     /// <value>Always returns "ConfirmEmailChange".</value>

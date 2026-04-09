@@ -9,27 +9,32 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.UpdateUserProfile;
 
 /// <summary>
 /// Handles the <see cref="UpdateUserProfileCommand"/> to update the user profile for current user.
 /// </summary>
 public class UpdateUserProfileCommandHandler(IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<UpdateUserProfileCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<UpdateUserProfileCommand, Result<Unit>>
 {
     /// <summary>
     /// Handles updating the user profile for current user.
     /// </summary>
     /// <param name="command">The <see cref="UpdateUserProfileCommand"/> containing the new user profile.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.</param>
-    /// <returns>A <see cref="Result{Boolean}"/> indicating success or failure of the operation.</returns>
-    public async Task<Result<bool>> Handle(UpdateUserProfileCommand command, CancellationToken cancellationToken)
+    /// <returns>
+    /// A <see cref="Result{Unit}"/> indicating that the profile was successfully updated,
+    /// or a failure result if the user was not found or no changes were detected.
+    /// </returns>
+    public async Task<Result<Unit>> Handle(UpdateUserProfileCommand command, CancellationToken cancellationToken)
     {
         UserEntity? user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
 
         if (user is null)
         {
-            return Result<bool>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         bool isChanged = false;
@@ -46,10 +51,10 @@ public class UpdateUserProfileCommandHandler(IUnitOfWork unitOfWork)
 
         if (!isChanged)
         {
-            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserPolicy.NoChangesDetectedMessage);
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, UserPolicy.NoChangesDetectedMessage);
         }
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

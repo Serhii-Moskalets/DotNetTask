@@ -2,6 +2,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.ResetPassword;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
@@ -60,7 +61,7 @@ public class ResetPasswordCommandHandlerTests
             .Returns(secureToken);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -86,7 +87,7 @@ public class ResetPasswordCommandHandlerTests
             .ReturnsAsync((UserEntity?)null);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

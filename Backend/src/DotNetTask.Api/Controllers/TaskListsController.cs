@@ -13,6 +13,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Api.Controllers;
 
 /// <summary>
@@ -80,7 +82,7 @@ public class TaskListsController : BaseController
     public async Task<IActionResult> DeleteTaskList([FromRoute] Guid taskListId)
     {
         DeleteTaskListCommand command = new(taskListId, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -97,7 +99,7 @@ public class TaskListsController : BaseController
     public async Task<IActionResult> UpdateTaskList([FromRoute] Guid taskListId, [FromBody] TaskListTitleRequest request)
     {
         UpdateTaskListCommand command = new(taskListId, this.CurrentUserId, request.Title);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 }

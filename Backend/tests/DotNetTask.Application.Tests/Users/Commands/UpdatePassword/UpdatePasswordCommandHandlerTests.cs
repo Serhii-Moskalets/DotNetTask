@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.UpdatePassword;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
@@ -60,7 +61,7 @@ public class UpdatePasswordCommandHandlerTests
             .Returns(NewPaswordHashString);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -84,7 +85,7 @@ public class UpdatePasswordCommandHandlerTests
             .ReturnsAsync((UserEntity?)null);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -112,7 +113,7 @@ public class UpdatePasswordCommandHandlerTests
             .Returns(false);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

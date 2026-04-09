@@ -2,6 +2,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Abstractions.Messaging;
 
 /// <summary>
@@ -13,7 +15,7 @@ public interface ICommand<TResponse> : IRequest<Result<TResponse>>;
 /// <summary>
 /// Represents a command that returns a boolean success/failure result.
 /// </summary>
-public interface ICommand : IRequest<Result<bool>>;
+public interface ICommand : IRequest<Result<Unit>>;
 
 /// <summary>
 /// Represents a query that always returns a result with data.

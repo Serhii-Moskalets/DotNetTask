@@ -10,6 +10,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.ConfirmPasswordReset;
 
 /// <summary>
@@ -23,7 +25,7 @@ public class ConfirmPasswordResetCommandHandler(
     IUnitOfWork unitOfWork,
     IPasswordHasher passwordHasher,
     IClock clock)
-    : HandlerBase(unitOfWork), IRequestHandler<ConfirmPasswordResetCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<ConfirmPasswordResetCommand, Result<Unit>>
 {
     private readonly IPasswordHasher _passwordHasher = passwordHasher;
     private readonly IClock _clock = clock;
@@ -34,28 +36,28 @@ public class ConfirmPasswordResetCommandHandler(
     /// <param name="command">The command containing the email, token, and new password.</param>
     /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the operation to complete.</param>
     /// <returns>
-    /// A <see cref="Result{Boolean}"/> indicating success (true) if the password was reset,
-    /// or a failure result if the user was not found or the token is invalid/expired.
+    /// A <see cref="Result{Unit}"/> indicating that the password was successfully reset,
+    /// or a failure result if the token is invalid, expired, or the user is not found.
     /// </returns>
-    public async Task<Result<bool>> Handle(ConfirmPasswordResetCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(ConfirmPasswordResetCommand command, CancellationToken cancellationToken)
     {
         UserEntity? user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.PasswordReset, cancellationToken);
 
         if (user is null)
         {
-            return Result<bool>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidPasswordResetTokenMessage);
+            return Result<Unit>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidPasswordResetTokenMessage);
         }
 
         string hash = this._passwordHasher.HashPassword(command.NewPassword);
         PasswordHash newPasswordHash = PasswordHash.Create(hash);
 
-        Result<bool> result = user.ConfirmPasswordReset(newPasswordHash, command.Token, this._clock.UtcNow);
+        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, command.Token, this._clock.UtcNow);
         if (!result.IsSuccess)
         {
             return result;
         }
 
         await this.UnitOfWork.SaveChangesAsync();
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

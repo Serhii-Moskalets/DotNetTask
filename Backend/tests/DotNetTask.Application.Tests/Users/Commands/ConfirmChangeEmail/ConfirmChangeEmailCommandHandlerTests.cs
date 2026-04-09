@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.ConfirmEmailChange;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Enums;
 using DotNetTask.Domain.Test.Common;
@@ -55,7 +56,7 @@ public class ConfirmEmailChangeCommandHandlerTests
             .ReturnsAsync((UserEntity?)null);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -85,7 +86,7 @@ public class ConfirmEmailChangeCommandHandlerTests
             .ReturnsAsync(user);
 
         // Act
-        Result<bool> result = await this._sut.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

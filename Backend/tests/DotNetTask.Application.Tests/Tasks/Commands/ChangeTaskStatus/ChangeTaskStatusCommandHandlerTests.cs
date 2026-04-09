@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Tasks.Commands.ChangeTaskStatus;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Enums;
@@ -57,7 +58,7 @@ public class ChangeTaskStatusCommandHandlerTests
             .ReturnsAsync((TaskEntity?)null);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -91,7 +92,7 @@ public class ChangeTaskStatusCommandHandlerTests
             .ReturnsAsync(task);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -123,7 +124,7 @@ public class ChangeTaskStatusCommandHandlerTests
         ChangeTaskStatusCommand command = new(Guid.NewGuid(), userId, newStatus);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

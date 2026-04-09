@@ -10,6 +10,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Users.Commands.ResendEmailVerification;
 
 /// <summary>
@@ -27,7 +29,7 @@ public class ResendEmailVerificationCommandHandler(
     IUnitOfWork unitOfWork,
     ITokenGenerator tokenGenerator,
     TokenOptions tokenSettings,
-    IClock clock) : HandlerBase(unitOfWork), IRequestHandler<ResendEmailVerificationCommand, Result<bool>>
+    IClock clock) : HandlerBase(unitOfWork), IRequestHandler<ResendEmailVerificationCommand, Result<Unit>>
 {
     private readonly ITokenGenerator _tokenGenerator = tokenGenerator;
     private readonly TokenOptions _tokenSettings = tokenSettings;
@@ -42,13 +44,13 @@ public class ResendEmailVerificationCommandHandler(
     /// A <see cref="Result{T}"/> containing <c>true</c> if the token was successfully regenerated
     /// and the domain event was dispatched; otherwise, a failure result with a specific error code.
     /// </returns>
-    public async Task<Result<bool>> Handle(ResendEmailVerificationCommand request, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(ResendEmailVerificationCommand request, CancellationToken cancellationToken)
     {
         UserEntity? user = await this.UnitOfWork.Users.GetByIdAsync(request.UserId, asNoTracking: false, cancellationToken);
 
         if (user is null)
         {
-            return Result<bool>.Failure(
+            return Result<Unit>.Failure(
                 TinyResult.Enums.ErrorCode.NotFound,
                 UserPolicy.AccountNotFoundMessage);
         }
@@ -56,7 +58,7 @@ public class ResendEmailVerificationCommandHandler(
         string secureToken = this._tokenGenerator.GenerateSecureToken();
         DateTime now = this._clock.UtcNow;
 
-        Result<bool> result = user.ResendEmailVerification(
+        Result<Unit> result = user.ResendEmailVerification(
             secureToken,
             this._tokenSettings.EmailVerificationTokenDuration,
             now);
@@ -68,6 +70,6 @@ public class ResendEmailVerificationCommandHandler(
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

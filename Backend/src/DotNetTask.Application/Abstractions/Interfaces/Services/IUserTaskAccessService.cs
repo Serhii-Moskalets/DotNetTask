@@ -1,3 +1,4 @@
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Entities;
 
 using TinyResult;
@@ -20,7 +21,7 @@ public interface IUserTaskAccessService
     /// A <see cref="Result{T}"/> indicating success if all validation rules pass,
     /// or failure if any rule is violated.
     /// </returns>
-    Task<Result<bool>> CanGrantAccessAsync(
+    Task<Result<Unit>> CanGrantAccessAsync(
         Guid taskId,
         Guid ownerId,
         UserEntity? sharedUser,

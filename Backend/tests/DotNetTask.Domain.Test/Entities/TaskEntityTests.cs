@@ -1,3 +1,4 @@
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Enums;
@@ -234,7 +235,7 @@ public class TaskEntityTests
         TaskEntity task = CreateTask();
 
         // Act
-        Result<bool> result = task.ChangeStatus(StatusTask.InProgress);
+        Result<Unit> result = task.ChangeStatus(StatusTask.InProgress);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -252,7 +253,7 @@ public class TaskEntityTests
         TaskEntity task = CreateTask();
 
         // Act
-        Result<bool> result = task.ChangeStatus(StatusTask.NotStarted);
+        Result<Unit> result = task.ChangeStatus(StatusTask.NotStarted);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
@@ -271,7 +272,7 @@ public class TaskEntityTests
         const StatusTask invalidStatus = (StatusTask)999;
 
         // Act
-        Result<bool> result = task.ChangeStatus(invalidStatus);
+        Result<Unit> result = task.ChangeStatus(invalidStatus);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -291,7 +292,7 @@ public class TaskEntityTests
         task.ChangeStatus(StatusTask.Done);
 
         // Act
-        Result<bool> result = task.ChangeStatus(StatusTask.NotStarted);
+        Result<Unit> result = task.ChangeStatus(StatusTask.NotStarted);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -310,7 +311,7 @@ public class TaskEntityTests
         task.ChangeStatus(StatusTask.InProgress);
 
         // Act
-        Result<bool> result = task.ChangeStatus(StatusTask.NotStarted);
+        Result<Unit> result = task.ChangeStatus(StatusTask.NotStarted);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -345,7 +346,7 @@ public class TaskEntityTests
         TaskEntity task = CreateTask();
 
         // Act
-        Result<bool> result = task.ChangeStatus(StatusTask.Done);
+        Result<Unit> result = task.ChangeStatus(StatusTask.Done);
 
         // Assert
         result.IsSuccess.Should().BeFalse();

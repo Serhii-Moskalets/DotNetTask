@@ -8,6 +8,8 @@ using MediatR;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
 
 /// <summary>
@@ -16,7 +18,7 @@ namespace DotNetTask.Application.UserTaskAccess.Commands.CreateUserTaskAccess;
 public class CreateUserTaskAccessCommandHandler(
     IUnitOfWork unitOfWork,
     IUserTaskAccessService userTaskAccessService)
-    : HandlerBase(unitOfWork), IRequestHandler<CreateUserTaskAccessCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<CreateUserTaskAccessCommand, Result<Unit>>
 {
     private readonly IUserTaskAccessService _userTaskAccessService = userTaskAccessService;
 
@@ -29,15 +31,16 @@ public class CreateUserTaskAccessCommandHandler(
     /// A <see cref="Result{T}"/> indicating success if the access was created,
     /// or failure if the user does not exist, is the task owner, or already has access.
     /// </returns>
-    public async Task<Result<bool>> Handle(CreateUserTaskAccessCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(CreateUserTaskAccessCommand command, CancellationToken cancellationToken)
     {
         UserEntity? sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(
             Email.Create(command.Email),
             asNoTracking: true,
             cancellationToken);
 
-        Result<bool> accessValidation = await this._userTaskAccessService
+        Result<Unit> accessValidation = await this._userTaskAccessService
             .CanGrantAccessAsync(command.TaskId, command.OwnerId, sharedUser, cancellationToken);
+
         if (!accessValidation.IsSuccess)
         {
             return accessValidation;
@@ -48,6 +51,6 @@ public class CreateUserTaskAccessCommandHandler(
         await this.UnitOfWork.UserTaskAccesses.AddAsync(access, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

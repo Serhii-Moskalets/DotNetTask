@@ -12,6 +12,8 @@ using Moq;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Tests.Users.Commands.ResendEmailVerification;
 
 /// <summary>
@@ -63,7 +65,7 @@ public class ResendEmailVerificationCommandHandlerTests
             .ReturnsAsync((UserEntity)null!);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -90,7 +92,7 @@ public class ResendEmailVerificationCommandHandlerTests
             .ReturnsAsync(user);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsFailure.Should().BeTrue();
@@ -119,7 +121,7 @@ public class ResendEmailVerificationCommandHandlerTests
         this._clockMock.Setup(c => c.UtcNow).Returns(CurrentTime);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();

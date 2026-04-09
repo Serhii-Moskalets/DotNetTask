@@ -8,6 +8,8 @@ using MediatR;
 using TinyResult;
 using TinyResult.Enums;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Application.Tasks.Commands.ChangeTaskStatus;
 
 /// <summary>
@@ -16,7 +18,7 @@ namespace DotNetTask.Application.Tasks.Commands.ChangeTaskStatus;
 /// </summary>
 public class ChangeTaskStatusCommandHandler(
     IUnitOfWork unitOfWork)
-    : HandlerBase(unitOfWork), IRequestHandler<ChangeTaskStatusCommand, Result<bool>>
+    : HandlerBase(unitOfWork), IRequestHandler<ChangeTaskStatusCommand, Result<Unit>>
 {
     /// <summary>
     /// Processes the command to change the status of an existing task.
@@ -31,23 +33,23 @@ public class ChangeTaskStatusCommandHandler(
     /// <returns>
     /// A <see cref="Result{T}"/> indicating the result of the operation.
     /// </returns>
-    public async Task<Result<bool>> Handle(ChangeTaskStatusCommand command, CancellationToken cancellationToken)
+    public async Task<Result<Unit>> Handle(ChangeTaskStatusCommand command, CancellationToken cancellationToken)
     {
         TaskEntity? task = await this.UnitOfWork.Tasks
             .GetTaskByIdForUserAsync(command.TaskId, command.UserId, asNoTracking: false, cancellationToken);
 
         if (task is null)
         {
-            return Result<bool>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<Unit>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         if (task.Status == command.Status)
         {
-            return Result<bool>.Success(true);
+            return Result<Unit>.Success(Unit.Value);
         }
 
         task.ChangeStatus(command.Status);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return Result<bool>.Success(true);
+        return Result<Unit>.Success(Unit.Value);
     }
 }

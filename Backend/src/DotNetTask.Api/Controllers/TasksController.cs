@@ -20,6 +20,8 @@ using Microsoft.AspNetCore.Mvc;
 
 using TinyResult;
 
+using Unit = DotNetTask.Domain.Common.Unit;
+
 namespace DotNetTask.Api.Controllers;
 
 /// <summary>
@@ -145,7 +147,7 @@ public class TasksController : BaseController
                 DueDate = request.DueDate,
             }, this.CurrentUserId);
 
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -161,7 +163,7 @@ public class TasksController : BaseController
     public async Task<IActionResult> DeleteTask([FromRoute] Guid taskId)
     {
         DeleteTaskCommand command = new(taskId, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -194,7 +196,7 @@ public class TasksController : BaseController
     public async Task<IActionResult> AddTagToTask([FromRoute] Guid taskId, [FromRoute] Guid tagId)
     {
         AddTagToTaskCommand command = new(taskId, this.CurrentUserId, tagId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -211,7 +213,7 @@ public class TasksController : BaseController
     public async Task<IActionResult> RemoveTagFromTask([FromRoute] Guid taskId)
     {
         RemoveTagFromTaskCommand command = new(taskId, this.CurrentUserId);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 
@@ -228,7 +230,7 @@ public class TasksController : BaseController
     public async Task<IActionResult> ChangeTaskStatus([FromRoute] Guid taskId, [FromRoute] StatusTask status)
     {
         ChangeTaskStatusCommand command = new(taskId, this.CurrentUserId, status);
-        Result<bool> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
 }

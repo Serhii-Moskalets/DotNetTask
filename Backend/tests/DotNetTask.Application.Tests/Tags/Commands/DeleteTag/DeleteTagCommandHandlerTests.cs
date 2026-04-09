@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Repositories;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Tag.Commands.DeleteTag;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.ValueObjects;
@@ -51,7 +52,7 @@ public class DeleteTagCommandHandlerTests
         DeleteTagCommand command = new(Guid.NewGuid(), Guid.NewGuid());
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
@@ -79,7 +80,7 @@ public class DeleteTagCommandHandlerTests
         DeleteTagCommand command = new(tagEntity.Id, userId);
 
         // Act
-        Result<bool> result = await this._handler.Handle(command, CancellationToken.None);
+        Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
