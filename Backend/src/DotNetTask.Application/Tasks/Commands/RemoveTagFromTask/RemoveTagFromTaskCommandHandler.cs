@@ -28,17 +28,17 @@ public class RemoveTagFromTaskCommandHandler(
         TaskEntity? task = await this.UnitOfWork.Tasks.GetTaskByIdForUserAsync(command.TaskId, command.UserId, asNoTracking: false, cancellationToken);
         if (task is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         if (task.TagId is null)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<bool>.Success(true);
         }
 
         task.SetTag(null);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

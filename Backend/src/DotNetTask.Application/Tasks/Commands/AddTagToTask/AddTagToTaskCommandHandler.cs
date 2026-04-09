@@ -33,28 +33,28 @@ public class AddTagToTaskCommandHandler(
 
         if (task is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         if (task.TagId == command.TagId)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<bool>.Success(true);
         }
 
         TagEntity? tag = await this.UnitOfWork.Tags.GetByIdAsync(command.TagId, true, cancellationToken);
         if (tag is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
         }
 
         if (tag.UserId != command.UserId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, TagPolicy.DoNotHavePermission);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, TagPolicy.DoNotHavePermission);
         }
 
         task.SetTag(command.TagId);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

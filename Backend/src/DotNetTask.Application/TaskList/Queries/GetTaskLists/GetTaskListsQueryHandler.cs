@@ -38,6 +38,6 @@ public class GetTaskListsQueryHandler(
 
         PagedResultDto<TaskListDto> result = items.ToPagedResult(totalCount, query.Page, query.PageSize, TaskListMapper.Map);
 
-        return await Result<PagedResultDto<TaskListDto>>.SuccessAsync(result);
+        return Result<PagedResultDto<TaskListDto>>.Success(result);
     }
 }

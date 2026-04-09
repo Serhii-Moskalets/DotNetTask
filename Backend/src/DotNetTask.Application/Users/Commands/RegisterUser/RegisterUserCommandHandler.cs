@@ -44,7 +44,7 @@ public class RegisterUserCommandHandler(
         UserEntity? user = await this._unitOfWork.Users.GetByEmailAsync(Email.Create(command.Email), asNoTracking: false, cancellationToken);
         if (user?.EmailConfirmed is true)
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
+            return Result<Guid>.Failure(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
         }
 
         bool userNameExists = await this._unitOfWork.Users.ExistsByUserNameAsync(
@@ -53,7 +53,7 @@ public class RegisterUserCommandHandler(
 
         if (userNameExists && (user == null || user.UserName.Value != command.UserName))
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.InvalidOperation, UserNamePolicy.AlreadyInUseMessage);
+            return Result<Guid>.Failure(ErrorCode.InvalidOperation, UserNamePolicy.AlreadyInUseMessage);
         }
 
         string passwordHash = this._passwordHasher.HashPassword(command.Password);
@@ -93,6 +93,6 @@ public class RegisterUserCommandHandler(
 
         await this._unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<Guid>.SuccessAsync(user.Id);
+        return Result<Guid>.Success(user.Id);
     }
 }

@@ -43,7 +43,7 @@ public class ConfirmPasswordResetCommandHandler(
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidPasswordResetTokenMessage);
+            return Result<bool>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidPasswordResetTokenMessage);
         }
 
         string hash = this._passwordHasher.HashPassword(command.NewPassword);

@@ -46,18 +46,18 @@ public class ChangeEmailCommandHandler(
         UserEntity? user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: false, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         if (user.Email == newEmail)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
+            return Result<bool>.Failure(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
         }
 
         bool emailExist = await this.UnitOfWork.Users.ExistsByEmailAsync(newEmail, cancellationToken);
         if (emailExist)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
         }
 
         string confirmationToken = this._tokenGenerator.GenerateSecureToken();
@@ -67,6 +67,6 @@ public class ChangeEmailCommandHandler(
         user.RequestEmailChange(newEmail, confirmationToken, revertToken, TimeSpan.FromHours(1), now);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

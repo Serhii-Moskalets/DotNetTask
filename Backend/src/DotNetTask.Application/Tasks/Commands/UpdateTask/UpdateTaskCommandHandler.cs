@@ -31,7 +31,7 @@ public class UpdateTaskCommandHandler(
             .GetTaskByIdForUserAsync(command.Dto.TaskId, command.UserId, false, cancellationToken: cancellationToken);
         if (task == null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         UpdateTaskDto dto = command.Dto;
@@ -40,7 +40,7 @@ public class UpdateTaskCommandHandler(
             dto.Description == task.Description?.Value &&
             dto.DueDate == task.DueDate)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<bool>.Success(true);
         }
 
         TaskTitle? taskTitle = TaskTitle.CreateOptional(dto.Title);
@@ -49,6 +49,6 @@ public class UpdateTaskCommandHandler(
         task.UpdateDetails(taskTitle, taskDescription, command.Dto.DueDate);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

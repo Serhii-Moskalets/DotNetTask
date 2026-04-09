@@ -33,7 +33,7 @@ public class CreateTaskListCommandHandler(
         UserEntity? user = await this.UnitOfWork.Users.GetByIdAsync(command.UserId, asNoTracking: true, cancellationToken);
         if (user is null)
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<Guid>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         TaskListTitle title = await uniqueNameService.GetUniqueValueAsync(
@@ -47,6 +47,6 @@ public class CreateTaskListCommandHandler(
         await this.UnitOfWork.TaskLists.AddAsync(taskList, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<Guid>.SuccessAsync(taskList.Id);
+        return Result<Guid>.Success(taskList.Id);
     }
 }

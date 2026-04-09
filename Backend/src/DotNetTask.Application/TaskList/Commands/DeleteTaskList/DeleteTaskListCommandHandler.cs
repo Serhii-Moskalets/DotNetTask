@@ -33,12 +33,12 @@ public class DeleteTaskListCommandHandler(
             .GetTaskListByIdForUserAsync(command.TaskListId, command.UserId, asNoTracking: false, cancellationToken);
         if (taskList is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         this.UnitOfWork.TaskLists.Delete(taskList);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

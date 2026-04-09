@@ -40,27 +40,27 @@ public class UserTaskAccessService : IUserTaskAccessService
     {
         if (sharedUser is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.UserNotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.UserNotFoundMessage);
         }
 
         TaskEntity? task = await this._unitOfWork.Tasks.GetByIdAsync(taskId, cancellationToken: cancellationToken);
 
         if (task is null || task.OwnerId != ownerId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
+            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
         }
 
         if (task.OwnerId == sharedUser.Id)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.CannotShareWithOwnerMessage);
+            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.CannotShareWithOwnerMessage);
         }
 
         if (await this.HasAccessAsync(taskId, sharedUser.Id, cancellationToken))
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.AlreadySharedMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.AlreadySharedMessage);
         }
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 
     /// <summary>

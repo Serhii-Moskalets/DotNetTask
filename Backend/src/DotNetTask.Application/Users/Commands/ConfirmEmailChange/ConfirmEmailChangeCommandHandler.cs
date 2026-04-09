@@ -38,7 +38,7 @@ public class ConfirmEmailChangeCommandHandler(
         UserEntity? user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChange, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailChangeTokenMessage);
+            return Result<bool>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailChangeTokenMessage);
         }
 
         Result<bool> result = user.ConfirmEmailChange(command.Token, this._clock.UtcNow);

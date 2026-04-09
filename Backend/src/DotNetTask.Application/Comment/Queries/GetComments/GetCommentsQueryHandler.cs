@@ -39,8 +39,8 @@ public class GetCommentsQueryHandler(
     {
         if (!await this._taskAccessService.HasAccessAsync(query.TaskId, query.UserId, cancellationToken))
         {
-            return await Result<PagedResultDto<CommentDto>>
-                .FailureAsync(ErrorCode.InvalidOperation, TaskPolicy.AccessDeniedMessage);
+            return Result<PagedResultDto<CommentDto>>
+                .Failure(ErrorCode.InvalidOperation, TaskPolicy.AccessDeniedMessage);
         }
 
         (IReadOnlyCollection<Domain.Entities.CommentEntity>? items, int totalCount) = await this.UnitOfWork.Comments
@@ -52,6 +52,6 @@ public class GetCommentsQueryHandler(
 
         PagedResultDto<CommentDto> result = items.ToPagedResult(totalCount, query.Page, query.PageSize, CommentMapper.Map);
 
-        return await Result<PagedResultDto<CommentDto>>.SuccessAsync(result);
+        return Result<PagedResultDto<CommentDto>>.Success(result);
     }
 }

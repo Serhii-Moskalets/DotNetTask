@@ -36,11 +36,11 @@ public class GetTaskByIdQueryHandler(
 
         if (taskEntity is null)
         {
-            return await Result<TaskDto>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<TaskDto>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         TaskDto taskDto = TaskMapper.Map(taskEntity);
 
-        return await Result<TaskDto>.SuccessAsync(taskDto);
+        return Result<TaskDto>.Success(taskDto);
     }
 }

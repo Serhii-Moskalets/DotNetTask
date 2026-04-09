@@ -37,12 +37,12 @@ public class UpdateTaskListCommandHandler(
 
         if (taskList is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         if (taskList.Title.Value == command.NewTitle)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<bool>.Success(true);
         }
 
         TaskListTitle title = await uniqueNameService.GetUniqueValueAsync(
@@ -54,6 +54,6 @@ public class UpdateTaskListCommandHandler(
         taskList.UpdateTitle(title);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

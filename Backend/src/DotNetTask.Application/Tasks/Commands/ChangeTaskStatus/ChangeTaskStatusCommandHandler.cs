@@ -38,16 +38,16 @@ public class ChangeTaskStatusCommandHandler(
 
         if (task is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         if (task.Status == command.Status)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<bool>.Success(true);
         }
 
         task.ChangeStatus(command.Status);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

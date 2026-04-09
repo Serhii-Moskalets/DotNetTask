@@ -32,7 +32,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
         bool hasAccess = await this.UnitOfWork.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, cancellationToken);
         if (!hasAccess)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.AccessDeniedMessage);
+            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.AccessDeniedMessage);
         }
 
         UserEntity? sharedUser = await this.UnitOfWork.Users.GetByEmailAsync(
@@ -42,7 +42,7 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
 
         if (sharedUser is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.UserNotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.UserNotFoundMessage);
         }
 
         int deleted = await this.UnitOfWork.UserTaskAccesses.DeleteByIdAsync(command.TaskId, sharedUser!.Id, cancellationToken);
@@ -50,9 +50,9 @@ public class DeleteTaskAccessByUserEmailCommandHandler(IUnitOfWork unitOfWork)
 
         if (deleted <= 0)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.DeleteFailedMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.DeleteFailedMessage);
         }
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

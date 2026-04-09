@@ -32,18 +32,18 @@ public class DeleteTaskAccessesByTaskCommandHandler(IUnitOfWork unitOfWork)
         TaskEntity? task = await this.UnitOfWork.Tasks.GetTaskByIdForUserAsync(command.TaskId, command.UserId, cancellationToken: cancellationToken);
         if (task is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserTaskAccessPolicy.AccessDeniedMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, UserTaskAccessPolicy.AccessDeniedMessage);
         }
 
         bool exist = await this.UnitOfWork.UserTaskAccesses.ExistsByTaskIdAsync(command.TaskId, cancellationToken);
         if (!exist)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.NoAccessesFoundMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.NoAccessesFoundMessage);
         }
 
         await this.UnitOfWork.UserTaskAccesses.DeleteAllByTaskIdAsync(command.TaskId, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

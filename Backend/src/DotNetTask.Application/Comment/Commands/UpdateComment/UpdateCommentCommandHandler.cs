@@ -28,12 +28,12 @@ public class UpdateCommentCommandHandler(IUnitOfWork unitOfWork)
         CommentEntity? comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, asNoTracking: false, cancellationToken);
         if (comment is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
         }
 
         if (comment.UserId != command.UserId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, CommentPolicy.UpdateAccessDeniedMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, CommentPolicy.UpdateAccessDeniedMessage);
         }
 
         CommentContent newContent = CommentContent.Create(command.NewContent);
@@ -46,6 +46,6 @@ public class UpdateCommentCommandHandler(IUnitOfWork unitOfWork)
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

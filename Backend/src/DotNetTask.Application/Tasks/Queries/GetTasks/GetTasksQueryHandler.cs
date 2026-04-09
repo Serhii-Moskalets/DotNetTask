@@ -41,6 +41,6 @@ public class GetTasksQueryHandler(IUnitOfWork unitOfWork)
 
         PagedResultDto<TaskBriefDto> result = items.ToPagedResult(totalCount, query.Page, query.PageSize, TaskMapper.MapToBrief);
 
-        return await Result<PagedResultDto<TaskBriefDto>>.SuccessAsync(result);
+        return Result<PagedResultDto<TaskBriefDto>>.Success(result);
     }
 }

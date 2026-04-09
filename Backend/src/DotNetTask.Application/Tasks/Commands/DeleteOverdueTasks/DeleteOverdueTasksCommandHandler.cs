@@ -31,12 +31,12 @@ public class DeleteOverdueTasksCommandHandler(
 
         if (taskList is null)
         {
-            return await Result<int>.FailureAsync(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
+            return Result<int>.Failure(ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         int deletedTasksCount = await this.UnitOfWork.Tasks
             .DeleteOverdueTaskAsync(command.TaskListId, DateTime.UtcNow, cancellationToken);
 
-        return await Result<int>.SuccessAsync(deletedTasksCount);
+        return Result<int>.Success(deletedTasksCount);
     }
 }

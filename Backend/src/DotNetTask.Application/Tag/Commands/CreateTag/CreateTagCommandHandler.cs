@@ -37,7 +37,7 @@ public class CreateTagCommandHandler(
 
         if (task is null)
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<Guid>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         TagName tagName = await uniqueValueService.GetUniqueValueAsync(
@@ -53,6 +53,6 @@ public class CreateTagCommandHandler(
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<Guid>.SuccessAsync(tagEntity.Id);
+        return Result<Guid>.Success(tagEntity.Id);
     }
 }

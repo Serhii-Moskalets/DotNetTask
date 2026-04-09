@@ -32,22 +32,22 @@ public class UpdateUsernameCommandHandler(
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         if (newUserName == user.UserName)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
+            return Result<bool>.Failure(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
         }
 
         if (await this.UnitOfWork.Users.ExistsByUserNameAsync(newUserName, cancellationToken))
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserNamePolicy.AlreadyInUseMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserNamePolicy.AlreadyInUseMessage);
         }
 
         user.ChangeUserName(newUserName);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

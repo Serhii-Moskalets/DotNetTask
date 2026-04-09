@@ -27,7 +27,7 @@ public class DeleteCommentCommandHandler(IUnitOfWork unitOfWork)
         CommentEntity? comment = await this.UnitOfWork.Comments.GetByIdAsync(command.CommentId, asNoTracking: false, cancellationToken);
         if (comment is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, CommentPolicy.CommentNotFoundMessage);
         }
 
         bool isCommentOwner = command.UserId == comment.UserId;
@@ -35,12 +35,12 @@ public class DeleteCommentCommandHandler(IUnitOfWork unitOfWork)
 
         if (!isCommentOwner && !isTaskOwner)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, CommentPolicy.DeleteAccessDeniedMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, CommentPolicy.DeleteAccessDeniedMessage);
         }
 
         this.UnitOfWork.Comments.Delete(comment);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

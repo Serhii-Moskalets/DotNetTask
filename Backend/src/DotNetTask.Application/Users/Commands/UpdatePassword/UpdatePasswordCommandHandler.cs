@@ -43,14 +43,14 @@ public class UpdatePasswordCommandHandler(
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         bool isPasswordValid = this._passwordHasher.VerifyPassword(command.CurrentPassword, user.PasswordHash.Value);
 
         if (!isPasswordValid)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, PasswordPolicy.IncorrectMessage);
+            return Result<bool>.Failure(ErrorCode.ValidationError, PasswordPolicy.IncorrectMessage);
         }
 
         string newHashString = this._passwordHasher.HashPassword(command.NewPassword);
@@ -59,6 +59,6 @@ public class UpdatePasswordCommandHandler(
         user.ChangePassword(newPasswordHash);
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

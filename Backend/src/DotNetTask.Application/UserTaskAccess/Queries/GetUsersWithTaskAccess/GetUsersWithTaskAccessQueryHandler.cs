@@ -35,7 +35,7 @@ public class GetUsersWithTaskAccessQueryHandler(IUnitOfWork unitOfWork)
             .GetTaskByIdForUserAsync(query.TaskId, query.UserId, asNoTracking: true, cancellationToken);
         if (task is null)
         {
-            return await Result<TaskAccessListDto>.FailureAsync(ErrorCode.NotFound, UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
+            return Result<TaskAccessListDto>.Failure(ErrorCode.NotFound, UserTaskAccessPolicy.TaskNotFoundOrAccessDeniedMessage);
         }
 
         (IReadOnlyCollection<UserTaskAccessEntity>? items, int totalCount) = await this.UnitOfWork.UserTaskAccesses
@@ -45,7 +45,7 @@ public class GetUsersWithTaskAccessQueryHandler(IUnitOfWork unitOfWork)
             query.PageSize,
             cancellationToken);
 
-        return await Result<TaskAccessListDto>.SuccessAsync(new TaskAccessListDto
+        return Result<TaskAccessListDto>.Success(new TaskAccessListDto
         {
             Id = task.Id,
             Title = task.Title.Value,

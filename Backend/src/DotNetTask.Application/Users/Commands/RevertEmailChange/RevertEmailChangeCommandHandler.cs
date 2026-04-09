@@ -38,7 +38,7 @@ public class RevertEmailChangeCommandHandler(
         UserEntity? user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailChangeRevert, cancellationToken);
         if (user is null)
         {
-            return await Result<string>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailRevertTokenMessage);
+            return Result<string>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailRevertTokenMessage);
         }
 
         string resetToken = this._tokenGenerator.GenerateSecureToken();
@@ -51,6 +51,6 @@ public class RevertEmailChangeCommandHandler(
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<string>.SuccessAsync(resetToken);
+        return Result<string>.Success(resetToken);
     }
 }

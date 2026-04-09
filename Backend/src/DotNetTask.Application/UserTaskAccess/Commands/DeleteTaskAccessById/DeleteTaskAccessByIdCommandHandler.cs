@@ -30,17 +30,17 @@ public class DeleteTaskAccessByIdCommandHandler(IUnitOfWork unitOfWork)
     {
         if (command.OwnerId == command.UserId)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.ValidationError, UserTaskAccessPolicy.OwnerAccessRemovalMessage);
+            return Result<bool>.Failure(ErrorCode.ValidationError, UserTaskAccessPolicy.OwnerAccessRemovalMessage);
         }
 
         if (!await this.UnitOfWork.Tasks.IsTaskOwnerAsync(command.TaskId, command.OwnerId, cancellationToken))
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserTaskAccessPolicy.AccessDeniedMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserTaskAccessPolicy.AccessDeniedMessage);
         }
 
         await this.UnitOfWork.UserTaskAccesses.DeleteByIdAsync(command.TaskId, command.UserId, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

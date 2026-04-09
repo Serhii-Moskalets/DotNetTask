@@ -31,7 +31,7 @@ public class ConfirmEmailCommandHandler(
         UserEntity? user = await this.UnitOfWork.Users.GetBySecurityTokenAsync(command.Token, Domain.Enums.UserTokenType.EmailVerification, cancellationToken);
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailVerificationTokenMessage);
+            return Result<bool>.Failure(TinyResult.Enums.ErrorCode.NotFound, TokenPolicy.InvalidEmailVerificationTokenMessage);
         }
 
         Result<bool> result = user.ConfirmEmailVerification(command.Token, this._clock.UtcNow);

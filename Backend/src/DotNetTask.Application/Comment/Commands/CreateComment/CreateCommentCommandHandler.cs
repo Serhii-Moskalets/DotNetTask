@@ -38,7 +38,7 @@ public class CreateCommentCommandHandler(
     {
         if (!await this._taskAccessService.HasAccessAsync(command.TaskId, command.UserId, cancellationToken))
         {
-            return await Result<Guid>.FailureAsync(ErrorCode.InvalidOperation, TaskPolicy.AccessDeniedMessage);
+            return Result<Guid>.Failure(ErrorCode.InvalidOperation, TaskPolicy.AccessDeniedMessage);
         }
 
         CommentContent content = CommentContent.Create(command.Content);
@@ -48,6 +48,6 @@ public class CreateCommentCommandHandler(
         await this.UnitOfWork.Comments.AddAsync(commentEntity, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<Guid>.SuccessAsync(commentEntity.Id);
+        return Result<Guid>.Success(commentEntity.Id);
     }
 }

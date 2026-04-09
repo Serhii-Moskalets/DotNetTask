@@ -34,12 +34,12 @@ public class DeleteTagCommandHandler(
             .GetTagByIdForUserAsync(command.TagId, command.UserId, asNoTracking: false, cancellationToken);
         if (tag is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TagPolicy.NotFoundMessage);
         }
 
         this.UnitOfWork.Tags.Delete(tag);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

@@ -29,12 +29,12 @@ public class DeleteTaskCommandHandler(
             .GetTaskByIdForUserAsync(command.TaskId, command.UserId, asNoTracking: false, cancellationToken);
         if (task is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, TaskPolicy.NotFoundMessage);
         }
 
         this.UnitOfWork.Tasks.Delete(task);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

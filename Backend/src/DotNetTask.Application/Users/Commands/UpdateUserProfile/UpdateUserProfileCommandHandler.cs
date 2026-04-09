@@ -29,7 +29,7 @@ public class UpdateUserProfileCommandHandler(IUnitOfWork unitOfWork)
 
         if (user is null)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<bool>.Failure(ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         bool isChanged = false;
@@ -46,10 +46,10 @@ public class UpdateUserProfileCommandHandler(IUnitOfWork unitOfWork)
 
         if (!isChanged)
         {
-            return await Result<bool>.FailureAsync(ErrorCode.InvalidOperation, UserPolicy.NoChangesDetectedMessage);
+            return Result<bool>.Failure(ErrorCode.InvalidOperation, UserPolicy.NoChangesDetectedMessage);
         }
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

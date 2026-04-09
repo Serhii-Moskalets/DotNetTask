@@ -46,7 +46,7 @@ public class ResetPasswordCommandHandler(
 
         if (user is null)
         {
-            return await Result<bool>.SuccessAsync(true);
+            return Result<bool>.Success(true);
         }
 
         string token = this._tokenGenerator.GenerateSecureToken();
@@ -56,6 +56,6 @@ public class ResetPasswordCommandHandler(
 
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

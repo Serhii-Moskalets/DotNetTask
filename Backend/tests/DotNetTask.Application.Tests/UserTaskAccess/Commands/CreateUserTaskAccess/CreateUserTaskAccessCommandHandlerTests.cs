@@ -61,7 +61,7 @@ public class CreateUserTaskAccessCommandHandlerTests
         this._userRepoMock.Setup(r => r.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
-        Result<bool> failureResult = await Result<bool>.FailureAsync(ErrorCode.ValidationError, "Already shared");
+        Result<bool> failureResult = Result<bool>.Failure(ErrorCode.ValidationError, "Already shared");
         this._serviceMock.Setup(s => s.CanGrantAccessAsync(command.TaskId, command.OwnerId, user, It.IsAny<CancellationToken>()))
             .ReturnsAsync(failureResult);
 
@@ -95,7 +95,7 @@ public class CreateUserTaskAccessCommandHandlerTests
             .ReturnsAsync(user);
 
         this._serviceMock.Setup(s => s.CanGrantAccessAsync(command.TaskId, command.OwnerId, user, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(await Result<bool>.SuccessAsync(true));
+            .ReturnsAsync(Result<bool>.Success(true));
 
         // Act
         Result<bool> result = await this._handler.Handle(command, CancellationToken.None);

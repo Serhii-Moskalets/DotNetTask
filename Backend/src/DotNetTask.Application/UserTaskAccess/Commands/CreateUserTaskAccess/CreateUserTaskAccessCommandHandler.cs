@@ -48,6 +48,6 @@ public class CreateUserTaskAccessCommandHandler(
         await this.UnitOfWork.UserTaskAccesses.AddAsync(access, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

@@ -33,7 +33,7 @@ public class CreateTaskCommandHandler(
 
         if (taskList is null)
         {
-            return await Result<Guid>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
+            return Result<Guid>.Failure(TinyResult.Enums.ErrorCode.NotFound, TaskListPolicy.NotFoundMessage);
         }
 
         TaskTitle taskTitle = TaskTitle.Create(command.Dto.Title);
@@ -47,6 +47,6 @@ public class CreateTaskCommandHandler(
         await this.UnitOfWork.Tasks.AddAsync(task, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<Guid>.SuccessAsync(task.Id);
+        return Result<Guid>.Success(task.Id);
     }
 }

@@ -29,12 +29,12 @@ public class DeleteTaskAccessesByUserCommandHandler(IUnitOfWork unitOfWork)
         bool exists = await this.UnitOfWork.UserTaskAccesses.ExistsByUserIdAsync(command.UserId, cancellationToken);
         if (!exists)
         {
-            return await Result<bool>.FailureAsync(TinyResult.Enums.ErrorCode.InvalidOperation, UserTaskAccessPolicy.NoUserAccessesMessage);
+            return Result<bool>.Failure(TinyResult.Enums.ErrorCode.InvalidOperation, UserTaskAccessPolicy.NoUserAccessesMessage);
         }
 
         await this.UnitOfWork.UserTaskAccesses.DeleteAllByUserIdAsync(command.UserId, cancellationToken);
         await this.UnitOfWork.SaveChangesAsync(cancellationToken);
 
-        return await Result<bool>.SuccessAsync(true);
+        return Result<bool>.Success(true);
     }
 }

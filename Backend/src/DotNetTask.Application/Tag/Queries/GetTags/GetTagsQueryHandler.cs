@@ -36,6 +36,6 @@ public class GetTagsQueryHandler(
 
         PagedResultDto<TagDto> result = items.ToPagedResult(totalCount, query.Page, query.PageSize, TagMapper.Map);
 
-        return await Result<PagedResultDto<TagDto>>.SuccessAsync(result);
+        return Result<PagedResultDto<TagDto>>.Success(result);
     }
 }

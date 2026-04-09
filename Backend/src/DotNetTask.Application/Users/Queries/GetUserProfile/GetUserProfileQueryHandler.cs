@@ -36,10 +36,10 @@ public class GetUserProfileQueryHandler(IUnitOfWork unitOfWork)
         UserEntity? user = await this.UnitOfWork.Users.GetByIdAsync(request.UserId, cancellationToken: cancellationToken);
         if (user is null)
         {
-            return await Result<UserBriefDto>.FailureAsync(TinyResult.Enums.ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
+            return Result<UserBriefDto>.Failure(TinyResult.Enums.ErrorCode.NotFound, UserPolicy.AccountNotFoundMessage);
         }
 
         UserBriefDto userDto = UserMapper.Map(user);
-        return await Result<UserBriefDto>.SuccessAsync(userDto);
+        return Result<UserBriefDto>.Success(userDto);
     }
 }
