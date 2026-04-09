@@ -44,17 +44,14 @@ public static class ServiceCollectionExtensions
             ?? new DatabaseOptions();
 
         services.AddDbContext<DotNetTaskDbContext>(options =>
-        options.UseNpgsql(
-            config.GetConnectionString(CommonPolicy.DataBaseConnectionString),
-            npgsqlOptions =>
         {
-            npgsqlOptions.EnableRetryOnFailure(
-                maxRetryCount: dbOptions.MaxRetryCount,
-                maxRetryDelay: TimeSpan.FromSeconds(dbOptions.MaxRetryDelaySeconds),
-                errorCodesToAdd: null);
-
-            npgsqlOptions.CommandTimeout(dbOptions.CommandTimeout);
-        }));
+            options.UseNpgsql(config.GetConnectionString(CommonPolicy.DataBaseConnectionString), npgsql =>
+            {
+                npgsql.EnableRetryOnFailure(dbOptions.MaxRetryCount, TimeSpan.FromSeconds(dbOptions.MaxRetryDelaySeconds), null);
+                npgsql.CommandTimeout(dbOptions.CommandTimeout);
+            });
+            options.UseSnakeCaseNamingConvention();
+        });
 
         services.AddScoped<IDotNetTaskDbContext>(provider =>
             provider.GetRequiredService<DotNetTaskDbContext>());
