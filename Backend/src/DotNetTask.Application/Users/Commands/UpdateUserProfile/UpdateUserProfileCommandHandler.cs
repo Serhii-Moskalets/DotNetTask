@@ -41,12 +41,24 @@ public class UpdateUserProfileCommandHandler(IUnitOfWork unitOfWork)
 
         if (command.FirstName is not null)
         {
-            isChanged |= user.ChangeFirstName(FirstName.Create(command.FirstName));
+            Result<bool> result = user.ChangeFirstName(FirstName.Create(command.FirstName));
+            if (result.IsFailure)
+            {
+                return Result<Unit>.Failure(result.Error!.Code, result.Error.Message);
+            }
+
+            isChanged |= result.Value;
         }
 
         if (command.LastName is not null)
         {
-            isChanged |= user.ChangeLastName(LastName.Create(command.LastName));
+            Result<bool> result = user.ChangeLastName(LastName.Create(command.LastName));
+            if (result.IsFailure)
+            {
+                return Result<Unit>.Failure(result.Error!.Code, result.Error.Message);
+            }
+
+            isChanged |= result.Value;
         }
 
         if (!isChanged)

@@ -1,20 +1,22 @@
 using DotNetTask.Domain.Common;
+using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Enums;
-using DotNetTask.Domain.Exceptions;
+using DotNetTask.Domain.Events;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
 
 using FluentAssertions;
 
 using TinyResult;
+using TinyResult.Enums;
 
 namespace DotNetTask.Domain.Test.Entities;
 
 /// <summary>
 /// Unit tests for the <see cref="UserEntity"/> class.
 /// </summary>
-public class UserEntityTests
+public class UserEntityTests : BaseTest
 {
     private const string CurrentFirstName = "John";
     private const string CurrentLastName = "Doe";
@@ -30,7 +32,6 @@ public class UserEntityTests
     private static readonly string NewPasswordHashString = new('b', 64);
 
     private static readonly TimeSpan Duration = TimeSpan.FromHours(1);
-    private static readonly DateTime CurrentTime = DateTime.UtcNow;
 
     /// <summary>
     /// Tests that the constructor creates a user with valid data.
@@ -39,7 +40,7 @@ public class UserEntityTests
     public void Constructor_Should_CreateUser_When_ValidData()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
 
         // Assert
         user.FirstName.Value.Should().Be(CurrentFirstName);
@@ -53,159 +54,277 @@ public class UserEntityTests
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.RequestEmailVerification"/> sets token value, expiry, and type correctly.
+    /// Tests that <see cref="UserEntity.RequestEmailVerification"/> sets the verification token,
+    /// raises the registration event, and ensures the user status is unconfirmed.
     /// </summary>
     [Fact]
-    public void RequestEmailVerification_Should_SetToken_And_MarkEmailUnconfirmed()
-    {
-        // Arrange
-        UserEntity user = UserEntityFactory.Create();
-
-        user.RequestEmailVerification(TokenValue, Duration, CurrentTime);
-
-        // Assert
-        user.CurrentToken.Should().NotBeNull();
-        user.CurrentToken.Type.Should().Be(UserTokenType.EmailVerification);
-        user.EmailConfirmed.Should().BeFalse();
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.ResendEmailVerification"/> sets new token value, expiry, and type correctry.
-    /// </summary>
-    [Fact]
-    public void ResendEmailVerification_ShouldReturnSuccess_And_SetToken()
+    public void RequestEmailVerification_Should_SetToken_Event_And_MarkEmailUnconfirmed()
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
 
         // Act
-        Result<Unit> result = user.ResendEmailVerification(TokenValue, Duration, CurrentTime);
+        Result<Unit> result = user.RequestEmailVerification(TokenValue, Duration, this.Clock.UtcNow);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.CurrentToken.Should().NotBeNull();
+        user.CurrentToken.Type.Should().Be(UserTokenType.EmailVerification);
+        user.Status.Should().Be(UserStatus.Unconfirmed);
+
+        UserRegisteredDomainEvent evt = user.DomainEvents
+            .OfType<UserRegisteredDomainEvent>()
+            .Should().ContainSingle()
+            .Subject;
+
+        evt.VerificationToken.Should().Be(user.CurrentToken);
+
+        user.ClearDomainEvents();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RequestEmailVerification"/> returns failure
+    /// when the user already has an active status and a confirmed email.
+    /// </summary>
+    [Fact]
+    public void RequestEmailVerification_Should_ReturnFailure_When_UserIsActive()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        // Act
+        Result<Unit> result = user.RequestEmailVerification(TokenValue, Duration, this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ResendEmailVerification"/> successfully updates the token
+    /// and raises a resend domain event.
+    /// </summary>
+    [Fact]
+    public void ResendEmailVerification_Should_Success_SetToken_And_Event()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.Create();
+
+        // Act
+        Result<Unit> result = user.ResendEmailVerification(TokenValue, Duration, this.Clock.UtcNow);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         user.CurrentToken.Should().NotBeNull();
         user.CurrentToken.Type.Should().Be(UserTokenType.EmailVerification);
         user.CurrentToken.Value.Should().Be(TokenValue);
-        user.EmailConfirmed.Should().BeFalse();
+        user.Status.Should().Be(UserStatus.Unconfirmed);
+
+        VerificationEmailResendEvent evt = user.DomainEvents
+            .OfType<VerificationEmailResendEvent>()
+            .Should().ContainSingle()
+            .Subject;
+
+        evt.ResendVerificationToken.Should().Be(user.CurrentToken);
+
+        user.ClearDomainEvents();
     }
 
     /// <summary>
     /// Tests that <see cref="UserEntity.ResendEmailVerification"/> returns failure
-    /// when the email is already confirmed.
+    /// when the email has already been confirmed.
     /// </summary>
     [Fact]
-    public void ResendEmailVerification_ShouldReturnFailure_When_EmailAlreadyConfirmed()
+    public void ResendEmailVerification_Should_ReturnFailure_When_EmailAlreadyConfirmed()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailVerification(TokenValue, Duration, CurrentTime);
-        user.ConfirmEmailVerification(TokenValue, CurrentTime.AddMinutes(5));
+        UserEntity user = UserEntityFactory.CreateActive();
 
         // Act
-        Result<Unit> result = user.ResendEmailVerification("new_token", Duration, CurrentTime);
+        Result<Unit> result = user.ResendEmailVerification("new_token", Duration, this.Clock.UtcNow);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage);
         user.CurrentToken.Should().BeNull();
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> sets token value, expiry, and type correctly.
+    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> marks the user as active
+    /// when a valid verification token is provided.
     /// </summary>
     [Fact]
     public void ConfirmEmailVerification_Should_SetConfirmed_When_TokenValid()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         // Act
-        user.RequestEmailVerification(TokenValue, Duration, fakeClock.UtcNow);
-        user.ConfirmEmailVerification(TokenValue, fakeClock.UtcNow);
+        Result<Unit> requestEmailVerifResult = user.RequestEmailVerification(TokenValue, Duration, this.Clock.UtcNow);
+        Result<Unit> confirmEmailVerifResult = user.ConfirmEmailVerification(TokenValue, this.Clock.UtcNow);
 
         // Assert
-        user.EmailConfirmed.Should().BeTrue();
+        requestEmailVerifResult.IsSuccess.Should().BeTrue();
+        confirmEmailVerifResult.IsSuccess.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.Active);
         user.CurrentToken.Should().BeNull();
     }
 
     /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> returns failure
-    /// when the email verification token is expired.
+    /// when the provided token has expired.
     /// </summary>
     [Fact]
-    public void ConfirmEmailVerification_ShoulReturnFailure_When_TokenExpired()
+    public void ConfirmEmailVerification_Should_ReturnFailure_When_TokenExpired()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
-        user.RequestEmailVerification(TokenValue, TimeSpan.FromMinutes(1), fakeClock.UtcNow);
+        user.RequestEmailVerification(TokenValue, TimeSpan.FromMinutes(1), this.Clock.UtcNow);
 
-        fakeClock.Advance(TimeSpan.FromMinutes(2));
+        this.Clock.Advance(TimeSpan.FromMinutes(2));
 
         // Act
-        Result<Unit> result = user.ConfirmEmailVerification(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailVerification(TokenValue, this.Clock.UtcNow);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailVerificationTokenMessage);
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> retuns failure
-    /// when the email verification was not requested.
+    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> returns failure
+    /// when no verification request was previously made.
     /// </summary>
     [Fact]
     public void ConfirmEmailVerification_Should_ReturnFailure_When_NoRequestWasMade()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         // Act
-        Result<Unit> result = user.ConfirmEmailVerification(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailVerification(TokenValue, this.Clock.UtcNow);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailVerificationTokenMessage);
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> updates the email
-    /// and confirms it when a valid token is provided.
+    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> returns failure
+    /// when the provided token value is incorrect.
+    /// </summary>
+    [Fact]
+    public void ConfirmEmailVerification_Should_ReturnFailure_When_TokenInvalid()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.Create();
+        user.RequestEmailVerification(TokenValue, Duration, this.Clock.UtcNow);
+
+        // Act
+        Result<Unit> result = user.ConfirmEmailVerification("invalidtoken", this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailVerificationTokenMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RequestEmailChange"/> returns failure
+    /// when the requested email is the same as the current one.
+    /// </summary>
+    [Fact]
+    public void RequestEmailChange_Should_ReturnFailure_When_EmailIsSame()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        // Act
+        Result<Unit> result = user.RequestEmailChange(user.Email, TokenValue, RevertToken, Duration, this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RequestEmailChange"/> returns failure
+    /// when the user account is not in an active state.
+    /// </summary>
+    [Fact]
+    public void RequestEmailChange_Should_ReturnFailure_When_UserNotActive()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.Create();
+
+        // Act
+        Result<Unit> result = user.RequestEmailChange(user.Email, TokenValue, RevertToken, Duration, this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RequestEmailChange"/> correctly initializes security tokens,
+    /// changes user status, and raises the appropriate domain event.
+    /// </summary>
+    [Fact]
+    public void RequestEmailChange_Should_SetTokens_Status_And_Event()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        // Act
+        Result<Unit> result = user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, this.Clock.UtcNow);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.Unconfirmed);
+        user.CurrentToken.Should().NotBeNull();
+        user.CurrentToken.Value.Should().Be(TokenValue);
+
+        EmailChangeRequestedDomainEvent emailEvent = user.DomainEvents
+            .OfType<EmailChangeRequestedDomainEvent>()
+            .Should().ContainSingle()
+            .Subject;
+
+        emailEvent.ConfirmationToken.Should().Be(user.CurrentToken);
+        emailEvent.RevertToken.Should().Be(user.RevertToken);
+
+        user.ClearDomainEvents();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> successfully updates the email address
+    /// and activates the user when a valid token is provided.
     /// </summary>
     [Fact]
     public void ConfirmEmailChange_Should_UpdateEmail_When_Valid()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
+        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, this.Clock.UtcNow);
 
         // Act
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, fakeClock.UtcNow);
-        user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailChange(TokenValue, this.Clock.UtcNow);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         user.Email.Value.Should().Be(NewEmail.Value);
-        user.EmailConfirmed.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.Active);
         user.CurrentToken.Should().BeNull();
         user.RevertToken.Should().NotBeNull();
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> updates the email,
-    /// confirms it, and updates the security stamp.
+    /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> updates the security stamp
+    /// to invalidate old sessions after a successful email change.
     /// </summary>
     [Fact]
     public void ConfirmEmailChange_Should_UpdateSecurityStamp_When_Valid()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         SecurityStamp initialStamp = user.SecurityStamp;
 
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, fakeClock.UtcNow);
+        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, this.Clock.UtcNow);
 
         // Act
-        user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
+        user.ConfirmEmailChange(TokenValue, this.Clock.UtcNow);
 
         // Assert
         user.SecurityStamp.Should().NotBe(initialStamp);
@@ -213,227 +332,178 @@ public class UserEntityTests
 
     /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> returns failure
-    /// when the email change confirmation token is expired.
-    /// </summary>
+    /// when the email change token has expired.
+    /// </summary>>
     [Fact]
-    public void ConfirmEmailChange_Should_ReturnFailure_When_TokenExpired()
+    public void ConfirmEmailChange_Should_Fail_When_TokenExpired()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
 
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1), fakeClock.UtcNow);
+        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1), this.Clock.UtcNow);
 
-        fakeClock.Advance(TimeSpan.FromMinutes(2));
+        this.Clock.Advance(TimeSpan.FromMinutes(2));
 
         // Act
-        Result<Unit> result = user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailChange(TokenValue, this.Clock.UtcNow);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailChangeTokenMessage);
     }
 
     /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> returns failure
-    /// when the email change was not requested.
+    /// when the email change process was not initiated.
     /// </summary>
     [Fact]
     public void ConfirmEmailChange_Should_ReturnFailure_When_NoRequestWasMade()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
         UserEntity user = UserEntityFactory.Create();
 
         // Act
-        Result<Unit> result = user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmEmailChange(TokenValue, this.Clock.UtcNow);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
-    }
-
-    /// <summary>
-    /// Verifies that <see cref="UserEntity.RevertEmailChange"/> successfully restores the
-    /// original email address from the token's metadata.
-    /// </summary>
-    [Fact]
-    public void RevertEmailChange_Should_RestoreOldEmail()
-    {
-        // Arrange
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, CurrentTime);
-        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
-
-        // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
-
-        // Assert
-        user.Email.Value.Should().Be(CurrentEmail);
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.RevertEmailChange"/> successfully restores the
-    /// original email address and updates the security stamp.
-    /// </summary>
-    [Fact]
-    public void RevertEmailChange_Should_RestoreOldEmail_And_UpdateSecurityStamp()
-    {
-        // Arrange
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, CurrentTime);
-        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
-        SecurityStamp stampAfterConfirm = user.SecurityStamp;
-
-        // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
-
-        // Assert
-        user.Email.Value.Should().Be(CurrentEmail);
-        user.MustChangePassword.Should().BeTrue();
-        user.SecurityStamp.Should().NotBe(stampAfterConfirm);
-    }
-
-    /// <summary>
-    /// Verifies that <see cref="UserEntity.RevertEmailChange"/> generates a new security stamp
-    /// that differs from the one generated during the (unauthorized) email confirmation,
-    /// effectively kicking out the attacker.
-    /// </summary>
-    [Fact]
-    public void RevertEmailChange_Should_InvalidatePreviousSecurityStamp()
-    {
-        // Arrange
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, CurrentTime);
-        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
-        SecurityStamp stampAfterHacker = user.SecurityStamp;
-
-        // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
-
-        // Assert
-        user.SecurityStamp.Should().NotBe(stampAfterHacker);
-    }
-
-    /// <summary>
-    /// Tests that <see cref="UserEntity.RevertEmailChange"/> sets the <see cref="UserEntity.MustChangePassword"/>
-    /// flag to true, forcing the user to secure their account upon next login.
-    /// </summary>
-    [Fact]
-    public void RevertEmailChange_Should_SetMustChangePassword()
-    {
-        // Arrange
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, CurrentTime);
-        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
-
-        // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
-
-        // Assert
-        user.MustChangePassword.Should().BeTrue();
-    }
-
-    /// <summary>
-    /// Verifies that <see cref="UserEntity.RevertEmailChange"/> clears the revert token
-    /// after a successful restoration of the original email.
-    /// </summary>
-    [Fact]
-    public void RevertEmailChange_Should_ClearRevertToken()
-    {
-        // Arrange
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, CurrentTime);
-        user.ConfirmEmailChange(TokenValue, DateTime.UtcNow);
-
-        // Act
-        user.RevertEmailChange(RevertToken, DateTime.UtcNow, ResetToken, TimeSpan.FromHours(1));
-
-        // Assert
-        user.RevertToken.Should().BeNull();
-    }
-
-    /// <summary>
-    /// Verifies that <see cref="UserEntity.RevertEmailChange"/> issues a mandatory password reset token
-    /// as part of the account recovery process.
-    /// </summary>
-    [Fact]
-    public void RevertEmailChange_Should_SetPasswordResetToken()
-    {
-        // Arrange
-        FakeClock fakeClock = new(CurrentTime);
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, CurrentTime);
-        user.ConfirmEmailChange(TokenValue, fakeClock.UtcNow);
-
-        // Act
-        user.RevertEmailChange(RevertToken, fakeClock.UtcNow, ResetToken, TimeSpan.FromHours(1));
-
-        // Assert
-        user.CurrentToken.Should().NotBeNull();
-        user.CurrentToken.Type.Should().Be(UserTokenType.PasswordReset);
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailChangeTokenMessage);
     }
 
     /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmEmailChange"/> returns failure
-    /// when the email change confirmation token is expired.
+    /// when an invalid token is provided for an existing request.
+    /// </summary>
+    [Fact]
+    public void ConfirmEmailChange_Should_Fail_When_InvalidToken()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.Create();
+
+        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1), this.Clock.UtcNow);
+
+        this.Clock.Advance(TimeSpan.FromMinutes(2));
+
+        // Act
+        Result<Unit> result = user.ConfirmEmailChange("invalidToken", this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailChangeTokenMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RevertEmailChange"/> successfully restores the original email
+    /// and forces a password reset for security reasons.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_Should_RestoreEmail_And_ResetSecurity()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, this.Clock.UtcNow);
+        user.ConfirmEmailChange(TokenValue, this.Clock.UtcNow);
+
+        SecurityStamp stampAfterConfirm = user.SecurityStamp;
+
+        // Act
+        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow, ResetToken, TimeSpan.FromHours(1));
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.Email.Value.Should().Be(CurrentEmail);
+        user.MustChangePassword.Should().BeTrue();
+        user.RevertToken.Should().BeNull();
+        user.CurrentToken.Should().NotBeNull();
+        user.CurrentToken.Type.Should().Be(UserTokenType.PasswordReset);
+        user.SecurityStamp.Should().NotBe(stampAfterConfirm);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RevertEmailChange"/> returns failure
+    /// when the revert token has expired.
     /// </summary>
     [Fact]
     public void RevertEmailChange_Should_ReturnFailure_When_TokenExpired()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
 
-        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1), fakeClock.UtcNow);
+        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, TimeSpan.FromMinutes(1), this.Clock.UtcNow);
 
-        fakeClock.Advance(TimeSpan.FromMinutes(2));
+        this.Clock.Advance(TimeSpan.FromMinutes(2));
 
         // Act
-        Result<Unit> result = user.RevertEmailChange(RevertToken, fakeClock.UtcNow, ResetToken, TimeSpan.FromHours(1));
+        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailRevertTokenMessage);
     }
 
     /// <summary>
     /// Tests that <see cref="UserEntity.RevertEmailChange"/> returns failure
-    /// when no revert token exists or the process was never initiated.
+    /// when no revert request is found for the user.
     /// </summary>
     [Fact]
     public void RevertEmailChange_Should_ReturnFailure_When_NoRevertRequestWasMade()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
-
-        DateTime expiredTime = DateTime.UtcNow;
+        UserEntity user = UserEntityFactory.CreateActive();
 
         // Act
-        Result<Unit> result = user.RevertEmailChange(RevertToken, expiredTime, ResetToken, TimeSpan.FromHours(1));
+        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow, ResetToken, TimeSpan.FromHours(1));
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailRevertTokenMessage);
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> updates the password hash
-    /// when a valid password reset token is provided.
+    /// Tests that <see cref="UserEntity.RequestPasswordReset"/> generates a valid reset token
+    /// and raises a password reset requested domain event.
+    /// </summary>
+    [Fact]
+    public void RequestPasswordReset_Should_SetToken_And_Event()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        // Act
+        user.RequestPasswordReset(TokenValue, TimeSpan.FromMinutes(10), this.Clock.UtcNow);
+
+        // Assert
+        user.CurrentToken.Should().NotBeNull();
+        user.CurrentToken.Value.Should().Be(TokenValue);
+
+        PasswordResetRequestedDomainEvent emailEvent = user.DomainEvents
+            .OfType<PasswordResetRequestedDomainEvent>()
+            .Should().ContainSingle()
+            .Subject;
+
+        emailEvent.ResetToken.Should().Be(user.CurrentToken);
+
+        user.ClearDomainEvents();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> updates the password hash and security stamp
+    /// when a valid reset token is provided.
     /// </summary>
     [Fact]
     public void ResetPassword_Should_UpdatePassword_And_SecurityStamp_When_ValidToken()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         SecurityStamp initialStamp = user.SecurityStamp;
 
-        user.RequestPasswordReset(TokenValue, Duration, fakeClock.UtcNow);
+        user.RequestPasswordReset(TokenValue, Duration, this.Clock.UtcNow);
 
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
-        user.ConfirmPasswordReset(newPasswordHash, TokenValue, fakeClock.UtcNow);
+        // Act
+        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, this.Clock.UtcNow);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         user.PasswordHash.Value.Should().Be(NewPasswordHashString);
-        user.EmailConfirmed.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.Active);
         user.SecurityStamp.Should().NotBe(initialStamp);
         user.CurrentToken.Should().BeNull();
         user.MustChangePassword.Should().BeFalse();
@@ -441,151 +511,228 @@ public class UserEntityTests
 
     /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> returns failure
-    /// when the password reset confirmation token is expired.
+    /// when the password reset token has expired.
     /// </summary>
     [Fact]
-    public void ConfirmPasswordReset_ShoulReturnFailure_When_TokenExpired()
+    public void ConfirmPasswordReset_Should_ReturnFailure_When_TokenExpired()
     {
         // Arrange
-        FakeClock fakeClock = new(CurrentTime);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
 
-        user.RequestPasswordReset(TokenValue, TimeSpan.FromMinutes(1), fakeClock.UtcNow);
-        fakeClock.Advance(TimeSpan.FromMinutes(2));
+        user.RequestPasswordReset(TokenValue, TimeSpan.FromMinutes(1), this.Clock.UtcNow);
+        this.Clock.Advance(TimeSpan.FromMinutes(2));
 
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
         // Act
-        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, fakeClock.UtcNow);
+        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, this.Clock.UtcNow);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
     }
 
     /// <summary>
     /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> returns failure
-    /// when no password reset request exists for the user.
+    /// when no password reset was requested for the user.
     /// </summary>
     [Fact]
     public void ConfirmPasswordReset_Should_ReturnFailure_When_NoRequestWasMade()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
-        DateTime expiredTime = DateTime.UtcNow;
+        UserEntity user = UserEntityFactory.CreateActive();
 
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
         // Act
-        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, expiredTime);
+        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, TokenValue, this.Clock.UtcNow);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> returns failure
+    /// when the provided token is invalid.
+    /// </summary>
+    [Fact]
+    public void ConfirmPasswordReset_Should_ReturnFailure_When_TokenIsInvalid()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
+
+        // Act
+        Result<Unit> result = user.ConfirmPasswordReset(newPasswordHash, "invalidToken", this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ConfirmPasswordReset"/> returns failure
+    /// when the new password is identical to the current one.
+    /// </summary>
+    [Fact]
+    public void ConfirmPasswordReset_Should_ReturnFailure_When_PasswordIsSame()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+        user.RequestPasswordReset(TokenValue, TimeSpan.FromHours(1), this.Clock.UtcNow);
+
+        // Act
+        Result<Unit> result = user.ConfirmPasswordReset(user.PasswordHash, TokenValue, this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, PasswordPolicy.SameAsOldMessage);
     }
 
     /// <summary>
     /// Tests that <see cref="UserEntity.ChangeFirstName"/> and <see cref="UserEntity.ChangeLastName"/>
-    /// successfully update the user's names and return <see langword="true"/> when different values are provided.
+    /// successfully update the user's name properties.
     /// </summary>
     [Fact]
     public void ChangeFirstName_And_ChangeLastName_Should_UpdateNames()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         FirstName newFirstName = FirstName.Create("Jane");
-        LastName newLastName = LastName.Create("Jane");
+        LastName newLastName = LastName.Create("Jackson");
 
         // Act
-        bool changeFirstNameResult = user.ChangeFirstName(newFirstName);
-        bool changeLastNameResult = user.ChangeLastName(newLastName);
+        Result<bool> changeFirstNameResult = user.ChangeFirstName(newFirstName);
+        Result<bool> changeLastNameResult = user.ChangeLastName(newLastName);
 
         // Assert
+        changeFirstNameResult.IsSuccess.Should().BeTrue();
+        changeLastNameResult.IsSuccess.Should().BeTrue();
         user.FirstName.Value.Should().Be(newFirstName.Value);
         user.LastName!.Value.Should().Be(newLastName!.Value);
-        changeFirstNameResult.Should().BeTrue();
-        changeLastNameResult.Should().BeTrue();
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ChangeLastName"/> sets last name to null
-    /// when the new last name is empty or whitespace.
+    /// Tests that <see cref="UserEntity.ChangeFirstName"/> returns failure
+    /// when the user account is not active.
+    /// </summary>
+    [Fact]
+    public void ChangeFirstName_Should_ReturnFailure_When_UserNotActive()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.Create();
+        FirstName newFirstName = FirstName.Create("Jane");
+
+        // Act
+        Result<bool> result = user.ChangeFirstName(newFirstName);
+
+        // Assert
+        AssertError<bool>(result, ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ChangeLastName"/> sets the last name to <see langword="null"/>
+    /// when provided with an empty or whitespace string.
     /// </summary>
     [Fact]
     public void ChangeLastName_Should_SetToNull_When_EmptyOrWhitespace()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         LastName? newLastName = LastName.CreateOptional(" ");
 
         // Act
-        user.ChangeLastName(newLastName);
+        Result<bool> result = user.ChangeLastName(newLastName);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         user.LastName.Should().BeNull();
     }
 
     /// <summary>
-    /// Verifies that <see cref="UserEntity.ChangeFirstName"/> and <see cref="UserEntity.ChangeLastName"/>
-    /// return <see langword="false"/> when the provided names are identical to the current ones.
+    /// Tests that <see cref="UserEntity.ChangeLastName"/> returns failure
+    /// when the user account is not active.
     /// </summary>
     [Fact]
-    public void ChangeLastAndFirstName_Should_ReturnFalse_When_FirstOrLastNameIsTheSame()
+    public void ChangeLastName_Should_ReturnFailure_When_UserNotActive()
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
+        LastName newLastName = LastName.Create("Jackson");
+
+        // Act
+        Result<bool> result = user.ChangeLastName(newLastName);
+
+        // Assert
+        AssertError<bool>(result, ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage);
+    }
+
+    /// <summary>
+    /// Verifies that name change methods return <see langword="false"/> in the result value
+    /// when the provided names are identical to the current ones.
+    /// </summary>
+    [Fact]
+    public void ChangeLastAndFirstName_Should_False_When_FirstOrLastNameIsTheSame()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
         FirstName currentFirstName = FirstName.Create(CurrentFirstName);
         LastName currentLastName = LastName.Create(CurrentLastName);
 
         // Act
-        bool changeFirstNameResult = user.ChangeFirstName(currentFirstName);
-        bool changeLastNameResult = user.ChangeLastName(currentLastName);
+        Result<bool> changeFirstNameResult = user.ChangeFirstName(currentFirstName);
+        Result<bool> changeLastNameResult = user.ChangeLastName(currentLastName);
 
         // Assert
-        changeFirstNameResult.Should().BeFalse();
-        changeLastNameResult.Should().BeFalse();
+        changeFirstNameResult.IsSuccess.Should().BeTrue();
+        changeFirstNameResult.Value.Should().BeFalse();
+        changeLastNameResult.IsSuccess.Should().BeTrue();
+        changeLastNameResult.Value.Should().BeFalse();
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ChangePassword"/> updates the password hash
-    /// when the current password hash is provided correctly.
+    /// Tests that <see cref="UserEntity.ChangePassword"/> successfully updates the password hash
+    /// for an active user.
     /// </summary>
     [Fact]
     public void ChangePassword_Should_UpdatePassword_When_CurrentPasswordCorrect()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
         // Act
-        user.ChangePassword(newPasswordHash);
+        Result<Unit> result = user.ChangePassword(newPasswordHash);
 
         // Assert
+        result.IsSuccess.Should().BeTrue();
         user.PasswordHash.Should().Be(newPasswordHash);
     }
 
     /// <summary>
-    /// Verifies that <see cref="UserEntity.ChangePassword"/> throws a <see cref="DomainException"/>
+    /// Verifies that <see cref="UserEntity.ChangePassword"/> returns failure
     /// when the new password hash is the same as the current one.
-    /// </summary>>
+    /// </summary>
     [Fact]
-    public void ChangePassword_Should_Throw_When_NewPasswordIsSameAsOld()
+    public void ChangePassword_Should_ReturnFailure_When_NewPasswordIsSameAsOld()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         PasswordHash samePasswordHash = PasswordHash.Create(PasswordHashString);
 
-        // Act & Assert
-        user.Invoking(u => u.ChangePassword(samePasswordHash))
-            .Should().Throw<DomainException>();
+        // Act
+        Result<Unit> result = user.ChangePassword(samePasswordHash);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, PasswordPolicy.SameAsOldMessage);
     }
 
     /// <summary>
-    /// Tests that the security stamp is initialized and changes after password update.
+    /// Tests that changing the password also updates the user's security stamp.
     /// </summary>
     [Fact]
     public void ChangePassword_Should_UpdatePassword_And_SecurityStamp()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         SecurityStamp initialStamp = user.SecurityStamp;
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
@@ -599,14 +746,33 @@ public class UserEntityTests
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ChangeUserName"/> updates the username
-    /// when a valid and different new username is provided.
+    /// Tests that <see cref="UserEntity.ChangePassword"/> returns failure
+    /// and does not update the security stamp when the user is not active.
+    /// </summary>
+    [Fact]
+    public void ChangePassword_Should_ReturnFailure_When_UserNotActive()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.Create();
+        SecurityStamp initialStamp = user.SecurityStamp;
+        PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
+
+        // Act
+        Result<Unit> result = user.ChangePassword(newPasswordHash);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage);
+        user.SecurityStamp.Should().Be(initialStamp);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ChangeUserName"/> successfully updates the username.
     /// </summary>
     [Fact]
     public void ChangeUserName_Should_Update_When_ValidVOProvided()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         UserName newUserName = UserName.Create("new_unique_name");
 
         // Act
@@ -625,6 +791,24 @@ public class UserEntityTests
     public void ChangeUserName_Should_ReturnFailure_When_SameUserNameProvided()
     {
         // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+        UserName oldUserName = UserName.Create(CurrentUserName);
+
+        // Act
+        Result<Unit> result = user.ChangeUserName(oldUserName);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ChangeUserName"/> returns failure
+    /// when the user account is not active.
+    /// </summary>
+    [Fact]
+    public void ChangeUserName_Should_ReturnFailure_When_UserNotActive()
+    {
+        // Arrange
         UserEntity user = UserEntityFactory.Create();
         UserName oldUserName = UserName.Create(CurrentUserName);
 
@@ -632,49 +816,34 @@ public class UserEntityTests
         Result<Unit> result = user.ChangeUserName(oldUserName);
 
         // Assert
-        result.IsSuccess.Should().BeFalse();
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage);
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.ConfirmEmailVerification"/> returns failure
-    /// when an invalid or incorrect token is provided.
-    /// </summary>
-    [Fact]
-    public void ConfirmEmailVerification_Should_Throw_When_TokenInvalid()
-    {
-        // Arrange
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailVerification(TokenValue, Duration, CurrentTime);
-
-        // Act
-        Result<Unit> result = user.ConfirmEmailVerification("invalidtoken", DateTime.UtcNow);
-
-        // Assert
-        result.IsSuccess.Should().BeFalse();
-    }
-
-    /// <summary>
-    /// Verifies that <see cref="UserEntity.UpdateUnconfirmedRegistration"/> correctly updates all user properties
-    /// and generates a new security token when the user's email has not yet been confirmed.
+    /// Verifies that <see cref="UserEntity.UpdateUnconfirmedRegistration"/> correctly updates user properties
+    /// during the unconfirmed registration phase.
     /// </summary>
     [Fact]
     public void UpdateUnconfirmedRegistration_Should_UpdateProperties_When_EmailNotConfirmed()
     {
+        // Arrange
         UserEntity user = UserEntityFactory.Create();
         FirstName newFirst = FirstName.Create("NewFirst");
         LastName newLast = LastName.Create("NewLast");
         UserName newUsername = UserName.Create("newusername");
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
+        // Act
         user.UpdateUnconfirmedRegistration(
             newFirst,
             newUsername,
             newPasswordHash,
             TokenValue,
             Duration,
-            CurrentTime,
+            this.Clock.UtcNow,
             newLast);
 
+        // Assert
         user.FirstName.Value.Should().Be(newFirst.Value);
         user.LastName!.Value.Should().Be(newLast!.Value);
         user.UserName.Value.Should().Be(newUsername.Value);
@@ -683,46 +852,56 @@ public class UserEntityTests
     }
 
     /// <summary>
-    /// Verifies that <see cref="UserEntity.UpdateUnconfirmedRegistration"/> updates the security stamp,
-    /// ensuring that any previous sessions or tokens are invalidated when registration details change.
+    /// Verifies that <see cref="UserEntity.UpdateUnconfirmedRegistration"/> updates the security stamp.
     /// </summary>
     [Fact]
     public void UpdateUnconfirmedRegistration_Should_UpdateSecurityStamp()
     {
+        // Arrange
         UserEntity user = UserEntityFactory.Create();
         SecurityStamp initialStamp = user.SecurityStamp;
         PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
 
+        // Act
         user.UpdateUnconfirmedRegistration(
             FirstName.Create("NewFirst"),
             UserName.Create("newusername"),
             newPasswordHash,
             TokenValue,
             Duration,
-            CurrentTime);
+            this.Clock.UtcNow);
 
+        // Assert
         user.SecurityStamp.Should().NotBe(initialStamp);
     }
 
     /// <summary>
-    /// Tests that <see cref="UserEntity.UpdateUnconfirmedRegistration"/> throws a <see cref="DomainException"/>
-    /// if an attempt is made to update registration details after the email has already been confirmed.
+    /// Tests that <see cref="UserEntity.UpdateUnconfirmedRegistration"/> returns failure
+    /// if the user's email has already been confirmed.
     /// </summary>
     [Fact]
-    public void UpdateUnconfirmedRegistration_Should_Throw_When_EmailAlreadyConfirmed()
+    public void UpdateUnconfirmedRegistration_Should_ReturnFailure_When_EmailAlreadyConfirmed()
     {
-        UserEntity user = UserEntityFactory.Create();
-        user.RequestEmailVerification(TokenValue, Duration, CurrentTime);
-        user.ConfirmEmailVerification(TokenValue, CurrentTime);
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
 
-        Action act = () => user.UpdateUnconfirmedRegistration(
+        // Act
+        Result<Unit> result = user.UpdateUnconfirmedRegistration(
             FirstName.Create("NewFirst"),
             UserName.Create("newusername"),
             PasswordHash.Create(NewPasswordHashString),
             TokenValue,
             Duration,
-            CurrentTime);
+            this.Clock.UtcNow);
 
-        act.Should().Throw<DomainException>();
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage);
+    }
+
+    private static void AssertError<T>(Result<T> result, ErrorCode code, string message)
+    {
+        result.IsSuccess.Should().BeFalse();
+        result.Error.Should().NotBeNull();
+        result.Error.Code.Should().Be(code);
+        result.Error.Message.Should().Be(message);
     }
 }

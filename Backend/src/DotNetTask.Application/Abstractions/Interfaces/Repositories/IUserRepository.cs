@@ -54,16 +54,15 @@ public interface IUserRepository : IRepository<UserEntity>
     /// Retrieves minimal security-related information for a specific user.
     /// </summary>
     /// <param name="userId">The unique identifier of the user.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>
-    /// A task that returns a tuple containing the <c>SecurityStamp</c> and <c>MustChangePassword</c> flag
-    /// if the user exists; otherwise, <c>null</c>.
+    /// A nullable tuple containing the user's <c>SecurityStamp</c>, <c>MustChangePassword</c> flag,
+    /// and current <see cref="UserStatus"/>. Returns <c>null</c> if no user is found with the specified ID.
     /// </returns>
     /// <remarks>
-    /// This method is optimized for high-frequency security checks (e.g., in middleware)
-    /// by using a projection to fetch only the necessary columns instead of the entire user entity.
+    /// Optimized with projection to avoid fetching the entire entity.
     /// </remarks>
-    Task<(string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)?> GetUsersSecurityInfoAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<(string SecurityStamp, bool MustChangePassword, UserStatus Status)?> GetUsersSecurityInfoAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a user entity that matches the specified security token and token type.

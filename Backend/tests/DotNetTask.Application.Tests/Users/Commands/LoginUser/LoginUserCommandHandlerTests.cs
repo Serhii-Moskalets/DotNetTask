@@ -18,11 +18,10 @@ namespace DotNetTask.Application.Tests.Users.Commands.LoginUser;
 /// <summary>
 /// Contains unit tests for the <see cref="LoginUserCommandHandler"/> class.
 /// </summary>
-public class LoginUserCommandHandlerTests
+public class LoginUserCommandHandlerTests : BaseTest
 {
     private const string IpAddress = "192.168.0.1";
     private const string GeneratedToken = "valid_jwt_token";
-    private static readonly DateTime CurrentTime = DateTime.UtcNow;
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
@@ -49,13 +48,11 @@ public class LoginUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnSuccess_WhenCredentialsAreValid()
+    public async Task Handle_Should_ReturnSuccess_WhenEverythingIsValid()
     {
         // Arrange
         LoginUserCommand command = new("john@test.com", "CorrectPassword123!", IpAddress);
-        UserEntity user = UserEntityFactory.Create(email: command.Email);
-
-        ConfirmEmail(user);
+        UserEntity user = UserEntityFactory.CreateActive(email: command.Email);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -82,7 +79,7 @@ public class LoginUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenUserDoesNotExist()
+    public async Task Handle_Should_ReturnFailure_WhenUserDoesNotExist()
     {
         // Arrange
         LoginUserCommand command = new("nonexistent@test.com", "any_password", IpAddress);
@@ -106,7 +103,7 @@ public class LoginUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenPasswordIsIncorrect()
+    public async Task Handle_Should_ReturnFailure_WhenPasswordIsIncorrect()
     {
         // Arrange
         LoginUserCommand command = new("john@test.com", "WrongPassword!", IpAddress);
@@ -136,18 +133,13 @@ public class LoginUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnMustChangePassword_WhenFlagIsTrue()
+    public async Task Handle_Should_ReturnMustChangePassword_WhenFlagIsTrue_And_EmailIsConfirmed()
     {
         // Arrange
         LoginUserCommand command = new("john@test.com", "Password123!", IpAddress);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
 
-        ConfirmEmail(user);
-
-        string revertToken = "revert";
-        user.RequestEmailChange(Email.Create("new@test.com"), "token", revertToken, TimeSpan.FromHours(1), CurrentTime);
-        user.ConfirmEmailChange("token", DateTime.UtcNow);
-        user.RevertEmailChange(revertToken, DateTime.UtcNow, "reset-token", TimeSpan.FromMinutes(15));
+        this.SetMustChangePassword(user);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -167,12 +159,12 @@ public class LoginUserCommandHandlerTests
     }
 
     /// <summary>
-    /// Verifies that the login process fails with a validation error when the user
-    /// has not yet confirmed their email address.
+    /// Verifies that the login process returns a success result with an unconfirmed email status
+    /// and a valid token when the user has not yet confirmed their email address.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnSuccessWithUnconfirmedEmail_WhenEmailIsNotConfirmed()
+    public async Task Handle_Should_ReturnUnconfirmed_WhenUserStatusIsUnconfirmed()
     {
         // Arrange
         LoginUserCommand command = new("john@test.com", "Password123!", IpAddress);
@@ -198,10 +190,12 @@ public class LoginUserCommandHandlerTests
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Once);
     }
 
-    private static void ConfirmEmail(UserEntity user)
+    private void SetMustChangePassword(UserEntity user)
     {
-        string token = "any-token";
-        user.RequestEmailVerification(token, TimeSpan.FromHours(1), CurrentTime);
-        user.ConfirmEmailVerification(token, DateTime.UtcNow);
+
+        string revertToken = "revert";
+        user.RequestEmailChange(Email.Create("new@test.com"), "token", revertToken, TimeSpan.FromHours(1), this.Clock.UtcNow);
+        user.ConfirmEmailChange("token", this.Clock.UtcNow.AddMinutes(1));
+        user.RevertEmailChange(revertToken, this.Clock.UtcNow.AddMinutes(2), "reset-token", TimeSpan.FromMinutes(15));
     }
 }

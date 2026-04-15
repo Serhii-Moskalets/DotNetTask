@@ -3,6 +3,7 @@ using System.Security.Claims;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Domain.Constants;
+using DotNetTask.Domain.Enums;
 using DotNetTask.Domain.Exceptions;
 using DotNetTask.Infrastructure.Web.Options;
 using Microsoft.Extensions.Options;
@@ -51,7 +52,7 @@ public class UserSecurityMiddleware(RequestDelegate next, IOptions<ApiEndpointOp
                 throw new UnauthorizedAccessException(TokenPolicy.InvalidUserIdentityMessage);
             }
 
-            (string? securityStamp, bool mustChangePassword, bool isEmailConfirmed) = await unitOfWork.Users.GetUsersSecurityInfoAsync(userId, context.RequestAborted)
+            (string? securityStamp, bool mustChangePassword, UserStatus userStatus) = await unitOfWork.Users.GetUsersSecurityInfoAsync(userId, context.RequestAborted)
                 ?? throw new UnauthorizedAccessException(UserPolicy.AccountNotFoundMessage);
 
             if (securityStamp != tokenStamp)
@@ -59,7 +60,7 @@ public class UserSecurityMiddleware(RequestDelegate next, IOptions<ApiEndpointOp
                 throw new UnauthorizedAccessException(UserPolicy.SessionExpiredMessage);
             }
 
-            if (!isEmailConfirmed)
+            if (userStatus is UserStatus.Unconfirmed)
             {
                 bool isResendEmailEndpoint = context.Request.Path.StartsWithSegments(this._endpointOptions.ResendEmailVerificationEndpoint, StringComparison.OrdinalIgnoreCase);
 

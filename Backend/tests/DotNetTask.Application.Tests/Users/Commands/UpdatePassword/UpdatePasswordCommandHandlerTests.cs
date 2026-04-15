@@ -44,14 +44,13 @@ public class UpdatePasswordCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnSuccess_WhenCurrentPasswordIsCorrect()
+    public async Task Handle_Should_ReturnSuccess_WhenCurrentPasswordIsCorrect()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
-        UpdatePasswordCommand command = new("OldPass123!", "NewPass123!", userId);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
+        UpdatePasswordCommand command = new("OldPass123!", "NewPass123!", user.Id);
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._passwordHasherMock.Setup(x => x.VerifyPassword(command.CurrentPassword, user.PasswordHash.Value))
@@ -66,6 +65,7 @@ public class UpdatePasswordCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         user.PasswordHash.Value.Should().Be(NewPaswordHashString);
+        user.MustChangePassword.Should().BeFalse();
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -75,7 +75,7 @@ public class UpdatePasswordCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnNotFound_WhenUserDoesNotExist()
+    public async Task Handle_Should_ReturnNotFound_WhenUserDoesNotExist()
     {
         // Arrange
         Guid userId = Guid.NewGuid();
@@ -99,14 +99,13 @@ public class UpdatePasswordCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenCurrentPasswordIsIncorrect()
+    public async Task Handle_Should_ReturnFailure_WhenCurrentPasswordIsIncorrect()
     {
         // Arrange
-        Guid userId = Guid.NewGuid();
-        UpdatePasswordCommand command = new("WrongPass!", "NewPass!", userId);
         UserEntity user = UserEntityFactory.Create();
+        UpdatePasswordCommand command = new("WrongPass!", "NewPass!", user.Id);
 
-        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
+        this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
 
         this._passwordHasherMock.Setup(x => x.VerifyPassword(command.CurrentPassword, It.IsAny<string>()))

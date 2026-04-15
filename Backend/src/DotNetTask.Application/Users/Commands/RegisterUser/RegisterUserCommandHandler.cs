@@ -3,6 +3,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
+using DotNetTask.Domain.Enums;
 using DotNetTask.Domain.ValueObjects;
 
 using MediatR;
@@ -42,7 +43,7 @@ public class RegisterUserCommandHandler(
     public async Task<Result<Guid>> Handle(RegisterUserCommand command, CancellationToken cancellationToken)
     {
         UserEntity? user = await this._unitOfWork.Users.GetByEmailAsync(Email.Create(command.Email), asNoTracking: false, cancellationToken);
-        if (user?.EmailConfirmed is true)
+        if (user is not null && user.Status is not UserStatus.Unconfirmed)
         {
             return Result<Guid>.Failure(ErrorCode.InvalidOperation, EmailPolicy.AlreadyInUseMessage);
         }

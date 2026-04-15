@@ -25,30 +25,33 @@ public class UserEntityConfiguration : BaseEntityConfiguration<UserEntity>
             .HasConversion(n => n.Value, v => FirstName.Create(v))
             .HasColumnName("first_name")
             .IsRequired()
-            .HasMaxLength(20);
+            .HasMaxLength(FirstName.MaxLength);
 
         builder.Property(u => u.LastName)
             .HasConversion(
                 n => n != null ? n.Value : null,
                 v => LastName.CreateOptional(v))
             .HasColumnName("last_name")
-            .HasMaxLength(30)
+            .HasMaxLength(LastName.MaxLength)
             .IsRequired(false);
 
         builder.Property(u => u.UserName)
             .HasConversion(un => un.Value, v => UserName.Create(v))
             .HasColumnName("user_name")
             .IsRequired()
-            .HasMaxLength(20);
+            .HasMaxLength(UserName.MaxLength);
 
         builder.Property(u => u.Email)
             .HasConversion(e => e.Value, v => Email.Create(v))
             .HasColumnName("email")
             .IsRequired()
-            .HasMaxLength(100);
+            .HasMaxLength(Email.MaxLength);
 
-        builder.Property(u => u.EmailConfirmed)
-            .HasColumnName("email_confirmed")
+        builder.Property(u => u.Status)
+            .HasColumnName("status")
+            .HasConversion<string>()
+            .HasMaxLength(20)
+            .HasColumnType("varchar(20)")
             .IsRequired();
 
         builder.Property(u => u.PasswordHash)

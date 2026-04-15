@@ -59,4 +59,18 @@ public static class UserPolicy
     /// The error message when a user must change their password before accessing other resources.
     /// </summary>
     public const string MustChangePasswordMessage = "You must change your password before accessing other resources.";
+
+    /// <summary>
+    /// The error message when a user is not active and tries to access resources that require an active account.
+    /// </summary>
+    public const string IsNotActiveMessage = "User is not active";
+
+    /// <summary>
+    /// The error message when a user is active and tries to access resources that require an inactive account.
+    /// </summary>
+    public const string IsActiveMessage = "User is active";
+    /// <summary>
+    /// The error message when the status value used to indicate an unknown or invalid user state.
+    /// </summary>
+    public const string InvalidUserStatus = "Unknown user status";
 }

@@ -1,9 +1,9 @@
-using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.RegisterUser;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
+using DotNetTask.Domain.Enums;
 using DotNetTask.Domain.Test.Common;
 using DotNetTask.Domain.ValueObjects;
 
@@ -19,14 +19,13 @@ namespace DotNetTask.Application.Tests.Users.Commands.RegisterUser;
 /// <summary>
 /// Contains unit tests for the <see cref="RegisterUserCommandHandler"/> class.
 /// </summary>
-public class RegisterUserCommandHandlerTests
+public class RegisterUserCommandHandlerTests : BaseTest
 {
     private const string IpAddress = "192.168.0.1";
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
     private readonly Mock<ITokenGenerator> _tokenGeneratorMock;
-    private readonly Mock<IClock> _clock;
     private readonly RegisterUserCommandHandler _sut;
 
     private readonly string _passwordHash = new('a', 64);
@@ -39,13 +38,12 @@ public class RegisterUserCommandHandlerTests
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
         this._passwordHasherMock = new Mock<IPasswordHasher>();
         this._tokenGeneratorMock = new Mock<ITokenGenerator>();
-        this._clock = new Mock<IClock>();
 
         this._sut = new RegisterUserCommandHandler(
             this._unitOfWorkMock.Object,
             this._passwordHasherMock.Object,
             this._tokenGeneratorMock.Object,
-            this._clock.Object);
+            this.Clock);
     }
 
     /// <summary>
@@ -53,7 +51,7 @@ public class RegisterUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldCreateNewUser_WhenUserDoesNotExist()
+    public async Task Handle_Should_CreateNewUser_WhenUserDoesNotExist()
     {
         // Arrange
         RegisterUserCommand command = new("John", "Doe", "johndoe", "new@test.com", "Password123!", IpAddress);
@@ -77,17 +75,15 @@ public class RegisterUserCommandHandlerTests
     }
 
     /// <summary>
-    /// Verifies that registration fails when the email exists and is already confirmed.
+    /// Verifies that registration fails when the email is already in use by a user with a status other than Unconfirmed.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenEmailIsAlreadyExistAndConfirmed()
+    public async Task Handle_Should_Fail_WhenEmailIsAlreadyInUseAndStatusIsNotUnconfirmed()
     {
         // Arrange
         RegisterUserCommand command = new("John", "Doe", "johndoe", "existing@test.com", "Password123!", IpAddress);
-        UserEntity user = UserEntityFactory.Create();
-
-        typeof(UserEntity).GetProperty(nameof(UserEntity.EmailConfirmed))!.SetValue(user, true);
+        UserEntity user = UserEntityFactory.CreateActive(email: command.Email);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -98,9 +94,7 @@ public class RegisterUserCommandHandlerTests
         // Assert
         result.IsFailure.Should().BeTrue();
         result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
-
         result.Error.Message.Should().Be(EmailPolicy.AlreadyInUseMessage);
-
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -109,7 +103,7 @@ public class RegisterUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenUserNameTakenByAnotherUser()
+    public async Task Handle_Should_Fail_WhenUserNameTakenByAnotherUser()
     {
         // Arrange
         RegisterUserCommand command = new("John", "Doe", "existing_user", "john@test.com", "Password123!", IpAddress);
@@ -124,10 +118,8 @@ public class RegisterUserCommandHandlerTests
 
         // Assert
         result.IsFailure.Should().BeTrue();
-
         result.Error!.Code.Should().Be(ErrorCode.InvalidOperation);
         result.Error.Message.Should().Be(UserNamePolicy.AlreadyInUseMessage);
-
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -136,11 +128,11 @@ public class RegisterUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldUpdateExistingUser_WhenEmailNotConfirmed()
+    public async Task Handle_Should_UpdateExistingUser_WhenStatusIsUnconfirmed()
     {
         // Arrange
         RegisterUserCommand command = new("NewName", LastName: null, "NewUsername", "newemail@exam0ple.com", this._passwordHash, IpAddress);
-        UserEntity existingUser = UserEntityFactory.Create();
+        UserEntity existingUser = UserEntityFactory.Create(email: command.Email);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
@@ -156,6 +148,7 @@ public class RegisterUserCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
+        existingUser.Status.Should().Be(UserStatus.Unconfirmed);
         existingUser.FirstName.Value.Should().Be("NewName");
         existingUser.UserName.Value.Should().Be("NewUsername");
         existingUser.CurrentToken.Should().NotBeNull();
@@ -170,11 +163,11 @@ public class RegisterUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenEmailExistsUnconfirmedButUsernameTakenByAnotherUser()
+    public async Task Handle_Should_ReturnFailure_WhenEmailExistsUnconfirmedButUsernameTakenByAnotherUser()
     {
         // Arrange
         RegisterUserCommand command = new("John", null, "taken_by_other", "existing@test.com", "Password123!", IpAddress);
-        UserEntity existingUser = UserEntityFactory.Create();
+        UserEntity existingUser = UserEntityFactory.Create(email: command.Email);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);
@@ -197,11 +190,11 @@ public class RegisterUserCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldUpdateUser_WhenEmailExistsUnconfirmedAndUsernameIsSame()
+    public async Task Handle_Should_UpdateUser_WhenEmailExistsUnconfirmedAndUsernameIsSame()
     {
         // Arrange
         RegisterUserCommand command = new("NewName", null, "olduser", "existing@test.com", "Password123!", IpAddress);
-        UserEntity existingUser = UserEntityFactory.Create("OldName", "olduser", "existing@test.com");
+        UserEntity existingUser = UserEntityFactory.Create(firstName: "OldName", userName: "olduser", email: "existing@test.com");
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(existingUser);

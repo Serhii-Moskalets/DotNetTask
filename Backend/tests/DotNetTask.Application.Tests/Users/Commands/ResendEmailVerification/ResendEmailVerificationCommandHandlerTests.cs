@@ -1,4 +1,3 @@
-using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Common.Settings;
@@ -19,14 +18,12 @@ namespace DotNetTask.Application.Tests.Users.Commands.ResendEmailVerification;
 /// <summary>
 /// Contains unit tests for the <see cref="ResendEmailVerificationCommandHandler"/> class.
 /// </summary>
-public class ResendEmailVerificationCommandHandlerTests
+public class ResendEmailVerificationCommandHandlerTests : BaseTest
 {
     private const string IpAddress = "192.168.0.1";
     private const string GeneratedToken = "secure-test-token";
-    private static readonly DateTime CurrentTime = DateTime.UtcNow;
 
     private readonly Mock<IUnitOfWork> _uowMock;
-    private readonly Mock<IClock> _clockMock;
     private readonly Mock<ITokenGenerator> _tokenGeneratorMock;
     private readonly TokenOptions _tokenSettings;
     private readonly ResendEmailVerificationCommandHandler _handler;
@@ -37,7 +34,6 @@ public class ResendEmailVerificationCommandHandlerTests
     public ResendEmailVerificationCommandHandlerTests()
     {
         this._uowMock = new Mock<IUnitOfWork>();
-        this._clockMock = new Mock<IClock>();
         this._tokenGeneratorMock = new Mock<ITokenGenerator>();
         this._tokenSettings = new TokenOptions
         {
@@ -48,7 +44,7 @@ public class ResendEmailVerificationCommandHandlerTests
             this._uowMock.Object,
             this._tokenGeneratorMock.Object,
             this._tokenSettings,
-            this._clockMock.Object);
+            this.Clock);
     }
 
     /// <summary>
@@ -85,8 +81,8 @@ public class ResendEmailVerificationCommandHandlerTests
         UserEntity user = UserEntityFactory.Create();
         ResendEmailVerificationCommand command = new(user.Id, IpAddress);
 
-        user.RequestEmailVerification(GeneratedToken, TimeSpan.FromHours(1), CurrentTime);
-        user.ConfirmEmailVerification(GeneratedToken, CurrentTime.AddMinutes(15));
+        user.RequestEmailVerification(GeneratedToken, TimeSpan.FromHours(1), this.Clock.UtcNow);
+        user.ConfirmEmailVerification(GeneratedToken, this.Clock.UtcNow.AddMinutes(15));
 
         this._uowMock.Setup(u => u.Users.GetByIdAsync(user.Id, false, default))
             .ReturnsAsync(user);
@@ -117,8 +113,6 @@ public class ResendEmailVerificationCommandHandlerTests
 
         this._tokenGeneratorMock.Setup(t => t.GenerateSecureToken())
             .Returns(GeneratedToken);
-
-        this._clockMock.Setup(c => c.UtcNow).Returns(CurrentTime);
 
         // Act
         Result<Unit> result = await this._handler.Handle(command, CancellationToken.None);

@@ -115,17 +115,20 @@ public class UserRepository(DotNetTaskDbContext context)
     /// </summary>
     /// <param name="userId">The unique identifier of the user.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>A tuple with SecurityStamp and MustChangePassword, or null if user not found.</returns>
+    /// <returns>
+    /// A nullable tuple containing the user's <c>SecurityStamp</c>, <c>MustChangePassword</c> flag,
+    /// and current <see cref="UserStatus"/>. Returns <c>null</c> if no user is found with the specified ID.
+    /// </returns>
     /// <remarks>
     /// Optimized with projection to avoid fetching the entire entity.
     /// </remarks>
-    public async Task<(string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)?> GetUsersSecurityInfoAsync(
+    public async Task<(string SecurityStamp, bool MustChangePassword, UserStatus Status)?> GetUsersSecurityInfoAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
         var user = await this.DbSet
             .Where(u => u.Id == userId)
-            .Select(u => new { u.SecurityStamp.Value, u.MustChangePassword, u.EmailConfirmed })
+            .Select(u => new { u.SecurityStamp.Value, u.MustChangePassword, u.Status })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)
@@ -133,6 +136,6 @@ public class UserRepository(DotNetTaskDbContext context)
             return null;
         }
 
-        return (user.Value, user.MustChangePassword, user.EmailConfirmed);
+        return (user.Value, user.MustChangePassword, user.Status);
     }
 }
