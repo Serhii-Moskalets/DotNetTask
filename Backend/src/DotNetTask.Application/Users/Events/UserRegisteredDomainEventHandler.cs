@@ -17,12 +17,7 @@ public class UserRegisteredDomainEventHandler(
     private readonly IEmailService _emailService = emailService;
     private readonly IUrlProvider _urlProvider = urlProvider;
 
-    /// <summary>
-    /// Handles the user registration event.
-    /// </summary>
-    /// <param name="notification">The domain event data.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A <see cref="Task"/> representing the asynchronous operation.</returns>
+    /// <inheritdoc />
     public async Task Handle(UserRegisteredDomainEvent notification, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(notification);

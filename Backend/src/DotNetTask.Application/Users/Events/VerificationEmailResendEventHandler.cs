@@ -16,13 +16,7 @@ public class VerificationEmailResendEventHandler(
     private readonly IEmailService _emailService = emailService;
     private readonly IUrlProvider _urlProvider = urlProvider;
 
-    /// <summary>
-    /// Handles the resend email verification event.
-    /// </summary>
-    /// <param name="notification">The domain event data.</param>
-    /// <param name="cancellationToken">The cancellation token.</param>
-    /// <returns>A <see cref="Task"/> re.</returns>
-    /// <exception cref="NotImplementedException"> representing the asynchronous operation.</exception>
+    /// <inheritdoc />
     public async Task Handle(VerificationEmailResendEvent notification, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(notification);
