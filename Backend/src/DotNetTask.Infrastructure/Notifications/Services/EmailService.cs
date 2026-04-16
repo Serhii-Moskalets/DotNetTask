@@ -126,6 +126,31 @@ public class EmailService
             cancellationToken);
     }
 
+    /// <summary>
+    /// Sends a notification email informing the user that their account has been successfully deleted.
+    /// </summary>
+    /// <param name="toEmail">The recipient's email address.</param>
+    /// <param name="userName">The name of the user for personalization in the email.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public Task SendAccountDeletedEmailAsync(
+        string toEmail,
+        string userName,
+        CancellationToken cancellationToken = default)
+    {
+        Dictionary<string, string> placeholders = new()
+        {
+            { "USER_NAME", userName },
+        };
+
+        return this.SendEmailAsync(
+            toEmail,
+            EmailSubjects.AccountDeleted,
+            EmailTemplates.AccountDeleted,
+            placeholders,
+            cancellationToken);
+    }
+
     private async Task SendEmailAsync(
         string toEmail,
         string subject,

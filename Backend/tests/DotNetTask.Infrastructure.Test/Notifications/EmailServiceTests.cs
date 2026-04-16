@@ -49,7 +49,7 @@ public class EmailServiceTests
     /// </remarks>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SendConfirmationEmailAsync_ShouldCallProviderAndSender()
+    public async Task SendConfirmationEmailAsync_Should_CallProviderAndSender()
     {
         // Act
         await this._emailService.SendConfirmationEmailAsync(Email, UserName, Link, CancellationToken.None);
@@ -79,7 +79,7 @@ public class EmailServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SendEmailChangeConfirmationAsync_ShouldCallProviderWithCorrectTemplate()
+    public async Task SendEmailChangeConfirmationAsync_Should_CallProviderWithCorrectTemplate()
     {
         // Act
         await this._emailService.SendEmailChangeConfirmationAsync(Email, UserName, Link, CancellationToken.None);
@@ -109,7 +109,7 @@ public class EmailServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SendPasswordResetEmailAsync_ShouldCallProviderAndSender()
+    public async Task SendPasswordResetEmailAsync_Should_CallProviderAndSender()
     {
         // Act
         await this._emailService.SendPasswordResetEmailAsync(Email, UserName, Link, CancellationToken.None);
@@ -168,12 +168,40 @@ public class EmailServiceTests
     }
 
     /// <summary>
+    /// Verifies that <see cref="EmailService.SendAccountDeletedEmailAsync"/> correctly
+    /// coordinates template processing and delivery when an account deleted.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SendAccountDeletedEmailAsync_Should_CallProviderAndSender()
+    {
+        // Act
+        await this._emailService.SendAccountDeletedEmailAsync(Email, UserName, CancellationToken.None);
+
+        // Assert
+        this._templateProviderMock.Verify(
+            x => x.GetEmailTemplateAsync(
+                EmailTemplates.AccountDeleted,
+                It.Is<Dictionary<string, string>>(
+                    dict =>
+                    dict["USER_NAME"] == UserName)),
+            Times.Once);
+        this._senderMock.Verify(
+            x => x.SendAsync(
+                Email,
+                EmailSubjects.AccountDeleted,
+                ExpectedBody,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    /// <summary>
     /// Verifies that <see cref="EmailService"/> correctly propagates a <see cref="FileNotFoundException"/>
     /// if the requested email template does not exist on the file system.
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SendEmail_ShouldPropagateException_WhenTemplateNotFound()
+    public async Task SendEmail_Should_PropagateException_WhenTemplateNotFound()
     {
         // Arrange
         this._templateProviderMock

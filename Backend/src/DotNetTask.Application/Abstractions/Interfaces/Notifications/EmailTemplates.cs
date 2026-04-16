@@ -28,4 +28,9 @@ public static class EmailTemplates
     /// Template name for password reset confirmation.
     /// </summary>
     public const string PasswordReset = "password_reset";
+
+    /// <summary>
+    /// Template name for account deletion notification email sent after the account has been deleted.
+    /// </summary>
+    public const string AccountDeleted = "account_deleted";
 }

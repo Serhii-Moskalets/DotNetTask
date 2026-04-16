@@ -28,4 +28,9 @@ public static class EmailSubjects
     /// Subject line for password reset emails.
     /// </summary>
     public const string PasswordReset = "Reset your password";
+
+    /// <summary>
+    /// Subject line for account deletion notification emails.
+    /// </summary>
+    public const string AccountDeleted = "Your account has been deleted";
 }
