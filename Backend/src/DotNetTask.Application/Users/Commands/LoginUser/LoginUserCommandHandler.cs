@@ -45,16 +45,25 @@ public class LoginUserCommandHandler(
                 ErrorCode.ValidationError, UserPolicy.InvalidCredentialsMessage);
         }
 
-        string GenerateToken() => this._jwtTokenGenerator.GenerateToken(user);
+        string token = this._jwtTokenGenerator.GenerateToken(user);
 
-        if (user.UserStatus is UserStatus.Unconfirmed)
+        if (user.Status is UserStatus.PendingDeletion)
+        {
+            return Result<LoginResponse>.Success(new LoginResponse(
+                user.Id,
+                user.UserName.Value,
+                user.Email.Value,
+                Token: token,
+                IsAccountPendingDeletion: true));
+        }
+
         if (user.Status is UserStatus.Unconfirmed)
         {
             return Result<LoginResponse>.Success(new LoginResponse(
                 user.Id,
                 user.UserName.Value,
                 user.Email.Value,
-                Token: GenerateToken(),
+                Token: token,
                 IsEmailConfirmed: false));
         }
 
@@ -64,7 +73,7 @@ public class LoginUserCommandHandler(
                 user.Id,
                 user.UserName.Value,
                 user.Email.Value,
-                Token: null,
+                Token: token,
                 MustChangePassword: true));
         }
 
@@ -72,6 +81,6 @@ public class LoginUserCommandHandler(
             user.Id,
             user.UserName.Value,
             user.Email.Value,
-            GenerateToken()));
+            token));
     }
 }

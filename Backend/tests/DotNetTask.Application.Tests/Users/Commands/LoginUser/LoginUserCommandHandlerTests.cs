@@ -1,6 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.LoginUser;
+using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Test.Common;
@@ -145,6 +146,8 @@ public class LoginUserCommandHandlerTests : BaseTest
             .ReturnsAsync(user);
         this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
             .Returns(true);
+        this._jwtTokenGeneratorMock.Setup(x => x.GenerateToken(user))
+            .Returns(GeneratedToken);
 
         // Act
         Result<LoginResponse> result = await this._sut.Handle(command, CancellationToken.None);
@@ -154,8 +157,8 @@ public class LoginUserCommandHandlerTests : BaseTest
         result.Value.Should().NotBeNull();
         result.Value.IsEmailConfirmed.Should().BeTrue();
         result.Value.MustChangePassword.Should().BeTrue();
-        result.Value.Token.Should().BeNull();
-        this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Never);
+        result.Value.Token.Should().NotBeNull();
+        this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Once);
     }
 
     /// <summary>
@@ -185,6 +188,41 @@ public class LoginUserCommandHandlerTests : BaseTest
         result.Value.Should().NotBeNull();
         result.Value.MustChangePassword.Should().BeFalse();
         result.Value.IsEmailConfirmed.Should().BeFalse();
+        result.Value.Token.Should().NotBeNull();
+
+        this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Once);
+    }
+
+    /// <summary>
+    /// Verifies that the login process returns a success result with an аccount pending deletion status
+    /// and a valid token when the user's account has pending deletion status.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Handle_Should_ReturnPendingDeletion_WhenUserStatusIsPendingDeletion()
+    {
+        // Arrange
+        LoginUserCommand command = new("john@test.com", "Password123!", IpAddress);
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetByEmailAsync(It.IsAny<Email>(), asNoTracking: true, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+        this._passwordHasherMock.Setup(x => x.VerifyPassword(command.Password, user.PasswordHash.Value))
+            .Returns(true);
+
+        this._jwtTokenGeneratorMock.Setup(x => x.GenerateToken(user)).Returns(GeneratedToken);
+
+        Result<Unit> resultAcountDeletion = user.RequestAccountDeletion(this.Clock.UtcNow);
+
+        // Act
+        Result<LoginResponse> result = await this._sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        resultAcountDeletion.IsSuccess.Should().BeTrue();
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Should().NotBeNull();
+        result.Value.MustChangePassword.Should().BeFalse();
+        result.Value.IsAccountPendingDeletion.Should().BeTrue();
         result.Value.Token.Should().NotBeNull();
 
         this._jwtTokenGeneratorMock.Verify(x => x.GenerateToken(It.IsAny<UserEntity>()), Times.Once);
