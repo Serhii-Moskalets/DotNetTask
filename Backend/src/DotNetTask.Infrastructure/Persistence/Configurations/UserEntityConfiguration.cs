@@ -69,6 +69,9 @@ public class UserEntityConfiguration : BaseEntityConfiguration<UserEntity>
             .HasDefaultValue(false)
             .IsRequired();
 
+        builder.Property(u => u.DeletionScheduledAt)
+            .HasColumnName("deletion_scheduled_at");
+
         builder.OwnsOne(u => u.CurrentToken, token =>
         {
             token.WithOwner();
