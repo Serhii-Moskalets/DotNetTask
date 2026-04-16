@@ -1,8 +1,7 @@
 using DotNetTask.Application.Abstractions.Interfaces.Notifications;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Infrastructure.Notifications.Exceptions;
-using DotNetTask.Infrastructure.Notifications.Settings;
-
+using DotNetTask.Infrastructure.Notifications.Options;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 
@@ -15,9 +14,9 @@ namespace DotNetTask.Infrastructure.Notifications.Services;
 /// <summary>
 /// Provides low-level functionality to send emails using the SMTP protocol via MailKit.
 /// </summary>
-public class EmailSender(IOptions<EmailSettings> settings) : IEmailSender
+public class EmailSender(IOptions<EmailSettingsOptions> settings) : IEmailSender
 {
-    private readonly EmailSettings _settings = settings.Value;
+    private readonly EmailSettingsOptions _settings = settings.Value;
 
     /// <summary>
     /// Asynchronously sends an email message.

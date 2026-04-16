@@ -1,4 +1,4 @@
-using DotNetTask.Application.Abstractions.Interfaces.Notifications;
+using DotNetTask.Infrastructure.Notifications.Options;
 using DotNetTask.Infrastructure.Notifications.Services;
 
 using FluentAssertions;
@@ -12,6 +12,10 @@ namespace DotNetTask.Infrastructure.Test.Notifications;
 public class EmailTemplateProviderTests
 {
     private readonly EmailTemplateProvider _provider = new();
+    private readonly EmailTemplatesOptions _templatesOptions = new()
+    {
+        EmailVerification = "email_verification",
+    };
 
     /// <summary>
     /// Verifies that <see cref="EmailTemplateProvider.GetEmailTemplateAsync(string, Dictionary{string, string})"/>
@@ -31,7 +35,7 @@ public class EmailTemplateProviderTests
         };
 
         // Act
-        string htmlResult = await this._provider.GetEmailTemplateAsync(EmailTemplates.EmailVerification, placeholders);
+        string htmlResult = await this._provider.GetEmailTemplateAsync(this._templatesOptions.EmailVerification, placeholders);
 
         // Assert
         htmlResult.Should().NotBeNullOrEmpty();
@@ -80,7 +84,7 @@ public class EmailTemplateProviderTests
         };
 
         // Act
-        string result = await this._provider.GetEmailTemplateAsync(EmailTemplates.EmailVerification, placeholders);
+        string result = await this._provider.GetEmailTemplateAsync(this._templatesOptions.EmailVerification, placeholders);
 
         // Assert
         result.Should().Contain("&lt;script&gt;alert(&#39;xss&#39;)&lt;/script&gt;");

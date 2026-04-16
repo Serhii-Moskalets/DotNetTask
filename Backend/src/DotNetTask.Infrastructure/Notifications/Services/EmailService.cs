@@ -1,4 +1,6 @@
 using DotNetTask.Application.Abstractions.Interfaces.Notifications;
+using DotNetTask.Infrastructure.Notifications.Options;
+using Microsoft.Extensions.Options;
 
 namespace DotNetTask.Infrastructure.Notifications.Services;
 
@@ -7,10 +9,18 @@ namespace DotNetTask.Infrastructure.Notifications.Services;
 /// </summary>
 /// <param name="sender">The SMTP sender implementation.</param>
 /// <param name="templateProvider">The template engine for loading HTML files.</param>
+/// <param name="emailSubjectsOptions">Configuration containing predefined subjects for various system notifications.</param>
+/// <param name="emailTemplatesOptions">Configuration containing file paths or keys for email templates.</param>
 public class EmailService
     (IEmailSender sender,
-    IEmailTemplateProvider templateProvider) : IEmailService
+    IEmailTemplateProvider templateProvider,
+    IOptions<EmailSubjectsOptions> emailSubjectsOptions,
+    IOptions<EmailTemplatesOptions> emailTemplatesOptions) : IEmailService
 {
+
+    private readonly EmailSubjectsOptions _subjects = emailSubjectsOptions.Value;
+    private readonly EmailTemplatesOptions _templates = emailTemplatesOptions.Value;
+
     /// <summary>
     /// Prepares and sends a registration confirmation email to a new user.
     /// </summary>
@@ -33,8 +43,8 @@ public class EmailService
 
         return this.SendEmailAsync(
             toEmail,
-            EmailSubjects.RegistrationConfirmation,
-            EmailTemplates.EmailVerification,
+            this._subjects.RegistrationConfirmation,
+            this._templates.EmailVerification,
             placeholders,
             cancellationToken);
     }
@@ -61,8 +71,8 @@ public class EmailService
 
         return this.SendEmailAsync(
             toEmail,
-            EmailSubjects.EmailChangeConfirmation,
-            EmailTemplates.EmailChange,
+            this._subjects.EmailChangeConfirmation,
+            this._templates.EmailChange,
             placeholders,
             cancellationToken);
     }
@@ -92,8 +102,8 @@ public class EmailService
 
         return this.SendEmailAsync(
             toEmail,
-            EmailSubjects.EmailChangeSecurityAlert,
-            EmailTemplates.EmailChangeSecurityAlert,
+            this._subjects.EmailChangeSecurityAlert,
+            this._templates.EmailChangeSecurityAlert,
             placeholders,
             cancellationToken);
     }
@@ -120,8 +130,8 @@ public class EmailService
 
         return this.SendEmailAsync(
             toEmail,
-            EmailSubjects.PasswordReset,
-            EmailTemplates.PasswordReset,
+            this._subjects.PasswordReset,
+            this._templates.PasswordReset,
             placeholders,
             cancellationToken);
     }
@@ -145,8 +155,8 @@ public class EmailService
 
         return this.SendEmailAsync(
             toEmail,
-            EmailSubjects.AccountDeleted,
-            EmailTemplates.AccountDeleted,
+            this._subjects.AccountDeleted,
+            this._templates.AccountDeleted,
             placeholders,
             cancellationToken);
     }
@@ -158,6 +168,10 @@ public class EmailService
         Dictionary<string, string> placeholders,
         CancellationToken cancellationToken)
     {
+        ArgumentException.ThrowIfNullOrEmpty(toEmail);
+        ArgumentException.ThrowIfNullOrEmpty(subject);
+        ArgumentException.ThrowIfNullOrEmpty(templateName);
+
         string body = await templateProvider.GetEmailTemplateAsync(templateName, placeholders);
 
         await sender.SendAsync(

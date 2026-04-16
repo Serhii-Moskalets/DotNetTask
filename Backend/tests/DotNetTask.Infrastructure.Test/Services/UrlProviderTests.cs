@@ -1,4 +1,4 @@
-using DotNetTask.Infrastructure.Notifications.Settings;
+using DotNetTask.Infrastructure.Notifications.Options;
 using DotNetTask.Infrastructure.Services;
 
 using FluentAssertions;
@@ -24,8 +24,8 @@ public class UrlProviderTests
     private const string Token = "Security-token";
     private const string TokenWithSpecialCharacters = "abc/123+def==";
 
-    private readonly Mock<IOptions<FrontendSettings>> _optionsMock;
-    private readonly FrontendSettings _settings;
+    private readonly Mock<IOptions<FrontendSettingsOptions>> _optionsMock;
+    private readonly FrontendSettingsOptions _settings;
     private readonly UrlProvider _sut;
 
     /// <summary>
@@ -33,7 +33,7 @@ public class UrlProviderTests
     /// </summary>
     public UrlProviderTests()
     {
-        this._optionsMock = new Mock<IOptions<FrontendSettings>>();
+        this._optionsMock = new Mock<IOptions<FrontendSettingsOptions>>();
 
         this._settings = CreateFrontendSettings();
 
@@ -62,7 +62,7 @@ public class UrlProviderTests
 
         // Assert
         result.Should().StartWith(baseUrl);
-        result.Should().Contain(this._settings.ConfirmEmailPath);
+        result.Should().Contain(this._settings.EmailConfirmationPath);
     }
 
     /// <summary>
@@ -78,7 +78,7 @@ public class UrlProviderTests
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain(this._settings.ConfirmEmailPath);
+        result.Should().Contain(this._settings.EmailConfirmationPath);
     }
 
     /// <summary>
@@ -140,7 +140,7 @@ public class UrlProviderTests
 
         // Assert
         result.Should().StartWith(baseUrl);
-        result.Should().Contain(this._settings.RevertEmailChangePath);
+        result.Should().Contain(this._settings.EmailRevertPath);
     }
 
     /// <summary>
@@ -156,7 +156,7 @@ public class UrlProviderTests
         // Assert
         result.Should().NotContain("+");
         result.Should().Contain("abc%2f123%2bdef%3d%3d");
-        result.Should().Contain(this._settings.RevertEmailChangePath);
+        result.Should().Contain(this._settings.EmailRevertPath);
     }
 
     /// <summary>
@@ -227,7 +227,7 @@ public class UrlProviderTests
     public void Constructor_ShouldThrowException_WhenBaseUrlIsMissing()
     {
         // Arrange
-        this._optionsMock.Setup(x => x.Value).Returns(new FrontendSettings
+        this._optionsMock.Setup(x => x.Value).Returns(new FrontendSettingsOptions
         {
             BaseUrl = null!,
         });
@@ -240,20 +240,20 @@ public class UrlProviderTests
            .WithMessage("Frontend BaseUrl is not configured.");
     }
 
-    private static FrontendSettings CreateFrontendSettings(
+    private static FrontendSettingsOptions CreateFrontendSettings(
         string? baseUrl = null,
         string? confirmEmailPath = null,
         string? emailChangeConfirmationPath = null,
         string? passwordResetPath = null,
         string? revertEmailChangePath = null)
     {
-        return new FrontendSettings
+        return new FrontendSettingsOptions
         {
             BaseUrl = baseUrl ?? BaseUrl,
-            ConfirmEmailPath = confirmEmailPath ?? ConfirmEmailPath,
+            EmailConfirmationPath = confirmEmailPath ?? ConfirmEmailPath,
             EmailChangeConfirmationPath = emailChangeConfirmationPath ?? EmailChangeConfirmationPath,
             PasswordResetPath = passwordResetPath ?? PasswordResetPath,
-            RevertEmailChangePath = revertEmailChangePath ?? RevertEmailChangePath,
+            EmailRevertPath = revertEmailChangePath ?? RevertEmailChangePath,
         };
     }
 }

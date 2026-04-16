@@ -1,6 +1,6 @@
 using System.Collections.Specialized;
 using DotNetTask.Application.Abstractions.Interfaces.Common;
-using DotNetTask.Infrastructure.Notifications.Settings;
+using DotNetTask.Infrastructure.Notifications.Options;
 using Microsoft.Extensions.Options;
 
 namespace DotNetTask.Infrastructure.Services;
@@ -12,14 +12,14 @@ namespace DotNetTask.Infrastructure.Services;
 public class UrlProvider : IUrlProvider
 {
     private readonly string _frontendBaseUrl;
-    private readonly FrontendSettings _options;
+    private readonly FrontendSettingsOptions _options;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="UrlProvider"/> class.
     /// </summary>
     /// /// <param name="options">The frontend settings containing the base URL.</param>
     /// <exception cref="InvalidOperationException">Thrown when the 'FrontendSettings:BaseUrl' is missing in configuration.</exception>
-    public UrlProvider(IOptions<FrontendSettings> options)
+    public UrlProvider(IOptions<FrontendSettingsOptions> options)
     {
         string baseUrl = options.Value.BaseUrl
             ?? throw new InvalidOperationException("Frontend BaseUrl is not configured.");
@@ -40,7 +40,7 @@ public class UrlProvider : IUrlProvider
     /// <inheritdoc />
     public string GetEmailConfirmationLink(string token)
     {
-        return this.BuildUrl(this._options.ConfirmEmailPath, new Dictionary<string, string>
+        return this.BuildUrl(this._options.EmailConfirmationPath, new Dictionary<string, string>
             {
                 { "token", token },
             });
@@ -49,7 +49,7 @@ public class UrlProvider : IUrlProvider
     /// <inheritdoc />
     public string GetEmailRevertLink(string token)
     {
-        return this.BuildUrl(this._options.RevertEmailChangePath, new Dictionary<string, string>
+        return this.BuildUrl(this._options.EmailRevertPath, new Dictionary<string, string>
         {
             { "token", token },
         });
