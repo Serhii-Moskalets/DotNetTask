@@ -70,6 +70,15 @@ public class UserSecurityMiddleware(RequestDelegate next, IOptions<ApiEndpointOp
                 }
             }
 
+            if (userStatus is UserStatus.PendingDeletion)
+            {
+                bool isRecoveryAccountEndpoint = context.Request.Path.StartsWithSegments(this._endpointOptions.RecoverAccountEndpoint, StringComparison.OrdinalIgnoreCase);
+                if (!isRecoveryAccountEndpoint)
+                {
+                    throw new RecoveryAccountException();
+                }
+            }
+
             if (mustChangePassword)
             {
                 bool isChangePasswordEndpoint = context.Request.Path.StartsWithSegments(this._endpointOptions.ResetPasswordEndpoint, StringComparison.OrdinalIgnoreCase);
