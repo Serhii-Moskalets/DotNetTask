@@ -637,6 +637,8 @@ public class UserEntity : BaseEntity
     {
         this.Status = UserStatus.PendingDeletion;
         this.DeletionScheduledAt = deletionDate;
+        this.CurrentToken = null;
+        this.RevertToken = null;
     }
 
     /// <summary>

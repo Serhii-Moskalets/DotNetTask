@@ -995,6 +995,36 @@ public class UserEntityTests : BaseTest
     }
 
     /// <summary>
+    /// Tests that <see cref="UserEntity.RequestAccountDeletion"/> marks the account as pending deletion
+    /// and raises the appropriate domain event.
+    /// </summary>
+    [Fact]
+    public void RequestAccountDeletion_Should_ClearAllTokens()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        user.RequestPasswordReset(TokenValue, Duration, this.Clock.UtcNow);
+        user.CurrentToken.Should().NotBeNull();
+
+        // Act
+        Result<Unit> result = user.RequestAccountDeletion(this.Clock.UtcNow);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.PendingDeletion);
+        user.CurrentToken.Should().BeNull();
+        user.DeletionScheduledAt.Should().NotBeNull();
+        user.DeletionScheduledAt.Should().BeAfter(this.Clock.UtcNow);
+
+        user.DomainEvents
+            .OfType<AccountDeletionRequestedDomainEvent>()
+            .Should().ContainSingle();
+
+        user.ClearDomainEvents();
+    }
+
+    /// <summary>
     /// Tests that <see cref="UserEntity.RequestAccountDeletion"/> returns failure
     /// when the user account is not active.
     /// </summary>
