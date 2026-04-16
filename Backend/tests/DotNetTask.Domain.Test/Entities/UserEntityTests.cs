@@ -968,6 +968,109 @@ public class UserEntityTests : BaseTest
         AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage);
     }
 
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RequestAccountDeletion"/> marks the account as pending deletion
+    /// and raises the appropriate domain event.
+    /// </summary>
+    [Fact]
+    public void RequestAccountDeletion_Should_MarkPendingDeletion_And_RaiseEvent()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        // Act
+        Result<Unit> result = user.RequestAccountDeletion(this.Clock.UtcNow);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.PendingDeletion);
+        user.DeletionScheduledAt.Should().NotBeNull();
+        user.DeletionScheduledAt.Should().BeAfter(this.Clock.UtcNow);
+
+        user.DomainEvents
+            .OfType<AccountDeletionRequestedDomainEvent>()
+            .Should().ContainSingle();
+
+        user.ClearDomainEvents();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RequestAccountDeletion"/> returns failure
+    /// when the user account is not active.
+    /// </summary>
+    [Fact]
+    public void RequestAccountDeletion_Should_ReturnFailure_When_UserNotActive()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.Create();
+
+        // Act
+        Result<Unit> result = user.RequestAccountDeletion(this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage);
+        user.Status.Should().Be(UserStatus.Unconfirmed);
+        user.DeletionScheduledAt.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RecoverAccount"/> successfully restores
+    /// an account that is pending deletion.
+    /// </summary>
+    [Fact]
+    public void RecoverAccount_Should_RestoreAccount_When_PendingDeletion()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+        user.RequestAccountDeletion(this.Clock.UtcNow);
+
+        // Act
+        Result<Unit> result = user.RecoverAccount(this.Clock.UtcNow);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.Active);
+        user.DeletionScheduledAt.Should().BeNull();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RecoverAccount"/> returns failure
+    /// when the deletion grace period has already expired.
+    /// </summary>
+    [Fact]
+    public void RecoverAccount_Should_ReturnFailure_When_DeletionPeriodExpired()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+        user.RequestAccountDeletion(this.Clock.UtcNow);
+
+        this.Clock.Advance(TimeSpan.FromDays(UserPolicy.DeletionDelayInDays + 1));
+
+        // Act
+        Result<Unit> result = user.RecoverAccount(this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.InvalidOperation, UserPolicy.DeletionPeriodExpiredMessage);
+        user.Status.Should().Be(UserStatus.PendingDeletion);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RecoverAccount"/> returns failure
+    /// when the account is active and not pending deletion.
+    /// </summary>
+    [Fact]
+    public void RecoverAccount_Should_ReturnFailure_When_UserIsActive()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        // Act
+        Result<Unit> result = user.RecoverAccount(this.Clock.UtcNow);
+
+        // Assert
+        AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.IsActiveMessage);
+    }
+
     private static void AssertError<T>(Result<T> result, ErrorCode code, string message)
     {
         result.IsSuccess.Should().BeFalse();

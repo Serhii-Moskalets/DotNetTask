@@ -100,6 +100,11 @@ public class UserEntity : BaseEntity
     public PasswordHash PasswordHash { get; private set; } = null!;
 
     /// <summary>
+    /// Gets the date when account should delete.
+    /// </summary>
+    public DateTime? DeletionScheduledAt { get; private set; }
+
+    /// <summary>
     /// Gets the current status of the user account, such as unconfirmed, active, or pending deletion.
     /// </summary>
     public UserStatus Status { get; private set; } = UserStatus.Unconfirmed;
@@ -267,6 +272,7 @@ public class UserEntity : BaseEntity
         string oldEmail = this.Email.Value;
 
         this.MarkAsUnconfirmed();
+
         this.CurrentToken = SecurityToken.Create(confirmationToken, duration, UserTokenType.EmailChange, currentTime, newEmail.Value);
         this.RevertToken = SecurityToken.Create(revertToken, duration, UserTokenType.EmailChangeRevert, currentTime, oldEmail);
 
@@ -340,11 +346,20 @@ public class UserEntity : BaseEntity
     /// <param name="token">The unique secure token for password reset.</param>
     /// <param name="duration">The timeframe during which the token remains valid.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    public void RequestPasswordReset(string token, TimeSpan duration, DateTime currentTime)
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the account is pending deletion.</returns>
+    public Result<Unit> RequestPasswordReset(string token, TimeSpan duration, DateTime currentTime)
     {
+        Result<Unit> result = this.EnsureNotPendingDeletion();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
         this.MustChangePassword = false;
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.PasswordReset, currentTime);
         this.AddDomainEvent(new PasswordResetRequestedDomainEvent(this, this.CurrentToken));
+
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
@@ -353,9 +368,15 @@ public class UserEntity : BaseEntity
     /// <param name="newPasswordHash">The new hashed password.</param>
     /// <param name="token">The reset token to validate.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the token is invalid or the account is inactive.</returns>
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the token is invalid or the account is pending deletion.</returns>
     public Result<Unit> ConfirmPasswordReset(PasswordHash newPasswordHash, string token, DateTime currentTime)
     {
+        Result<Unit> result = this.EnsureNotPendingDeletion();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
         if (this.CurrentToken?.IsValid(token, UserTokenType.PasswordReset, currentTime) is not true)
         {
             return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
@@ -477,6 +498,56 @@ public class UserEntity : BaseEntity
     }
 
     /// <summary>
+    /// Requests the deletion of the user account by initiating the account deletion process and generating a deletion
+    /// token.
+    /// </summary>
+    /// <remarks>After calling this method, the user's status is set to pending deletion, and a domain event
+    /// is raised to signal the deletion request. The actual deletion will occur after a policy-defined waiting
+    /// period.</remarks>
+    /// <param name="currentTime">The current date and time used as the reference point for the deletion request.</param>
+    /// <returns>A result indicating whether the account deletion request was successfully initiated. Returns a failure result if
+    /// the user is not active.</returns>
+    public Result<Unit> RequestAccountDeletion(DateTime currentTime)
+    {
+        Result<Unit> result = this.EnsureActive();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        this.AddDomainEvent(new AccountDeletionRequestedDomainEvent(this));
+        this.MarkAsPendingDeletion(currentTime.AddDays(UserPolicy.DeletionDelayInDays));
+
+        return Result<Unit>.Success(Unit.Value);
+    }
+
+    /// <summary>
+    /// Restores the user account from a pending deletion state to active status.
+    /// </summary>
+    /// <param name="currentTime">The current date and time used as the reference point for the deletion request.</param>
+    /// <remarks>Use this method to reactivate an account that is scheduled for deletion. The account must be
+    /// in a pending deletion state for recovery to succeed.</remarks>
+    /// <returns>A result indicating whether the account was successfully recovered. Returns a failure result if the account is
+    /// not pending deletion; otherwise, returns a success result.</returns>
+    public Result<Unit> RecoverAccount(DateTime currentTime)
+    {
+        Result<Unit> result = this.EnsurePendingDeletion();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        if (this.DeletionScheduledAt is null || currentTime > this.DeletionScheduledAt)
+        {
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, UserPolicy.DeletionPeriodExpiredMessage);
+        }
+
+        this.Activate();
+
+        return Result<Unit>.Success(Unit.Value);
+    }
+
+    /// <summary>
     /// Internal helper to update the password hash after ensuring the user is active and the new password is different from the old one.
     /// </summary>
     /// <param name="newPasswordHash">The new password hash.</param>
@@ -505,6 +576,7 @@ public class UserEntity : BaseEntity
         this.Status switch
         {
             UserStatus.Unconfirmed => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage),
+            UserStatus.PendingDeletion => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.AccountPendingDeletionMessage),
             UserStatus.Active => Result<Unit>.Success(Unit.Value),
             _ => throw new DomainException(UserPolicy.InvalidUserStatus),
         };
@@ -518,13 +590,36 @@ public class UserEntity : BaseEntity
         {
             UserStatus.Unconfirmed => Result<Unit>.Success(Unit.Value),
             UserStatus.Active => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage),
-            _ => throw new DomainException("Unknown user status"),
+            UserStatus.PendingDeletion => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.AccountPendingDeletionMessage),
             _ => throw new DomainException(UserPolicy.InvalidUserStatus),
         };
+
+    /// <summary>
+    /// Validates that the user is currently in an pending deletion state.
+    /// </summary>
+    /// <returns>A success result if pending deletion; otherwise, a failure if already confirmed or unconfirmed.</returns>
+    private Result<Unit> EnsurePendingDeletion() =>
+        this.Status switch
+        {
+            UserStatus.Active => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.IsActiveMessage),
+            UserStatus.Unconfirmed => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage),
+            UserStatus.PendingDeletion => Result<Unit>.Success(Unit.Value),
             _ => throw new DomainException(UserPolicy.InvalidUserStatus),
         };
+
+    /// <summary>
+    /// Validates that the user isn't currently in an pending deletion state.
+    /// </summary>
+    /// <returns>A success result if confirmed or unconfirmed; otherwise, a failure if already pending deletion.</returns>
+    private Result<Unit> EnsureNotPendingDeletion() =>
+        this.Status switch
+        {
+            UserStatus.Active => Result<Unit>.Success(Unit.Value),
+            UserStatus.Unconfirmed => Result<Unit>.Success(Unit.Value),
+            UserStatus.PendingDeletion => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.AccountPendingDeletionMessage),
             _ => throw new DomainException(UserPolicy.InvalidUserStatus),
         };
+
     /// <summary>
     /// Marks the user as active and cancels any scheduled deletion.
     /// </summary>
@@ -532,6 +627,16 @@ public class UserEntity : BaseEntity
     {
         this.Status = UserStatus.Active;
         this.DeletionScheduledAt = null;
+    }
+
+    /// <summary>
+    /// Marks the user as pending deletion and schedules the deletion for the specified date.
+    /// </summary>
+    /// <param name="deletionDate">The date and time when the user is scheduled to be deleted.</param>
+    private void MarkAsPendingDeletion(DateTime deletionDate)
+    {
+        this.Status = UserStatus.PendingDeletion;
+        this.DeletionScheduledAt = deletionDate;
     }
 
     /// <summary>

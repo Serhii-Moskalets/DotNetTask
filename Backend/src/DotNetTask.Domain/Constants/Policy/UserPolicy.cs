@@ -6,6 +6,11 @@ namespace DotNetTask.Domain.Constants;
 public static class UserPolicy
 {
     /// <summary>
+    /// Represents the default number of days after which an item should be considered for deletion.
+    /// </summary>
+    public const int DeletionDelayInDays = 30;
+
+    /// <summary>
     /// The error message used when the provided user entity does not match the specified user identifier.
     /// </summary>
     public const string IdMismatchMessage = "User ID mismatch.";
@@ -69,6 +74,17 @@ public static class UserPolicy
     /// The error message when a user is active and tries to access resources that require an inactive account.
     /// </summary>
     public const string IsActiveMessage = "User is active";
+
+    /// <summary>
+    /// The error message when a user tries to restore an account after the deletion period has expired.
+    /// </summary>
+    public const string DeletionPeriodExpiredMessage = "Too late to restore account";
+
+    /// <summary>
+    /// The error message when a user tries to access resources while their account is pending deletion.
+    /// </summary>
+    public const string AccountPendingDeletionMessage = "Account is pending deletion. Please contact support if you wish to restore your account.";
+
     /// <summary>
     /// The error message when the status value used to indicate an unknown or invalid user state.
     /// </summary>
