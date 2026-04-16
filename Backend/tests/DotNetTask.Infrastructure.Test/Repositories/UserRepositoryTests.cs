@@ -331,7 +331,7 @@ public class UserRepositoryTests : BaseTest
         string revertToken = "revert-token";
 
         UserEntity user = UserEntityFactory.Create();
-        user.RevertEmailChange(revertToken, this.Clock.UtcNow, "reset-token", TimeSpan.FromHours(1));
+        user.RevertEmailChange(revertToken, this.Clock.UtcNow);
 
         DotNetTaskDbContext context = await CreateContextWithUser(user);
         UserRepository repo = new(context);

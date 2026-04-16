@@ -45,7 +45,7 @@ public class RevertEmailChangeCommandHandler(
 
         string resetToken = this._tokenGenerator.GenerateSecureToken();
 
-        Result<Unit> result = user.RevertEmailChange(command.Token, this._clock.UtcNow, resetToken, TimeSpan.FromMinutes(15));
+        Result<Unit> result = user.RevertEmailChange(command.Token, this._clock.UtcNow);
         if (!result.IsSuccess)
         {
             return Result<string>.Failure(result.Error!.Code, result.Error.Message);

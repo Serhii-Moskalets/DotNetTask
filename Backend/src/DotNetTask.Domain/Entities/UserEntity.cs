@@ -197,8 +197,8 @@ public class UserEntity : BaseEntity
             return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailVerificationTokenMessage);
         }
 
+        this.Activate();
         this.CurrentToken = null;
-        this.Status = UserStatus.Active;
 
         return Result<Unit>.Success(Unit.Value);
     }
@@ -234,11 +234,8 @@ public class UserEntity : BaseEntity
         this.PasswordHash = passwordHash;
         this.UserName = userName;
 
-        Result<Unit> verificationResult = this.RequestEmailVerification(token, duration, currentTime);
-        if (verificationResult.IsFailure)
-        {
-            return verificationResult;
-        }
+        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification, currentTime);
+        this.AddDomainEvent(new VerificationEmailResendEvent(this, this.CurrentToken));
 
         this.UpdateSecurityStamp();
 
@@ -268,8 +265,8 @@ public class UserEntity : BaseEntity
         }
 
         string oldEmail = this.Email.Value;
-        this.Status = UserStatus.Unconfirmed;
 
+        this.MarkAsUnconfirmed();
         this.CurrentToken = SecurityToken.Create(confirmationToken, duration, UserTokenType.EmailChange, currentTime, newEmail.Value);
         this.RevertToken = SecurityToken.Create(revertToken, duration, UserTokenType.EmailChangeRevert, currentTime, oldEmail);
 
@@ -299,12 +296,12 @@ public class UserEntity : BaseEntity
 
         string pendingEmail = this.CurrentToken.Metadata ?? throw new DomainException(TokenPolicy.MissingPendingEmailMessage);
 
-        this.Email = Email.Create(pendingEmail);
+        this.UpdateSecurityStamp();
 
-        this.Status = UserStatus.Active;
+        this.Email = Email.Create(pendingEmail);
         this.CurrentToken = null;
 
-        this.UpdateSecurityStamp();
+        this.Activate();
 
         return Result<Unit>.Success(Unit.Value);
     }
@@ -314,10 +311,8 @@ public class UserEntity : BaseEntity
     /// </summary>
     /// <param name="revertToken">The revert token sent to the original email.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    /// <param name="resetToken">The token used to facilitate the forced password reset.</param>
-    /// <param name="duration">The validity duration of the reset token.</param>
     /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the revert token is invalid.</returns>
-    public Result<Unit> RevertEmailChange(string revertToken, DateTime currentTime, string resetToken, TimeSpan duration)
+    public Result<Unit> RevertEmailChange(string revertToken, DateTime currentTime)
     {
         if (this.RevertToken?.IsValid(revertToken, UserTokenType.EmailChangeRevert, currentTime) is not true)
         {
@@ -327,13 +322,14 @@ public class UserEntity : BaseEntity
         string oldEmail = this.RevertToken.Metadata ?? throw new DomainException(TokenPolicy.MissingOriginalEmailMessage);
 
         this.Email = Email.Create(oldEmail);
-        this.Status = UserStatus.Active;
 
         this.UpdateSecurityStamp();
+
+        this.CurrentToken = null;
+        this.RevertToken = null;
         this.MustChangePassword = true;
 
-        this.CurrentToken = SecurityToken.Create(resetToken, duration, UserTokenType.PasswordReset, currentTime);
-        this.RevertToken = null;
+        this.Activate();
 
         return Result<Unit>.Success(Unit.Value);
     }
@@ -365,17 +361,18 @@ public class UserEntity : BaseEntity
             return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
         }
 
-        this.UpdateSecurityStamp();
-
         Result<Unit> hashResult = this.SetPasswordHash(newPasswordHash);
         if (hashResult.IsFailure)
         {
             return hashResult;
         }
 
+        this.UpdateSecurityStamp();
+
         this.MustChangePassword = false;
         this.CurrentToken = null;
-        this.Status = UserStatus.Active;
+
+        this.Activate();
 
         return Result<Unit>.Success(Unit.Value);
     }
@@ -393,8 +390,6 @@ public class UserEntity : BaseEntity
             return result;
         }
 
-        this.UpdateSecurityStamp();
-
         Result<Unit> hashResult = this.SetPasswordHash(newPasswordHash);
         if (hashResult.IsFailure)
         {
@@ -402,6 +397,7 @@ public class UserEntity : BaseEntity
         }
 
         this.MustChangePassword = false;
+        this.UpdateSecurityStamp();
 
         return Result<Unit>.Success(Unit.Value);
     }
@@ -525,5 +521,23 @@ public class UserEntity : BaseEntity
             _ => throw new DomainException("Unknown user status"),
             _ => throw new DomainException(UserPolicy.InvalidUserStatus),
         };
+            _ => throw new DomainException(UserPolicy.InvalidUserStatus),
         };
+            _ => throw new DomainException(UserPolicy.InvalidUserStatus),
+        };
+    /// <summary>
+    /// Marks the user as active and cancels any scheduled deletion.
+    /// </summary>
+    private void Activate()
+    {
+        this.Status = UserStatus.Active;
+        this.DeletionScheduledAt = null;
+    }
+
+    /// <summary>
+    /// Sets the user's status to unconfirmed.
+    /// </summary>
+    /// <remarks>Use this method to reset the user's confirmation state. This may be necessary if the user's
+    /// confirmation needs to be revoked or re-initiated.</remarks>
+    private void MarkAsUnconfirmed() => this.Status = UserStatus.Unconfirmed;
 }

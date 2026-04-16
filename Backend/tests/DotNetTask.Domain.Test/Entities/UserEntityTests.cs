@@ -25,7 +25,6 @@ public class UserEntityTests : BaseTest
 
     private const string TokenValue = "token123";
     private const string RevertToken = "revert_secret";
-    private const string ResetToken = "reset_secret";
 
     private static readonly Email NewEmail = Email.Create("newEmail@example.com");
     private static readonly string PasswordHashString = new('a', 64);
@@ -405,15 +404,14 @@ public class UserEntityTests : BaseTest
         SecurityStamp stampAfterConfirm = user.SecurityStamp;
 
         // Act
-        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow, ResetToken, TimeSpan.FromHours(1));
+        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow);
 
         // Assert
         result.IsSuccess.Should().BeTrue();
         user.Email.Value.Should().Be(CurrentEmail);
         user.MustChangePassword.Should().BeTrue();
         user.RevertToken.Should().BeNull();
-        user.CurrentToken.Should().NotBeNull();
-        user.CurrentToken.Type.Should().Be(UserTokenType.PasswordReset);
+        user.CurrentToken.Should().BeNull();
         user.SecurityStamp.Should().NotBe(stampAfterConfirm);
     }
 
@@ -432,7 +430,7 @@ public class UserEntityTests : BaseTest
         this.Clock.Advance(TimeSpan.FromMinutes(2));
 
         // Act
-        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow, ResetToken, TimeSpan.FromHours(1));
+        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow);
 
         // Assert
         AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailRevertTokenMessage);
@@ -449,10 +447,35 @@ public class UserEntityTests : BaseTest
         UserEntity user = UserEntityFactory.CreateActive();
 
         // Act
-        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow, ResetToken, TimeSpan.FromHours(1));
+        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow);
 
         // Assert
         AssertError<Unit>(result, ErrorCode.Timeout, TokenPolicy.InvalidEmailRevertTokenMessage);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RevertEmailChange"/> succeeds
+    /// even when <see cref="UserEntity.ConfirmEmailChange"/> was never called
+    /// (i.e. the email was never actually updated).
+    /// This documents the intentional behaviour: the revert token is independent of confirmation.
+    /// </summary>
+    [Fact]
+    public void RevertEmailChange_Should_Succeed_When_ConfirmWasNeverCalled()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+        string originalEmail = user.Email.Value;
+
+        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, this.Clock.UtcNow);
+
+        // Act
+        Result<Unit> result = user.RevertEmailChange(RevertToken, this.Clock.UtcNow);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.Email.Value.Should().Be(originalEmail);
+        user.MustChangePassword.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.Active);
     }
 
     /// <summary>
@@ -487,7 +510,7 @@ public class UserEntityTests : BaseTest
     /// when a valid reset token is provided.
     /// </summary>
     [Fact]
-    public void ResetPassword_Should_UpdatePassword_And_SecurityStamp_When_ValidToken()
+    public void RequestResetPassword_Should_UpdatePassword_And_SecurityStamp_When_ValidToken()
     {
         // Arrange
         UserEntity user = UserEntityFactory.CreateActive();
@@ -507,6 +530,27 @@ public class UserEntityTests : BaseTest
         user.SecurityStamp.Should().NotBe(initialStamp);
         user.CurrentToken.Should().BeNull();
         user.MustChangePassword.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.RequestPasswordReset"/> succeeds
+    /// for an unconfirmed user, documenting that this is intentional behaviour
+    /// (EnsureNotPendingDeletion allows both Active and Unconfirmed states).
+    /// </summary>
+    [Fact]
+    public void RequestPasswordReset_Should_Succeed_When_UserIsUnconfirmed()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.Create();
+
+        // Act
+        Result<Unit> result = user.RequestPasswordReset(TokenValue, Duration, this.Clock.UtcNow);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.CurrentToken.Should().NotBeNull();
+        user.CurrentToken.Type.Should().Be(UserTokenType.PasswordReset);
+        user.Status.Should().Be(UserStatus.Unconfirmed);
     }
 
     /// <summary>
@@ -763,6 +807,33 @@ public class UserEntityTests : BaseTest
         // Assert
         AssertError<Unit>(result, ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage);
         user.SecurityStamp.Should().Be(initialStamp);
+    }
+
+    /// <summary>
+    /// Tests that <see cref="UserEntity.ChangePassword"/> resets the
+    /// <see cref="UserEntity.MustChangePassword"/> flag that was set by
+    /// <see cref="UserEntity.RevertEmailChange"/>.
+    /// </summary>
+    [Fact]
+    public void ChangePassword_Should_ClearMustChangePassword_After_EmailRevert()
+    {
+        // Arrange
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        user.RequestEmailChange(NewEmail, TokenValue, RevertToken, Duration, this.Clock.UtcNow);
+        user.ConfirmEmailChange(TokenValue, this.Clock.UtcNow);
+        user.RevertEmailChange(RevertToken, this.Clock.UtcNow);
+
+        user.MustChangePassword.Should().BeTrue();
+
+        PasswordHash newPasswordHash = PasswordHash.Create(NewPasswordHashString);
+
+        // Act
+        Result<Unit> result = user.ChangePassword(newPasswordHash);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.MustChangePassword.Should().BeFalse();
     }
 
     /// <summary>

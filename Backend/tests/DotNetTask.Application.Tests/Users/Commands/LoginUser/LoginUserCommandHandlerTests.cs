@@ -196,6 +196,6 @@ public class LoginUserCommandHandlerTests : BaseTest
         string revertToken = "revert";
         user.RequestEmailChange(Email.Create("new@test.com"), "token", revertToken, TimeSpan.FromHours(1), this.Clock.UtcNow);
         user.ConfirmEmailChange("token", this.Clock.UtcNow.AddMinutes(1));
-        user.RevertEmailChange(revertToken, this.Clock.UtcNow.AddMinutes(2), "reset-token", TimeSpan.FromMinutes(15));
+        user.RevertEmailChange(revertToken, this.Clock.UtcNow.AddMinutes(2));
     }
 }
