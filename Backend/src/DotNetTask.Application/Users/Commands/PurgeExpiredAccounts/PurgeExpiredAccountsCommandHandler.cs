@@ -26,8 +26,8 @@ public class PurgeExpiredAccountsCommandHandler(IUnitOfWork unitOfWork, IClock c
             return Result<int>.Success(0);
         }
 
-        await this.UnitOfWork.Users.DeleteRangeAsync(usersIdsToDelete, cancellationToken);
-        int deleted = await this.UnitOfWork.SaveChangesAsync(cancellationToken);
+        int deleted = await this.UnitOfWork.Users.DeleteRangeAsync(usersIdsToDelete, cancellationToken);
+        await this.UnitOfWork.SaveChangesAsync(cancellationToken);
         return Result<int>.Success(deleted);
 
     }

@@ -5,7 +5,6 @@ using DotNetTask.Domain.ValueObjects;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 
 using Microsoft.EntityFrameworkCore;
-
 using TinyResult;
 
 namespace DotNetTask.Infrastructure.Persistence.Repositories;
@@ -29,8 +28,8 @@ public class UserRepository(DotNetTaskDbContext context)
     /// <param name="ids">A collection of user identifiers representing the users to delete.
     /// Each identifier must correspond to an existing user.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    public async Task DeleteRangeAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of users deleted.</returns>
+    public async Task<int> DeleteRangeAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
         => await this.DbSet.Where(u => ids.Contains(u.Id)).ExecuteDeleteAsync(cancellationToken);
 
     /// <summary>
@@ -128,11 +127,11 @@ public class UserRepository(DotNetTaskDbContext context)
     /// <returns>A read-only list of unique user identifiers.</returns>
     public async Task<IReadOnlyList<Guid>> GetPendingDeletionAsync(DateTime cutoffTime, CancellationToken cancellationToken = default)
         => await this.DbSet
-            .AsNoTracking()
-            .Where(u => u.Status == UserStatus.PendingDeletion
-                && u.DeletionScheduledAt <= cutoffTime)
-            .Select(u => u.Id)
-            .ToListAsync(cancellationToken);
+             .AsNoTracking()
+             .Where(u => u.Status == UserStatus.PendingDeletion
+                    && u.DeletionScheduledAt <= cutoffTime)
+             .Select(u => u.Id)
+             .ToListAsync(cancellationToken);
 
     /// <summary>
     /// Retrieves minimal security-related information for a specific user.

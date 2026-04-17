@@ -48,9 +48,10 @@ public class UserRepositoryTests : BaseTest
         List<Guid> idsToDelete = [user1.Id, user2.Id];
 
         // Act
-        await this._repo.DeleteRangeAsync(idsToDelete);
+        int result = await this._repo.DeleteRangeAsync(idsToDelete);
 
         // Assert
+        result.Should().Be(2);
         List<UserEntity> remainingUsers = await this._context.Users.ToListAsync();
         remainingUsers.Should().HaveCount(1);
         remainingUsers.Should().Contain(u => u.Id == user3.Id);

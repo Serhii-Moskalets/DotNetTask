@@ -64,8 +64,8 @@ public class PurgeExpiredAccountsCommandHandlerTests : BaseTest
             .Setup(x => x.GetPendingDeletionAsync(It.IsAny<DateTime>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expiredIds);
 
-        this._uowMock
-            .Setup(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()))
+        this._repoMock
+            .Setup(x => x.DeleteRangeAsync(It.IsAny<IEnumerable<Guid>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expiredIds.Count);
 
         // Act

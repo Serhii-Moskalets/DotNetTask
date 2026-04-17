@@ -16,8 +16,8 @@ public interface IUserRepository : IRepository<UserEntity>
     /// <param name="ids">A collection of user identifiers representing the users to delete.
     /// Each identifier must correspond to an existing user.</param>
     /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
-    /// <returns>A task that represents the asynchronous operation.</returns>
-    Task DeleteRangeAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of users deleted.</returns>
+    Task<int> DeleteRangeAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Checks if a user with the specified email exists.
