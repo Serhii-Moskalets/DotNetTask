@@ -8,6 +8,7 @@ using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Abstractions.Options;
 using DotNetTask.Application.Common.Settings;
 using DotNetTask.Domain.Constants;
+using DotNetTask.Infrastructure.BackgroundJobs;
 using DotNetTask.Infrastructure.Notifications.Options;
 using DotNetTask.Infrastructure.Notifications.Services;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
@@ -133,6 +134,9 @@ public static class ServiceCollectionExtensions
 
         // --- Add Throttling Settings ---
         services.Configure<ThrottlingSettings>(config.GetSection(ThrottlingSettings.SectionName));
+
+        // --- Add Background Jobs
+        services.AddHostedService<UserDeletionJob>();
 
         return services;
     }
