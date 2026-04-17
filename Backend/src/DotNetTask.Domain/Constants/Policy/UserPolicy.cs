@@ -6,6 +6,11 @@ namespace DotNetTask.Domain.Constants;
 public static class UserPolicy
 {
     /// <summary>
+    /// Represents the default number of days after which an item should be considered for deletion.
+    /// </summary>
+    public const int DeletionDelayInDays = 30;
+
+    /// <summary>
     /// The error message used when the provided user entity does not match the specified user identifier.
     /// </summary>
     public const string IdMismatchMessage = "User ID mismatch.";
@@ -24,6 +29,11 @@ public static class UserPolicy
     /// The error message when email confirmation is attempted after the email has already been confirmed.
     /// </summary>
     public const string EmailAlreadyConfirmedMessage = "Cannot update registration details after email is confirmed.";
+
+    /// <summary>
+    /// The title for when email confirmation is required.
+    /// </summary>
+    public const string EmailNotConfirmedTitle = "Email Not Confirmed";
 
     /// <summary>
     /// The error message when email confirmation is required but hasn't been completed.
@@ -51,12 +61,52 @@ public static class UserPolicy
     public const string NoChangesDetectedMessage = "No changes detected. The provided names are the same as your current ones.";
 
     /// <summary>
+    /// The title for when a session has expired.
+    /// </summary>
+    public const string SessionExpiredTitle = "Unauthorized";
+
+    /// <summary>
     /// The error message when session has expired.
     /// </summary>
     public const string SessionExpiredMessage = "Session has expired. Please login again.";
 
     /// <summary>
+    /// The title for when a user must change their password.
+    /// </summary>
+    public const string MustChangePasswordTitle = "Password Change Required";
+
+    /// <summary>
     /// The error message when a user must change their password before accessing other resources.
     /// </summary>
     public const string MustChangePasswordMessage = "You must change your password before accessing other resources.";
+
+    /// <summary>
+    /// The error message when a user is not active and tries to access resources that require an active account.
+    /// </summary>
+    public const string IsNotActiveMessage = "User is not active";
+
+    /// <summary>
+    /// The error message when a user is active and tries to access resources that require an inactive account.
+    /// </summary>
+    public const string IsActiveMessage = "User is active";
+
+    /// <summary>
+    /// The error message when a user tries to restore an account after the deletion period has expired.
+    /// </summary>
+    public const string DeletionPeriodExpiredMessage = "Too late to restore account";
+
+    /// <summary>
+    /// The title for when an account is pending deletion.
+    /// </summary>
+    public const string AccountPendingDeletionTitle = "Account Pending Deletion";
+
+    /// <summary>
+    /// The error message when a user tries to access resources while their account is pending deletion.
+    /// </summary>
+    public const string AccountPendingDeletionMessage = "Account is pending deletion. Please contact support if you wish to restore your account.";
+
+    /// <summary>
+    /// The error message when the status value used to indicate an unknown or invalid user state.
+    /// </summary>
+    public const string InvalidUserStatus = "Unknown user status";
 }

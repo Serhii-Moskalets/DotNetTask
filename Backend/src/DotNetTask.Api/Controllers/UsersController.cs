@@ -2,6 +2,8 @@ using DotNetTask.Api.Requests.User;
 using DotNetTask.Application.Common.Dtos;
 using DotNetTask.Application.Users.Commands.ChangeEmail;
 using DotNetTask.Application.Users.Commands.ConfirmEmailChange;
+using DotNetTask.Application.Users.Commands.InitiateAccountDeletion;
+using DotNetTask.Application.Users.Commands.RecoverAccount;
 using DotNetTask.Application.Users.Commands.ResendEmailVerification;
 using DotNetTask.Application.Users.Commands.RevertEmailChange;
 using DotNetTask.Application.Users.Commands.UpdatePassword;
@@ -172,4 +174,42 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
         Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
+
+    /// <summary>
+    /// Schedules the account for permanent deletion.
+    /// </summary>
+    /// <remarks>
+    /// The account enters a 'PendingDeletion' state.
+    /// Permanent removal occurs automatically after a predefined grace period.
+    /// </remarks>
+    /// <returns>No content on success.</returns>
+    /// <response code="204">Account deletion has been successfully initiated.</response>
+    [HttpDelete]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> InitiateAccountDeletion()
+    {
+        InitiateAccountDeletionCommand command = new(this.CurrentUserId);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        return this.HandleNoContent(result);
+    }
+
+    /// <summary>
+    /// Cancels a pending account deletion and restores the account to Active status.
+    /// </summary>
+    /// <remarks>
+    /// This is only possible if the grace period has not yet expired.
+    /// </remarks>
+    /// <returns>No content on success.</returns>
+    /// <response code="204">Account has been successfully recovered.</response>
+    [HttpPatch("recover")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RecoverAccount()
+    {
+        RecoverAccountCommand command = new(this.CurrentUserId);
+        Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
+        return this.HandleNoContent(result);
+    }
+
 }

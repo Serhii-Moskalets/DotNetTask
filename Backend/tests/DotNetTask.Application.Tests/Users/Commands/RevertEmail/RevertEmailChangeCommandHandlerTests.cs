@@ -1,4 +1,3 @@
-using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.RevertEmailChange;
@@ -19,18 +18,15 @@ namespace DotNetTask.Application.Tests.Users.Commands.RevertEmail;
 /// <summary>
 /// Unit tests for the <see cref="RevertEmailChangeCommandHandler"/> class.
 /// </summary>
-public class RevertEmailChangeCommandHandlerTests
+public class RevertEmailChangeCommandHandlerTests : BaseTest
 {
     private const string IpAddress = "192.168.0.1";
     private const string PendingEmail = "new@example.com";
     private const string RevertToken = "revert-token";
     private const string ConfirmToken = "confirm-token";
 
-    private static readonly DateTime CurrentTime = DateTime.UtcNow;
-
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ITokenGenerator> _tokenGenerator;
-    private readonly Mock<IClock> _clock;
     private readonly RevertEmailChangeCommandHandler _sut;
 
     /// <summary>
@@ -40,11 +36,10 @@ public class RevertEmailChangeCommandHandlerTests
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
         this._tokenGenerator = new Mock<ITokenGenerator>();
-        this._clock = new Mock<IClock>();
         this._sut = new RevertEmailChangeCommandHandler(
             this._unitOfWorkMock.Object,
             this._tokenGenerator.Object,
-            this._clock.Object);
+            this.Clock);
     }
 
     /// <summary>
@@ -56,10 +51,10 @@ public class RevertEmailChangeCommandHandlerTests
     public async Task Handle_Should_ReturnSuccess_When_DataIsValid()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         RevertEmailChangeCommand command = new(RevertToken, IpAddress);
 
-        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), CurrentTime);
+        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), this.Clock.UtcNow);
 
         this._tokenGenerator.Setup(x => x.GenerateSecureToken()).Returns("new-return-token");
 
@@ -72,7 +67,7 @@ public class RevertEmailChangeCommandHandlerTests
         // Assert
         result.IsSuccess.Should().BeTrue();
         user.Email.Value.Should().Be(UserEntityFactory.Email);
-        user.EmailConfirmed.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.Active);
         user.RevertToken.Should().BeNull();
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -90,7 +85,7 @@ public class RevertEmailChangeCommandHandlerTests
         UserEntity user = UserEntityFactory.Create();
         RevertEmailChangeCommand command = new("wrong-token", IpAddress);
 
-        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), CurrentTime);
+        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), this.Clock.UtcNow);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailChangeRevert, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

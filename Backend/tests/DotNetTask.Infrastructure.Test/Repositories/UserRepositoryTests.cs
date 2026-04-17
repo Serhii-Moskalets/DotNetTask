@@ -14,9 +14,49 @@ namespace DotNetTask.Infrastructure.Test.Repositories;
 /// Unit tests for <see cref="UserRepository"/> to verify its user-related queries.
 /// Tests existence checks, retrieval by email and username.
 /// </summary>
-public class UserRepositoryTests
+public class UserRepositoryTests : BaseTest
 {
-    private static readonly DateTime CurrentTime = DateTime.UtcNow;
+    private readonly DotNetTaskDbContext _context;
+    private readonly UserRepository _repo;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="UserRepositoryTests"/> class.
+    /// </summary>
+    public UserRepositoryTests()
+    {
+        this._context = SqliteInMemoryDbContextFactory.Create();
+        this._repo = new UserRepository(this._context);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.DeleteRangeAsync"/>
+    /// removes multiple users from the database.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task DeleteRange_Should_RemoveUsersFromDatabase()
+    {
+        // Arrange
+        UserEntity user1 = UserEntityFactory.Create();
+        UserEntity user2 = UserEntityFactory.Create(userName: "user2", email: "user2@example.com");
+        UserEntity user3 = UserEntityFactory.Create(userName: "user3", email: "user3@example.com");
+
+        await this._context.Users.AddRangeAsync(user1, user2, user3);
+        await this._context.SaveChangesAsync();
+        this._context.ChangeTracker.Clear();
+
+        List<Guid> idsToDelete = [user1.Id, user2.Id];
+
+        // Act
+        int result = await this._repo.DeleteRangeAsync(idsToDelete);
+
+        // Assert
+        result.Should().Be(2);
+        List<UserEntity> remainingUsers = await this._context.Users.ToListAsync();
+        remainingUsers.Should().HaveCount(1);
+        remainingUsers.Should().Contain(u => u.Id == user3.Id);
+        remainingUsers.Should().NotContain(u => idsToDelete.Contains(u.Id));
+    }
 
     /// <summary>
     /// Verifies that <see cref="UserRepository.ExistsByEmailAsync"/>
@@ -24,22 +64,31 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task ExistsByEmail_ReturnTrue_WhenUserExists()
+    public async Task ExistsByEmail_Should_ReturnTrue_WhenUserExists()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-
-        UserRepository repo = new(context);
-        UserEntity user = UserEntityFactory.Create();
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
+        UserEntity testUser = await this.InitializeAsync();
 
         // Aсt
-        bool exists = await repo.ExistsByEmailAsync(user.Email);
+        bool exists = await this._repo.ExistsByEmailAsync(testUser.Email);
 
         // Assert
         exists.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.ExistsByEmailAsync"/>
+    /// returns false when no user with the specified email exists in the database.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task ExistsByEmail_Should_ReturnFalse_WhenUserDoesNotExist()
+    {
+        // Act
+        bool exists = await this._repo.ExistsByEmailAsync(Email.Create("ghost@example.com"));
+
+        // Assert
+        exists.Should().BeFalse();
     }
 
     /// <summary>
@@ -48,22 +97,62 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task ExistsByUserName_ReturnTrue_WhenUserExists()
+    public async Task ExistsByUserName_Should_ReturnTrue_WhenUserExists()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-
-        UserRepository repo = new(context);
-        UserEntity user = UserEntityFactory.Create();
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
+        UserEntity testUser = await this.InitializeAsync();
 
         // Act
-        bool exists = await repo.ExistsByUserNameAsync(user.UserName);
+        bool exists = await this._repo.ExistsByUserNameAsync(testUser.UserName);
 
         // Assert
         exists.Should().BeTrue();
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.ExistsByUserNameAsync"/>
+    /// returns false when no user with the specified username exists in the database.
+    /// </summary>
+    /// <returns>A task representing the asynchronous operation.</returns>
+    [Fact]
+    public async Task ExistsByUserName_Should_ReturnFalse_WhenUserDoesNotExist()
+    {
+        // Act
+        bool exists = await this._repo.ExistsByUserNameAsync(UserName.Create("ghost"));
+
+        // Assert
+        exists.Should().BeFalse();
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="UserRepository.GetPendingDeletionAsync"/>
+    /// returns only users that have passed the deletion cutoff time.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task GetPendingDeletion_Should_ReturnOnlyUsersPastCutoff()
+    {
+        // Arrange
+        DateTime cutoff = this.Clock.UtcNow;
+
+        UserEntity userReady = UserEntityFactory.CreateActive(userName: "userReady", email: "userReady@example.com");
+        userReady.RequestAccountDeletion(this.Clock.UtcNow.AddDays(-31));
+
+        UserEntity userWaiting = UserEntityFactory.CreateActive(userName: "userWaiting", email: "userWaiting@example.com");
+        userWaiting.RequestAccountDeletion(this.Clock.UtcNow);
+
+        UserEntity userActive = UserEntityFactory.CreateActive(userName: "userActive", email: "userActive@example.com");
+
+        await this._context.Users.AddRangeAsync(userReady, userWaiting, userActive);
+        await this._context.SaveChangesAsync();
+
+        // Act
+        IReadOnlyList<Guid> result = await this._repo.GetPendingDeletionAsync(cutoff);
+
+        // Arrange
+        result.Should().NotBeNull();
+        result.Should().Contain(userReady.Id);
+        result.Should().NotContainInOrder(new List<Guid> { userActive.Id, userWaiting.Id });
     }
 
     /// <summary>
@@ -72,23 +161,17 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetByEmail_ReturnUser_WhenUserExists()
+    public async Task GetByEmail_Should_ReturnUser_WhenUserExists()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-
-        UserRepository repo = new(context);
-        UserEntity userEntity = UserEntityFactory.Create();
-
-        await context.Users.AddAsync(userEntity);
-        await context.SaveChangesAsync();
+        UserEntity testUser = await this.InitializeAsync();
 
         // Act
-        UserEntity? saved = await repo.GetByEmailAsync(userEntity.Email);
+        UserEntity? saved = await this._repo.GetByEmailAsync(testUser.Email);
 
         // Assert
         saved.Should().NotBeNull();
-        saved.UserName.Should().Be(userEntity.UserName);
+        saved.UserName.Should().Be(testUser.UserName);
     }
 
     /// <summary>
@@ -97,14 +180,10 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetByEmail_ReturnNull_WhenUserDoesNotExist()
+    public async Task GetByEmail_Should_ReturnNull_WhenUserDoesNotExist()
     {
-        // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
-
         // Act
-        UserEntity? saved = await repo.GetByEmailAsync(Email.Create("john@example.com"));
+        UserEntity? saved = await this._repo.GetByEmailAsync(Email.Create("john@example.com"));
 
         // Assert
         saved.Should().BeNull();
@@ -118,23 +197,16 @@ public class UserRepositoryTests
     /// context, confirming correct repository behavior when entity tracking is enabled.</remarks>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task GetByEmail_ShouldTrackEntity_WhenAsNoTrackingIsFalse()
+    public async Task GetByEmail_Should_TrackEntity_WhenAsNoTrackingIsFalse()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
-        Email email = Email.Create("track@test.com");
-        UserEntity user = UserEntityFactory.Create(email: email.Value);
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
-        context.ChangeTracker.Clear();
+        UserEntity testUser = await this.InitializeAsync();
 
         // Act
-        UserEntity? retrievedUser = await repo.GetByEmailAsync(email, asNoTracking: false);
+        UserEntity? retrievedUser = await this._repo.GetByEmailAsync(testUser.Email, asNoTracking: false);
 
         // Assert
-        bool isTracked = context.Entry(retrievedUser!).State != EntityState.Detached;
+        bool isTracked = this._context.Entry(retrievedUser!).State != EntityState.Detached;
         isTracked.Should().BeTrue();
     }
 
@@ -148,23 +220,16 @@ public class UserRepositoryTests
     /// performance and reduce memory usage.</remarks>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task GetByEmail_ShouldNotTrackEntity_WhenAsNoTrackingIsTrue()
+    public async Task GetByEmail_Should_NotTrackEntity_WhenAsNoTrackingIsTrue()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
-        Email email = Email.Create("notrack@test.com");
-        UserEntity user = UserEntityFactory.Create(email: email.Value);
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
-        context.ChangeTracker.Clear();
+        UserEntity testUser = await this.InitializeAsync();
 
         // Act
-        UserEntity? retrievedUser = await repo.GetByEmailAsync(email, asNoTracking: true);
+        UserEntity? retrievedUser = await this._repo.GetByEmailAsync(testUser.Email, asNoTracking: true);
 
         // Assert
-        bool isTracked = context.Entry(retrievedUser!).State != EntityState.Detached;
+        bool isTracked = this._context.Entry(retrievedUser!).State != EntityState.Detached;
         isTracked.Should().BeFalse();
     }
 
@@ -174,23 +239,17 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetByUserName_ReturnUser_WhenUserExists()
+    public async Task GetByUserName_Should_ReturnUser_WhenUserExists()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-
-        UserRepository repo = new(context);
-        UserEntity userEntity = UserEntityFactory.Create();
-
-        await context.Users.AddAsync(userEntity);
-        await context.SaveChangesAsync();
+        UserEntity testUser = await this.InitializeAsync();
 
         // Act
-        UserEntity? saved = await repo.GetByUserNameAsync(userEntity.UserName);
+        UserEntity? saved = await this._repo.GetByUserNameAsync(testUser.UserName);
 
         // Assert
         saved.Should().NotBeNull();
-        saved.UserName.Should().Be(userEntity.UserName);
+        saved.UserName.Should().Be(testUser.UserName);
     }
 
     /// <summary>
@@ -199,14 +258,13 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetByUserName_ReturnNull_WhenUserDoesNotExist()
+    public async Task GetByUserName_Should_ReturnNull_WhenUserDoesNotExist()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
+        await this.InitializeAsync();
 
         // Act
-        UserEntity? saved = await repo.GetByUserNameAsync(UserName.Create("user"));
+        UserEntity? saved = await this._repo.GetByUserNameAsync(UserName.Create("user"));
 
         // Assert
         saved.Should().BeNull();
@@ -218,24 +276,18 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetUsersSecurityInfo_ReturnData_WhenUserExists()
+    public async Task GetUsersSecurityInfo_Should_ReturnData_WhenUserExists()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
-
-        UserEntity user = UserEntityFactory.Create();
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
+        UserEntity testUser = await this.InitializeAsync();
 
         // Act
-        (string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)? result = await repo.GetUsersSecurityInfoAsync(user.Id);
+        (string SecurityStamp, bool MustChangePassword, UserStatus Status)? result = await this._repo.GetUsersSecurityInfoAsync(testUser.Id);
 
         // Assert
         result.Should().NotBeNull();
-        result.Value.SecurityStamp.Should().Be(user.SecurityStamp.Value);
-        result.Value.MustChangePassword.Should().Be(user.MustChangePassword);
+        result.Value.SecurityStamp.Should().Be(testUser.SecurityStamp.Value);
+        result.Value.MustChangePassword.Should().Be(testUser.MustChangePassword);
     }
 
     /// <summary>
@@ -244,14 +296,10 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetUsersSecurityInfo_ReturnNull_WhenUserDoesNotExist()
+    public async Task GetUsersSecurityInfo_Should_ReturnNull_WhenUserDoesNotExist()
     {
-        // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
-
         // Act
-        (string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)? result = await repo.GetUsersSecurityInfoAsync(Guid.NewGuid());
+        (string SecurityStamp, bool MustChangePassword, UserStatus Status)? result = await this._repo.GetUsersSecurityInfoAsync(Guid.NewGuid());
 
         // Assert
         result.Should().BeNull();
@@ -263,26 +311,21 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetBySecurityToken_ReturnUser_WhenMatchesCurrentToken()
+    public async Task GetBySecurityToken_Should_ReturnUser_WhenMatchesCurrentToken()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
+        string token = "current-secret";
+        UserEntity testUser = UserEntityFactory.CreateActive();
+        testUser.RequestPasswordReset(token, TimeSpan.FromHours(1), this.Clock.UtcNow);
 
-        SecurityToken token = SecurityToken.Create("current-secret-code", TimeSpan.FromHours(1), UserTokenType.PasswordReset, CurrentTime);
-
-        UserEntity user = UserEntityFactory.Create();
-        typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
+        await this.InitializeAsync(testUser);
 
         // Act
-        UserEntity? result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
+        UserEntity? result = await this._repo.GetBySecurityTokenAsync(token, UserTokenType.PasswordReset);
 
         // Assert
         result.Should().NotBeNull();
-        result.Id.Should().Be(user.Id);
+        result.Id.Should().Be(testUser.Id);
     }
 
     /// <summary>
@@ -291,26 +334,21 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetBySecurityToken_ReturnUser_WhenMatchesRevertToken()
+    public async Task GetBySecurityToken_Should_ReturnUser_WhenMatchesRevertToken()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
+        string revertToken = "revert-token";
+        UserEntity testUser = UserEntityFactory.CreateActive();
+        testUser.RequestEmailChange(Email.Create("newemail@example.com"), "confirm-token", revertToken, TimeSpan.FromHours(1), this.Clock.UtcNow);
 
-        SecurityToken token = SecurityToken.Create("revert-secret-code", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
-
-        UserEntity user = UserEntityFactory.Create();
-        typeof(UserEntity).GetProperty(nameof(UserEntity.RevertToken))?.SetValue(user, token);
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
+        await this.InitializeAsync(testUser);
 
         // Act
-        UserEntity? result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
+        UserEntity? result = await this._repo.GetBySecurityTokenAsync(revertToken, UserTokenType.EmailChangeRevert);
 
         // Assert
         result.Should().NotBeNull();
-        result.Id.Should().Be(user.Id);
+        result.Id.Should().Be(testUser.Id);
     }
 
     /// <summary>
@@ -319,21 +357,17 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetBySecurityToken_ReturnNull_WhenTypeMismatch()
+    public async Task GetBySecurityToken_Should_ReturnNull_WhenTypeMismatch()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
+        string revertToken = "revert-token";
+        UserEntity testUser = UserEntityFactory.CreateActive();
+        testUser.RevertEmailChange(revertToken, this.Clock.UtcNow);
 
-        SecurityToken token = SecurityToken.Create("same-code", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
+        await this.InitializeAsync(testUser);
 
-        UserEntity user = UserEntityFactory.Create();
-        typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
-
-        UserEntity? result = await repo.GetBySecurityTokenAsync(token.Value, UserTokenType.PasswordReset);
+        // Act
+        UserEntity? result = await this._repo.GetBySecurityTokenAsync(revertToken, UserTokenType.PasswordReset);
 
         // Assert
         result.Should().BeNull();
@@ -345,26 +379,30 @@ public class UserRepositoryTests
     /// </summary>
     /// <returns>A task representing the asynchronous operation.</returns>
     [Fact]
-    public async Task GetBySecurityToken_ShouldTrackReturnedEntity()
+    public async Task GetBySecurityToken_Should_ShouldTrackReturnedEntity()
     {
         // Arrange
-        await using DotNetTaskDbContext context = InMemoryDbContextFactory.Create();
-        UserRepository repo = new(context);
+        string token = "track-token";
+        UserEntity testUser = UserEntityFactory.CreateActive();
+        testUser.RequestPasswordReset(token, TimeSpan.FromHours(1), this.Clock.UtcNow);
 
-        SecurityToken token = SecurityToken.Create("track-token", TimeSpan.FromHours(1), UserTokenType.EmailChange, CurrentTime);
-
-        UserEntity user = UserEntityFactory.Create();
-        typeof(UserEntity).GetProperty(nameof(UserEntity.CurrentToken))?.SetValue(user, token);
-
-        await context.Users.AddAsync(user);
-        await context.SaveChangesAsync();
-        context.ChangeTracker.Clear();
+        await this.InitializeAsync(testUser);
 
         // Act
-        UserEntity? result = await repo.GetBySecurityTokenAsync(token.Value, token.Type);
+        UserEntity? result = await this._repo.GetBySecurityTokenAsync(token, UserTokenType.PasswordReset);
 
         // Assert
         result.Should().NotBeNull();
-        context.Entry(result).State.Should().NotBe(EntityState.Detached);
+        this._context.ChangeTracker.Entries<UserEntity>()
+            .Should().ContainSingle(e => e.Entity == result);
+    }
+
+    private async Task<UserEntity> InitializeAsync(UserEntity? testUser = null)
+    {
+        UserEntity user = testUser ?? UserEntityFactory.CreateActive();
+        await this._context.Users.AddAsync(user);
+        await this._context.SaveChangesAsync();
+        this._context.ChangeTracker.Clear();
+        return user;
     }
 }

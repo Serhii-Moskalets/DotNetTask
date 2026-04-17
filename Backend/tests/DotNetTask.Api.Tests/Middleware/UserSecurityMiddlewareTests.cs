@@ -3,6 +3,7 @@ using DotNetTask.Api.Middleware;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Domain.Constants;
+using DotNetTask.Domain.Enums;
 using DotNetTask.Domain.Exceptions;
 using DotNetTask.Infrastructure.Web.Options;
 using FluentAssertions;
@@ -34,6 +35,7 @@ public class UserSecurityMiddlewareTests
         {
             ResendEmailVerificationEndpoint = "/api/users/resend-email-verification",
             ResetPasswordEndpoint = "/api/auth/reset-password",
+            RecoverAccountEndpoint = "/api/auth/recover-account",
         };
 
         IOptions<ApiEndpointOptions> endpointOptions = Options.Create(apiEndpointOptions);
@@ -93,7 +95,7 @@ public class UserSecurityMiddlewareTests
         DefaultHttpContext context = CreateAuthenticatedContext(userId.ToString(), "some-stamp");
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(((string, bool, bool)?)null);
+            .ReturnsAsync(((string, bool, UserStatus)?)null);
 
         // Act & Assert
         Func<Task> act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -115,7 +117,7 @@ public class UserSecurityMiddlewareTests
         DefaultHttpContext context = CreateAuthenticatedContext(userId.ToString(), tokenStamp);
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((dbStamp, false, true));
+            .ReturnsAsync((dbStamp, false, UserStatus.Active));
 
         // Act & Assert
         Func<Task> act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -137,7 +139,7 @@ public class UserSecurityMiddlewareTests
         context.Request.Path = "/api/todo/items";
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((stamp, true, true));
+            .ReturnsAsync((stamp, true, UserStatus.Active));
 
         // Act & Assert
         Func<Task> act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -158,7 +160,7 @@ public class UserSecurityMiddlewareTests
         context.Request.Path = this._endpointSettings.ResetPasswordEndpoint;
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((stamp, true, true));
+            .ReturnsAsync((stamp, true, UserStatus.Active));
 
         // Act
         await this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -172,7 +174,7 @@ public class UserSecurityMiddlewareTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task InvokeAsync_ThrowResendEmailChangeVerification_When_EmailConfirmedIdFalse_And_NotResendEmailVerificationEndpoint()
+    public async Task InvokeAsync_ThrowEmailResendVerificationException_When_EmailConfirmedIdFalse_And_NotResendEmailVerificationEndpoint()
     {
         // Arrange
         Guid userId = Guid.NewGuid();
@@ -181,7 +183,7 @@ public class UserSecurityMiddlewareTests
         context.Request.Path = "/api/todo/items";
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((stamp, true, false));
+            .ReturnsAsync((stamp, false, UserStatus.Unconfirmed));
 
         // Act & Assert
         Func<Task> act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -202,7 +204,7 @@ public class UserSecurityMiddlewareTests
         context.Request.Path = this._endpointSettings.ResendEmailVerificationEndpoint;
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((stamp, false, false));
+            .ReturnsAsync((stamp, false, UserStatus.Unconfirmed));
 
         // Act
         await this._middleware.InvokeAsync(context, this._uowMock.Object);
@@ -224,7 +226,60 @@ public class UserSecurityMiddlewareTests
         DefaultHttpContext context = CreateAuthenticatedContext(userId.ToString(), stamp);
 
         this._uowMock.Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((stamp, false, true));
+            .ReturnsAsync((stamp, false, UserStatus.Active));
+
+        // Act
+        await this._middleware.InvokeAsync(context, this._uowMock.Object);
+
+        // Assert
+        this._nextMock.Verify(next => next(context), Times.Once);
+    }
+
+    /// <summary>
+    /// Verifies that a <see cref="RecoveryAccountException"/> is thrown when the user account
+    /// is marked as PendingDeletion and the request is not targeting the recovery endpoint.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task InvokeAsync_Should_ThrowRecoveryAccount_When_PendingDeletion_And_NotRecoveryEndpoint()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        string stamp = "valid-stamp";
+
+        DefaultHttpContext context = CreateAuthenticatedContext(userId.ToString(), stamp);
+        context.Request.Path = "/api/todo/items";
+
+        this._uowMock
+            .Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((stamp, false, UserStatus.PendingDeletion));
+
+        // Act
+        Func<Task> act = () => this._middleware.InvokeAsync(context, this._uowMock.Object);
+
+        // Assert
+        await act.Should().ThrowAsync<RecoveryAccountException>();
+    }
+
+    /// <summary>
+    /// Verifies that the middleware allows the request to proceed when the user account
+    /// is PendingDeletion but the request targets the recovery endpoint.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task InvokeAsync_Should_CallNext_When_PendingDeletion_And_IsRecoveryEndpoint()
+    {
+        // Arrange
+        Guid userId = Guid.NewGuid();
+        string stamp = "valid-stamp";
+
+        DefaultHttpContext context = CreateAuthenticatedContext(userId.ToString(), stamp);
+
+        context.Request.Path = this._endpointSettings.RecoverAccountEndpoint;
+
+        this._uowMock
+            .Setup(u => u.Users.GetUsersSecurityInfoAsync(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((stamp, false, UserStatus.PendingDeletion));
 
         // Act
         await this._middleware.InvokeAsync(context, this._uowMock.Object);

@@ -2,6 +2,7 @@ using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Domain.Constants;
 using DotNetTask.Domain.Entities;
+using DotNetTask.Domain.Enums;
 using DotNetTask.Domain.ValueObjects;
 
 using MediatR;
@@ -44,19 +45,19 @@ public class LoginUserCommandHandler(
                 ErrorCode.ValidationError, UserPolicy.InvalidCredentialsMessage);
         }
 
-        if (user.MustChangePassword)
+        string token = this._jwtTokenGenerator.GenerateToken(user);
+
+        if (user.Status is UserStatus.PendingDeletion)
         {
             return Result<LoginResponse>.Success(new LoginResponse(
                 user.Id,
                 user.UserName.Value,
                 user.Email.Value,
-                Token: null,
-                MustChangePassword: true));
+                Token: token,
+                IsAccountPendingDeletion: true));
         }
 
-        string token = this._jwtTokenGenerator.GenerateToken(user);
-
-        if (!user.EmailConfirmed)
+        if (user.Status is UserStatus.Unconfirmed)
         {
             return Result<LoginResponse>.Success(new LoginResponse(
                 user.Id,
@@ -64,6 +65,16 @@ public class LoginUserCommandHandler(
                 user.Email.Value,
                 Token: token,
                 IsEmailConfirmed: false));
+        }
+
+        if (user.MustChangePassword)
+        {
+            return Result<LoginResponse>.Success(new LoginResponse(
+                user.Id,
+                user.UserName.Value,
+                user.Email.Value,
+                Token: token,
+                MustChangePassword: true));
         }
 
         return Result<LoginResponse>.Success(new LoginResponse(

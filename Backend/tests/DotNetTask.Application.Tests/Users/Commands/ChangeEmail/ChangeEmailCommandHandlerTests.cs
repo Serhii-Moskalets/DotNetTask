@@ -1,4 +1,3 @@
-using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.ChangeEmail;
@@ -19,14 +18,13 @@ namespace DotNetTask.Application.Tests.Users.Commands.ChangeEmail;
 /// <summary>
 /// Contains unit tests for the <see cref="ChangeEmailCommandHandler"/> class.
 /// </summary>
-public class ChangeEmailCommandHandlerTests
+public class ChangeEmailCommandHandlerTests : BaseTest
 {
     private const string NewEmail = "newemail@example.com";
     private const string GeneratedToken = "secure-token-123";
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<ITokenGenerator> _tokenGeneratorMock;
-    private readonly Mock<IClock> _clock;
     private readonly ChangeEmailCommandHandler _sut;
 
     /// <summary>
@@ -36,11 +34,10 @@ public class ChangeEmailCommandHandlerTests
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
         this._tokenGeneratorMock = new Mock<ITokenGenerator>();
-        this._clock = new Mock<IClock>();
         this._sut = new ChangeEmailCommandHandler(
             this._unitOfWorkMock.Object,
             this._tokenGeneratorMock.Object,
-            this._clock.Object);
+            this.Clock);
     }
 
     /// <summary>
@@ -52,7 +49,7 @@ public class ChangeEmailCommandHandlerTests
     {
         // Arrange
         ChangeEmailCommand command = new(NewEmail, Guid.NewGuid());
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(command.UserId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

@@ -38,10 +38,10 @@ public class UpdateUsernameCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldREturnSuccess_WhenUseranmeIsUpdatedSuccessfully()
+    public async Task Handle_Should_Succeed_When_UsernameIsUpdated()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         UpdateUsernameCommand command = new("NewUserName", user.Id);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
@@ -65,7 +65,7 @@ public class UpdateUsernameCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnNotFound_WhenUserDoesNotExist()
+    public async Task Handle_Should_ReturnNotFound_WhenUserDoesNotExist()
     {
         // Arrange
         UpdateUsernameCommand command = new("AnyName", Guid.NewGuid());
@@ -88,7 +88,7 @@ public class UpdateUsernameCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenUsernameIsSameAsCurrent()
+    public async Task Handle_Should_ReturnFailure_WhenUsernameIsSameAsCurrent()
     {
         // Arrange
         Guid userId = Guid.NewGuid();
@@ -116,7 +116,7 @@ public class UpdateUsernameCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenUsernameIsAlreadyTaken()
+    public async Task Handle_Should_ReturnFailure_WhenUsernameIsAlreadyTaken()
     {
         // Arrange
         Guid userId = Guid.NewGuid();

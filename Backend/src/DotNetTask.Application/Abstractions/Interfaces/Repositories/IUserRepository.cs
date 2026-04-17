@@ -11,6 +11,31 @@ namespace DotNetTask.Application.Abstractions.Interfaces.Repositories;
 public interface IUserRepository : IRepository<UserEntity>
 {
     /// <summary>
+    /// Deletes the useers with the specified identifiers from the data store.
+    /// </summary>
+    /// <param name="ids">A collection of user identifiers representing the users to delete.
+    /// Each identifier must correspond to an existing user.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of users deleted.</returns>
+    Task<int> DeleteRangeAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a user with the specified email exists.
+    /// </summary>
+    /// <param name="email">The email value object to check.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns><c>true</c> if the email is taken; otherwise, <c>false</c>.</returns>
+    Task<bool> ExistsByEmailAsync(Email email, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Checks if a user with the specified username exists.
+    /// </summary>
+    /// <param name="userName">The username value object to check.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns><c>true</c> if the username is taken; otherwise, <c>false</c>.</returns>
+    Task<bool> ExistsByUserNameAsync(UserName userName, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Retrieves a user entity by its email.
     /// </summary>
     /// <param name="email">The email value object.</param>
@@ -35,35 +60,18 @@ public interface IUserRepository : IRepository<UserEntity>
     Task<UserEntity?> GetByUserNameAsync(UserName userName, bool asNoTracking = true, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Checks if a user with the specified email exists.
-    /// </summary>
-    /// <param name="email">The email value object to check.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns><c>true</c> if the email is taken; otherwise, <c>false</c>.</returns>
-    Task<bool> ExistsByEmailAsync(Email email, CancellationToken cancellationToken = default);
-
-    /// <summary>
-    /// Checks if a user with the specified username exists.
-    /// </summary>
-    /// <param name="userName">The username value object to check.</param>
-    /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns><c>true</c> if the username is taken; otherwise, <c>false</c>.</returns>
-    Task<bool> ExistsByUserNameAsync(UserName userName, CancellationToken cancellationToken = default);
-
-    /// <summary>
     /// Retrieves minimal security-related information for a specific user.
     /// </summary>
     /// <param name="userId">The unique identifier of the user.</param>
-    /// <param name="cancellationToken">A cancellation token to observe while waiting for the task to complete.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>
-    /// A task that returns a tuple containing the <c>SecurityStamp</c> and <c>MustChangePassword</c> flag
-    /// if the user exists; otherwise, <c>null</c>.
+    /// A nullable tuple containing the user's <c>SecurityStamp</c>, <c>MustChangePassword</c> flag,
+    /// and current <see cref="UserStatus"/>. Returns <c>null</c> if no user is found with the specified ID.
     /// </returns>
     /// <remarks>
-    /// This method is optimized for high-frequency security checks (e.g., in middleware)
-    /// by using a projection to fetch only the necessary columns instead of the entire user entity.
+    /// Optimized with projection to avoid fetching the entire entity.
     /// </remarks>
-    Task<(string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)?> GetUsersSecurityInfoAsync(Guid userId, CancellationToken cancellationToken = default);
+    Task<(string SecurityStamp, bool MustChangePassword, UserStatus Status)?> GetUsersSecurityInfoAsync(Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves a user entity that matches the specified security token and token type.
@@ -76,4 +84,13 @@ public interface IUserRepository : IRepository<UserEntity>
     /// <returns>A task that represents the asynchronous operation. The task result contains the user entity if a matching token
     /// and type are found; otherwise, null.</returns>
     Task<UserEntity?> GetBySecurityTokenAsync(string token, UserTokenType tokenType, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves a list of user IDs that are scheduled for deletion and have passed the cutoff time.
+    /// </summary>
+    /// <param name="cutoffTime">The threshold time; users scheduled for deletion before or at this time will be retrieved.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A read-only list of unique user identifiers.</returns>
+    Task<IReadOnlyList<Guid>> GetPendingDeletionAsync(DateTime cutoffTime, CancellationToken cancellationToken = default);
+
 }

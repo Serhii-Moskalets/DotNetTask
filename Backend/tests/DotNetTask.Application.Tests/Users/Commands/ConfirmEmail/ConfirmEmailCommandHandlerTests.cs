@@ -1,4 +1,3 @@
-using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.ConfirmEmail;
 using DotNetTask.Domain.Common;
@@ -18,13 +17,11 @@ namespace DotNetTask.Application.Tests.Users.Commands.ConfirmEmail;
 /// <summary>
 /// Contains unit tests for the <see cref="ConfirmEmailCommandHandler"/> class.
 /// </summary>
-public class ConfirmEmailCommandHandlerTests
+public class ConfirmEmailCommandHandlerTests : BaseTest
 {
     private const string IpAddress = "192.168.0.1";
-    private static readonly DateTime CurrentTime = DateTime.UtcNow;
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IClock> _clock;
     private readonly ConfirmEmailCommandHandler _sut;
 
     /// <summary>
@@ -33,8 +30,7 @@ public class ConfirmEmailCommandHandlerTests
     public ConfirmEmailCommandHandlerTests()
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._clock = new Mock<IClock>();
-        this._sut = new ConfirmEmailCommandHandler(this._unitOfWorkMock.Object, this._clock.Object);
+        this._sut = new ConfirmEmailCommandHandler(this._unitOfWorkMock.Object, this.Clock);
     }
 
     /// <summary>
@@ -50,7 +46,7 @@ public class ConfirmEmailCommandHandlerTests
 
         UserEntity user = UserEntityFactory.Create();
 
-        user.RequestEmailVerification(token, TimeSpan.FromHours(1), CurrentTime);
+        user.RequestEmailVerification(token, TimeSpan.FromHours(1), this.Clock.UtcNow);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -60,24 +56,25 @@ public class ConfirmEmailCommandHandlerTests
 
         // Assert
         result.IsSuccess.Should().BeTrue();
-        user.EmailConfirmed.Should().BeTrue();
+        user.Status.Should().Be(UserStatus.Active);
         user.CurrentToken.Should().BeNull();
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     /// <summary>
-    /// Verifies that a DomainException is thrown when the token is invalid or expired.
+    /// Verifies that the handler returns a failure result and does not save changes
+    /// when the provided token does not match the token stored for the found user.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_Should_ThrowDomainException_When_TokenIsInvalid()
+    public async Task Handle_Should_ReturnFailure_When_TokenIsInvalid()
     {
         // Arrange
         ConfirmEmailCommand command = new("wrong-token", IpAddress);
         UserEntity user = UserEntityFactory.Create();
 
-        user.RequestEmailVerification("valid-token", TimeSpan.FromHours(1), CurrentTime);
+        user.RequestEmailVerification("valid-token", TimeSpan.FromHours(1), this.Clock.UtcNow);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.EmailVerification, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

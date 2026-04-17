@@ -1,11 +1,9 @@
-using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.Security;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.ConfirmPasswordReset;
 using DotNetTask.Domain.Common;
 using DotNetTask.Domain.Entities;
 using DotNetTask.Domain.Enums;
-using DotNetTask.Domain.Exceptions;
 using DotNetTask.Domain.Test.Common;
 
 using FluentAssertions;
@@ -20,15 +18,13 @@ namespace DotNetTask.Application.Tests.Users.Commands.ConfirmPasswordReset;
 /// <summary>
 /// Contains unit tests for the <see cref="ConfirmPasswordResetCommandHandler"/> class.
 /// </summary>
-public class ConfirmPasswordResetCommandHandlerTests
+public class ConfirmPasswordResetCommandHandlerTests : BaseTest
 {
     private const string IpAddress = "192.168.0.1";
-    private static readonly DateTime CurrentTime = DateTime.UtcNow;
     private static readonly string NewPasswordHashString = new('b', 64);
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
     private readonly Mock<IPasswordHasher> _passwordHasherMock;
-    private readonly Mock<IClock> _clock;
     private readonly ConfirmPasswordResetCommandHandler _sut;
 
     /// <summary>
@@ -38,12 +34,11 @@ public class ConfirmPasswordResetCommandHandlerTests
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
         this._passwordHasherMock = new Mock<IPasswordHasher>();
-        this._clock = new Mock<IClock>();
 
         this._sut = new ConfirmPasswordResetCommandHandler(
             this._unitOfWorkMock.Object,
             this._passwordHasherMock.Object,
-            this._clock.Object);
+            this.Clock);
     }
 
     /// <summary>
@@ -57,7 +52,7 @@ public class ConfirmPasswordResetCommandHandlerTests
         UserEntity user = UserEntityFactory.Create();
         ConfirmPasswordResetCommand command = new("NewPassword123!", "valid-token", IpAddress);
 
-        user.RequestPasswordReset("valid-token", TimeSpan.FromHours(1), CurrentTime);
+        user.RequestPasswordReset("valid-token", TimeSpan.FromHours(1), this.Clock.UtcNow);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.PasswordReset, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);
@@ -77,17 +72,18 @@ public class ConfirmPasswordResetCommandHandlerTests
     }
 
     /// <summary>
-    /// Verifies that the handler throws a <see cref="DomainException"/> when the token is invalid.
+    /// Verifies that the handler returns a failure result and does not save changes
+    /// when the provided token does not match the token stored for the found user.
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_Should_ThrowDomainException_When_TokenIsInvalid()
+    public async Task Handle_Should_ReturnFailure_When_TokenIsInvali()
     {
         // Arrange
         UserEntity user = UserEntityFactory.Create();
         ConfirmPasswordResetCommand command = new("NewPass123!", "wrong-token", IpAddress);
 
-        user.RequestPasswordReset("correct-token", TimeSpan.FromHours(1), CurrentTime);
+        user.RequestPasswordReset("correct-token", TimeSpan.FromHours(1), this.Clock.UtcNow);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(command.Token, UserTokenType.PasswordReset, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

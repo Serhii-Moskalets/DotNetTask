@@ -37,10 +37,10 @@ public class UpdateUserProfileCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnSuccess_WhenFirstNameIsChanged()
+    public async Task Handle_Should_UpdateFirstName_WhenValid()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         UpdateUserProfileCommand command = new("NewName", null, user.Id);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
@@ -61,10 +61,10 @@ public class UpdateUserProfileCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenNoChangesDetected()
+    public async Task Handle_Should_ResturnFailure_WhenNoChangesDetected()
     {
         // Arrange
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
         UpdateUserProfileCommand command = new(UserEntityFactory.FirstName, UserEntityFactory.LastName, user.Id);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(user.Id, false, It.IsAny<CancellationToken>()))
@@ -87,7 +87,7 @@ public class UpdateUserProfileCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldReturnNotFound_WhenUserDoesNotExist()
+    public async Task Handle_Should_ReturnNotFound_WhenUserDoesNotExist()
     {
         // Arrange
         Guid userId = Guid.NewGuid();
@@ -110,12 +110,12 @@ public class UpdateUserProfileCommandHandlerTests
     /// </summary>
     /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
     [Fact]
-    public async Task Handle_ShouldOnlyUpdateLastName_WhenFirstNameIsNullInCommand()
+    public async Task Handle_Should_OnlyUpdateLastName_WhenFirstNameIsNullInCommand()
     {
         // Arrange
         Guid userId = Guid.NewGuid();
         UpdateUserProfileCommand command = new(null, "NewLastName", userId);
-        UserEntity user = UserEntityFactory.Create();
+        UserEntity user = UserEntityFactory.CreateActive();
 
         this._unitOfWorkMock.Setup(x => x.Users.GetByIdAsync(userId, false, It.IsAny<CancellationToken>()))
             .ReturnsAsync(user);

@@ -19,4 +19,9 @@ public class ApiEndpointOptions
     /// Gets or sets the relative or absolute URL for the password reset endpoint.
     /// </summary>
     public string ResetPasswordEndpoint { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets the relative or absolute URL for the account recovery endpoint.
+    /// </summary>
+    public string RecoverAccountEndpoint { get; set; } = string.Empty;
 }

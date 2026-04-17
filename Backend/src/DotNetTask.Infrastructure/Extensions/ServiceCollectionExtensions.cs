@@ -8,8 +8,9 @@ using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Abstractions.Options;
 using DotNetTask.Application.Common.Settings;
 using DotNetTask.Domain.Constants;
+using DotNetTask.Infrastructure.BackgroundJobs;
+using DotNetTask.Infrastructure.Notifications.Options;
 using DotNetTask.Infrastructure.Notifications.Services;
-using DotNetTask.Infrastructure.Notifications.Settings;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 using DotNetTask.Infrastructure.Persistence.Options;
 using DotNetTask.Infrastructure.Persistence.Repositories;
@@ -72,7 +73,26 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         // --- Add Email services ---
-        services.Configure<EmailSettings>(config.GetSection(EmailSettings.SectionName));
+        services.AddOptions<EmailSubjectsOptions>()
+            .Bind(config.GetSection(EmailSubjectsOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<EmailTemplatesOptions>()
+            .Bind(config.GetSection(EmailTemplatesOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<EmailSettingsOptions>()
+            .Bind(config.GetSection(EmailSettingsOptions.SectionName))
+           .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        services.AddOptions<FrontendSettingsOptions>()
+            .Bind(config.GetSection(FrontendSettingsOptions.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
         services.AddTransient<IEmailSender, EmailSender>();
         services.AddSingleton<IEmailTemplateProvider, EmailTemplateProvider>();
         services.AddScoped<IEmailService, EmailService>();
@@ -115,8 +135,8 @@ public static class ServiceCollectionExtensions
         // --- Add Throttling Settings ---
         services.Configure<ThrottlingSettings>(config.GetSection(ThrottlingSettings.SectionName));
 
-        // -- Add Frontend Settings ---
-        services.Configure<FrontendSettings>(config.GetSection(FrontendSettings.SectionName));
+        // --- Add Background Jobs
+        services.AddHostedService<UserDeletionJob>();
 
         return services;
     }

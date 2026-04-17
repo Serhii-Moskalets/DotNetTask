@@ -1,4 +1,3 @@
-using DotNetTask.Application.Abstractions.Interfaces.Common;
 using DotNetTask.Application.Abstractions.Interfaces.UnitOfWork;
 using DotNetTask.Application.Users.Commands.ConfirmEmailChange;
 using DotNetTask.Domain.Common;
@@ -18,7 +17,7 @@ namespace DotNetTask.Application.Tests.Users.Commands.ConfirmChangeEmail;
 /// <summary>
 /// Contains unit tests for the <see cref="ConfirmEmailChangeCommandHandler"/> class.
 /// </summary>
-public class ConfirmEmailChangeCommandHandlerTests
+public class ConfirmEmailChangeCommandHandlerTests : BaseTest
 {
     private const string PendingEmail = "new@example.com";
     private const string ConfirmToken = "confirm-token";
@@ -26,7 +25,6 @@ public class ConfirmEmailChangeCommandHandlerTests
     private const string IpAddress = "192.168.0.1";
 
     private readonly Mock<IUnitOfWork> _unitOfWorkMock;
-    private readonly Mock<IClock> _clock;
     private readonly ConfirmEmailChangeCommandHandler _sut;
 
     /// <summary>
@@ -35,8 +33,7 @@ public class ConfirmEmailChangeCommandHandlerTests
     public ConfirmEmailChangeCommandHandlerTests()
     {
         this._unitOfWorkMock = new Mock<IUnitOfWork>();
-        this._clock = new Mock<IClock>();
-        this._sut = new ConfirmEmailChangeCommandHandler(this._unitOfWorkMock.Object, this._clock.Object);
+        this._sut = new ConfirmEmailChangeCommandHandler(this._unitOfWorkMock.Object, this.Clock);
     }
 
     /// <summary>
@@ -77,7 +74,7 @@ public class ConfirmEmailChangeCommandHandlerTests
         ConfirmEmailChangeCommand command = new("wrong-token", IpAddress);
         UserEntity user = UserEntityFactory.Create();
 
-        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), DateTime.UtcNow);
+        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), this.Clock.UtcNow);
 
         this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(
                 It.IsAny<string>(),
@@ -92,5 +89,33 @@ public class ConfirmEmailChangeCommandHandlerTests
         result.IsSuccess.Should().BeFalse();
 
         this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+    }
+
+    /// <summary>
+    /// Verifies that the handler returns a success result, updates the user's email
+    /// to the pending one, and clears the security token when a valid and
+    /// non-expired token is provided.
+    /// </summary>
+    /// <returns>A <see cref="Task"/> representing the asynchronous unit test.</returns>
+    [Fact]
+    public async Task Handle_Should_ReturnSuccess_When_TokenIsValid()
+    {
+        // Arrange
+        ConfirmEmailChangeCommand command = new(ConfirmToken, IpAddress);
+        UserEntity user = UserEntityFactory.CreateActive();
+
+        user.RequestEmailChange(Email.Create(PendingEmail), ConfirmToken, RevertToken, TimeSpan.FromHours(1), this.Clock.UtcNow);
+
+        this._unitOfWorkMock.Setup(x => x.Users.GetBySecurityTokenAsync(ConfirmToken, UserTokenType.EmailChange, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(user);
+
+        // Act
+        Result<Unit> result = await this._sut.Handle(command, CancellationToken.None);
+
+        // Assert
+        result.IsSuccess.Should().BeTrue();
+        user.Email.Value.Should().Be(PendingEmail);
+        user.CurrentToken.Should().BeNull();
+        this._unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 }

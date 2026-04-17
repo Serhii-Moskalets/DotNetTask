@@ -74,11 +74,6 @@ public class UserEntity : BaseEntity
     public Email Email { get; private set; } = null!;
 
     /// <summary>
-    /// Gets a value indicating whether the user's email is confirmed.
-    /// </summary>
-    public bool EmailConfirmed { get; private set; }
-
-    /// <summary>
     /// Gets a value indicating whether the user is required to change their password on the next login.
     /// </summary>
     public bool MustChangePassword { get; private set; } = false;
@@ -103,6 +98,16 @@ public class UserEntity : BaseEntity
     /// Gets the hashed password of the user.
     /// </summary>
     public PasswordHash PasswordHash { get; private set; } = null!;
+
+    /// <summary>
+    /// Gets the date when account should delete.
+    /// </summary>
+    public DateTime? DeletionScheduledAt { get; private set; }
+
+    /// <summary>
+    /// Gets the current status of the user account, such as unconfirmed, active, or pending deletion.
+    /// </summary>
+    public UserStatus Status { get; private set; } = UserStatus.Unconfirmed;
 
     /// <summary>
     /// Gets the comments created by the user.
@@ -130,35 +135,46 @@ public class UserEntity : BaseEntity
     public virtual IReadOnlyCollection<UserTaskAccessEntity> UserAccesses => this._userAccesses;
 
     /// <summary>
-    /// Initiates an email verification request by generating a token.
+    /// Initiates an email verification request by generating a token and raising a registration domain event.
     /// </summary>
-    /// <param name="token">The token value.</param>
-    /// <param name="duration">How long the token is valid.</param>
-    /// <param name="currentTime">The current UTC time.</param>
-    public void RequestEmailVerification(string token, TimeSpan duration, DateTime currentTime)
+    /// <remarks>
+    /// This method ensures the user is in an unconfirmed state before generating the token.
+    /// If the user is already active or pending deletion, the request will fail.
+    /// </remarks>
+    /// <param name="token">The token value used for verification.</param>
+    /// <param name="duration">The timespan for which the token remains valid.</param>
+    /// <param name="currentTime">The current UTC time to calculate expiration.</param>
+    /// <returns>
+    /// A <see cref="Result{Unit}"/> indicating success, or a failure if the user
+    /// is not in a state that allows email verification.
+    /// </returns>
+    public Result<Unit> RequestEmailVerification(string token, TimeSpan duration, DateTime currentTime)
     {
-        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification, currentTime);
-        this.EmailConfirmed = false;
+        Result<Unit> result = this.EnsureUnconfirmed();
+        if (result.IsFailure)
+        {
+            return result;
+        }
 
+        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification, currentTime);
         this.AddDomainEvent(new UserRegisteredDomainEvent(this, this.CurrentToken));
+
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
-    /// Resends the email verification request by generating a new token.
+    /// Resends the email verification request by generating a new token, provided the user is still unconfirmed.
     /// </summary>
-    /// <remarks>
-    /// This method should be used when the user hasn't received the previous email or the token has expired.
-    /// It will only proceed if the email is not already confirmed.
-    /// </remarks>
     /// <param name="token">The new token value.</param>
-    /// <param name="duration">How long the new token is valid.</param>
+    /// <param name="duration">The timespan for which the new token remains valid.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    /// <returns>A <see cref="Result{T}"/> indicating whether the request was successfully re-initiated.</returns>
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the user is already confirmed or pending deletion.</returns>
     public Result<Unit> ResendEmailVerification(string token, TimeSpan duration, DateTime currentTime)
     {
-        if (this.EmailConfirmed)
+        Result<Unit> result = this.EnsureUnconfirmed();
+        if (result.IsFailure)
         {
-            return Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage);
+            return result;
         }
 
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification, currentTime);
@@ -172,35 +188,38 @@ public class UserEntity : BaseEntity
     /// </summary>
     /// <param name="token">The verification token.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    /// <returns>Return booean result true or false.</returns>
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the token is invalid, expired, or the user is already confirmed.</returns>
     public Result<Unit> ConfirmEmailVerification(string token, DateTime currentTime)
     {
+        Result<Unit> result = this.EnsureUnconfirmed();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
         if (this.CurrentToken?.IsValid(token, UserTokenType.EmailVerification, currentTime) is not true)
         {
             return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailVerificationTokenMessage);
         }
 
-        this.EmailConfirmed = true;
+        this.Activate();
         this.CurrentToken = null;
+
         return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
-    /// Updates the registration details for a user whose email address has not yet been confirmed. This method resets
-    /// the user's registration information and generates a new email verification token.
+    /// Updates registration details (name, username, password) and restarts the email verification process for an unconfirmed user.
     /// </summary>
-    /// <remarks>This method should only be called for users who have not yet confirmed their email address.
-    /// Calling this method will reset the user's registration details and invalidate any previous email verification
-    /// tokens.</remarks>
-    /// <param name="firstName">The first name to assign to the user during the registration update.</param>
-    /// <param name="userName">The username to assign to the user during the registration update.</param>
-    /// <param name="passwordHash">The hashed password to associate with the user during the registration update.</param>
-    /// <param name="token">The token string to use for creating a new email verification token.</param>
-    /// <param name="duration">The duration for which the email verification token remains valid.</param>
+    /// <param name="firstName">The updated first name.</param>
+    /// <param name="userName">The updated username.</param>
+    /// <param name="passwordHash">The updated password hash.</param>
+    /// <param name="token">The new verification token.</param>
+    /// <param name="duration">The validity duration of the new token.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    /// <param name="lastName">The last name to assign to the user during the registration update. This parameter is optional.</param>
-    /// <exception cref="DomainException">Thrown if the user's email address has already been confirmed.</exception>
-    public void UpdateUnconfirmedRegistration(
+    /// <param name="lastName">The updated last name (optional).</param>
+    /// <returns>A <see cref="Result{Unit}"/> indicating the outcome of the update and token regeneration.</returns>
+    public Result<Unit> UpdateUnconfirmedRegistration(
         FirstName firstName,
         UserName userName,
         PasswordHash passwordHash,
@@ -209,9 +228,10 @@ public class UserEntity : BaseEntity
         DateTime currentTime,
         LastName? lastName = null)
     {
-        if (this.EmailConfirmed)
+        Result<Unit> result = this.EnsureUnconfirmed();
+        if (result.IsFailure)
         {
-            throw new DomainException(UserPolicy.EmailAlreadyConfirmedMessage);
+            return result;
         }
 
         this.FirstName = firstName;
@@ -219,28 +239,39 @@ public class UserEntity : BaseEntity
         this.PasswordHash = passwordHash;
         this.UserName = userName;
 
-        this.RequestEmailVerification(token, duration, currentTime);
+        this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.EmailVerification, currentTime);
+        this.AddDomainEvent(new VerificationEmailResendEvent(this, this.CurrentToken));
 
         this.UpdateSecurityStamp();
+
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
-    /// Initiates an email change request.
+    /// Initiates a request to change the user's email address by generating both a confirmation token and a revert token.
     /// </summary>
-    /// <param name="newEmail">The requested new email address.</param>
-    /// <param name="confirmationToken">The unique secure token for confirming the new email.</param>
-    /// <param name="revertToken">The unique secure token for reverting the change.</param>
-    /// <param name="duration">How long the tokens is valid.</param>
+    /// <param name="newEmail">The new email address requested.</param>
+    /// <param name="confirmationToken">The token to be sent to the new email.</param>
+    /// <param name="revertToken">The token to be sent to the current email to allow reverting the change.</param>
+    /// <param name="duration">The validity duration for both tokens.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    /// <returns>Return booean result true or false.</returns>
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the email is identical to the current one or the account is not active.</returns>
     public Result<Unit> RequestEmailChange(Email newEmail, string confirmationToken, string revertToken, TimeSpan duration, DateTime currentTime)
     {
+        Result<Unit> result = this.EnsureActive();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
         if (newEmail == this.Email)
         {
             return Result<Unit>.Failure(ErrorCode.ValidationError, EmailPolicy.SameAsCurrentMessage);
         }
 
         string oldEmail = this.Email.Value;
+
+        this.MarkAsUnconfirmed();
 
         this.CurrentToken = SecurityToken.Create(confirmationToken, duration, UserTokenType.EmailChange, currentTime, newEmail.Value);
         this.RevertToken = SecurityToken.Create(revertToken, duration, UserTokenType.EmailChangeRevert, currentTime, oldEmail);
@@ -251,13 +282,19 @@ public class UserEntity : BaseEntity
     }
 
     /// <summary>
-    /// Confirms the pending email change using the confirmation token.
+    /// Confirms the pending email change using the token sent to the new address and updates the security stamp.
     /// </summary>
-    /// <param name="token">The change token sent to the new email address.</param>
+    /// <param name="token">The confirmation token.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    /// <returns>Return booean result true or false.</returns>
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the token is invalid or the metadata is missing.</returns>
     public Result<Unit> ConfirmEmailChange(string token, DateTime currentTime)
     {
+        Result<Unit> result = this.EnsureUnconfirmed();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
         if (this.CurrentToken?.IsValid(token, UserTokenType.EmailChange, currentTime) is not true)
         {
             return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidEmailChangeTokenMessage);
@@ -265,25 +302,23 @@ public class UserEntity : BaseEntity
 
         string pendingEmail = this.CurrentToken.Metadata ?? throw new DomainException(TokenPolicy.MissingPendingEmailMessage);
 
-        this.Email = Email.Create(pendingEmail);
-        this.EmailConfirmed = true;
+        this.UpdateSecurityStamp();
 
+        this.Email = Email.Create(pendingEmail);
         this.CurrentToken = null;
 
-        this.UpdateSecurityStamp();
+        this.Activate();
 
         return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
-    /// Reverts the email change to the original address using the revert token.
+    /// Reverts the email address to the previous one using a revert token and forces a password change for security.
     /// </summary>
-    /// <param name="revertToken">The revert token sent to the original email address.</param>
+    /// <param name="revertToken">The revert token sent to the original email.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    /// <param name="resetToken">TThe unique secure token for password reset.</param>
-    /// <param name="duration">The timeframe during which the token remains valid.</param>
-    /// <returns>Return booean result true or false.</returns>
-    public Result<Unit> RevertEmailChange(string revertToken, DateTime currentTime, string resetToken, TimeSpan duration)
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the revert token is invalid.</returns>
+    public Result<Unit> RevertEmailChange(string revertToken, DateTime currentTime)
     {
         if (this.RevertToken?.IsValid(revertToken, UserTokenType.EmailChangeRevert, currentTime) is not true)
         {
@@ -293,13 +328,14 @@ public class UserEntity : BaseEntity
         string oldEmail = this.RevertToken.Metadata ?? throw new DomainException(TokenPolicy.MissingOriginalEmailMessage);
 
         this.Email = Email.Create(oldEmail);
-        this.EmailConfirmed = true;
 
         this.UpdateSecurityStamp();
+
+        this.CurrentToken = null;
+        this.RevertToken = null;
         this.MustChangePassword = true;
 
-        this.CurrentToken = SecurityToken.Create(resetToken, duration, UserTokenType.PasswordReset, currentTime);
-        this.RevertToken = null;
+        this.Activate();
 
         return Result<Unit>.Success(Unit.Value);
     }
@@ -310,91 +346,148 @@ public class UserEntity : BaseEntity
     /// <param name="token">The unique secure token for password reset.</param>
     /// <param name="duration">The timeframe during which the token remains valid.</param>
     /// <param name="currentTime">The current UTC time.</param>
-    public void RequestPasswordReset(string token, TimeSpan duration, DateTime currentTime)
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the account is pending deletion.</returns>
+    public Result<Unit> RequestPasswordReset(string token, TimeSpan duration, DateTime currentTime)
     {
+        Result<Unit> result = this.EnsureNotPendingDeletion();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
         this.MustChangePassword = false;
         this.CurrentToken = SecurityToken.Create(token, duration, UserTokenType.PasswordReset, currentTime);
         this.AddDomainEvent(new PasswordResetRequestedDomainEvent(this, this.CurrentToken));
-    }
-
-    /// <summary>
-    /// Confirms the password reset and updates the password hash.
-    /// </summary>
-    /// <param name="newPasswordHash">The new password hash.</param>
-    /// <param name="token">The reset token to validate.</param>
-    /// <param name="currentTime">The current UTC time.</param>
-    /// <returns>Add returns doccumentations.</returns>
-    public Result<Unit> ConfirmPasswordReset(PasswordHash newPasswordHash, string token, DateTime currentTime)
-    {
-        if (this.CurrentToken?.IsValid(token, UserTokenType.PasswordReset, currentTime) is not true)
-        {
-            return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
-        }
-
-        this.UpdateSecurityStamp();
-        this.SetPasswordHash(newPasswordHash);
-
-        this.MustChangePassword = false;
-        this.CurrentToken = null;
-        this.EmailConfirmed = true;
 
         return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
-    /// Changes the user's password for authenticated users.
+    /// Validates the reset token and updates the user's password hash and security stamp.
     /// </summary>
-    /// <remarks>
-    /// This method is intended only for authenticated users with a confirmed email.
-    /// For unauthenticated password recovery, use <see cref="ConfirmPasswordReset"/> instead.
-    /// </remarks>
-    /// <param name="newPasswordHash">The new password hash to be set.</param>
-    public void ChangePassword(PasswordHash newPasswordHash)
+    /// <param name="newPasswordHash">The new hashed password.</param>
+    /// <param name="token">The reset token to validate.</param>
+    /// <param name="currentTime">The current UTC time.</param>
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the token is invalid or the account is pending deletion.</returns>
+    public Result<Unit> ConfirmPasswordReset(PasswordHash newPasswordHash, string token, DateTime currentTime)
     {
+        Result<Unit> result = this.EnsureNotPendingDeletion();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        if (this.CurrentToken?.IsValid(token, UserTokenType.PasswordReset, currentTime) is not true)
+        {
+            return Result<Unit>.Failure(ErrorCode.Timeout, TokenPolicy.InvalidPasswordResetTokenMessage);
+        }
+
+        Result<Unit> hashResult = this.SetPasswordHash(newPasswordHash);
+        if (hashResult.IsFailure)
+        {
+            return hashResult;
+        }
+
         this.UpdateSecurityStamp();
-        this.SetPasswordHash(newPasswordHash);
+
         this.MustChangePassword = false;
+        this.CurrentToken = null;
+
+        this.Activate();
+
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
-    /// Updates the user's first name.
+    /// Updates the password hash for an already authenticated and active user.
     /// </summary>
-    /// <param name="newFirstName">The new first name.</param>
-    /// <returns>True if the first name was changed; otherwise, false.</returns>
-    public bool ChangeFirstName(FirstName newFirstName)
+    /// <param name="newPasswordHash">The new hashed password.</param>
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the account is not active.</returns>
+    public Result<Unit> ChangePassword(PasswordHash newPasswordHash)
     {
+        Result<Unit> result = this.EnsureActive();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        Result<Unit> hashResult = this.SetPasswordHash(newPasswordHash);
+        if (hashResult.IsFailure)
+        {
+            return hashResult;
+        }
+
+        this.MustChangePassword = false;
+        this.UpdateSecurityStamp();
+
+        return Result<Unit>.Success(Unit.Value);
+    }
+
+    /// <summary>
+    /// Updates the user's first name if the account is active.
+    /// </summary>
+    /// <param name="newFirstName">The new first name to set.</param>
+    /// <returns>
+    /// A <see cref="Result{T}"/> where the value is <c>true</c> if the name was updated,
+    /// or <c>false</c> if the new name is identical to the current one.
+    /// Returns a failure if the account is not in an active state.
+    /// </returns>
+    public Result<bool> ChangeFirstName(FirstName newFirstName)
+    {
+        Result<Unit> result = this.EnsureActive();
+        if (result.IsFailure)
+        {
+            return Result<bool>.Failure(result.Error!.Code, result.Error!.Message);
+        }
+
         if (this.FirstName == newFirstName)
         {
-            return false;
+            return Result<bool>.Success(false);
         }
 
         this.FirstName = newFirstName;
-        return true;
+        return Result<bool>.Success(true);
     }
 
     /// <summary>
-    /// Updates the user's last name.
+    /// Updates the user's last name if the account is active.
     /// </summary>
-    /// <param name="newLastName">The new last name.</param>
-    /// <returns>True if the last name was changed; otherwise, false..</returns>
-    public bool ChangeLastName(LastName? newLastName)
+    /// <param name="newLastName">The new last name to set (can be null).</param>
+    /// <returns>
+    /// A <see cref="Result{T}"/> where the value is <c>true</c> if the name was updated,
+    /// or <c>false</c> if the new name is identical to the current one.
+    /// Returns a failure if the account is not in an active state.
+    /// </returns>
+    public Result<bool> ChangeLastName(LastName? newLastName)
     {
+        Result<Unit> result = this.EnsureActive();
+        if (result.IsFailure)
+        {
+            return Result<bool>.Failure(result.Error!.Code, result.Error!.Message);
+        }
+
         if (this.LastName == newLastName)
         {
-            return false;
+            return Result<bool>.Success(false);
         }
 
         this.LastName = newLastName;
-        return true;
+        return Result<bool>.Success(true);
     }
 
     /// <summary>
-    /// Updates the user's account username.
+    /// Updates the account's username, ensuring it is not the same as the current one.
     /// </summary>
-    /// <param name="userName">The new username.</param>
-    /// <returns>Return booean result true or false.</returns>
+    /// <param name="userName">The new username to set.</param>
+    /// <returns>A <see cref="Result{Unit}"/> indicating success, or a failure if the username is identical or the account is inactive.</returns>
     public Result<Unit> ChangeUserName(UserName userName)
     {
+        Result<Unit> result = this.EnsureActive();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
         if (this.UserName.Value.Equals(userName.Value, StringComparison.OrdinalIgnoreCase))
         {
             return Result<Unit>.Failure(ErrorCode.ValidationError, UserNamePolicy.SameAsCurrentMessage);
@@ -405,21 +498,153 @@ public class UserEntity : BaseEntity
     }
 
     /// <summary>
-    /// Sets the new password hash.
+    /// Requests the deletion of the user account by initiating the account deletion process and generating a deletion
+    /// token.
     /// </summary>
-    /// <param name="newPasswordHash">The new password hash.</param>
-    private void SetPasswordHash(PasswordHash newPasswordHash)
+    /// <remarks>After calling this method, the user's status is set to pending deletion, and a domain event
+    /// is raised to signal the deletion request. The actual deletion will occur after a policy-defined waiting
+    /// period.</remarks>
+    /// <param name="currentTime">The current date and time used as the reference point for the deletion request.</param>
+    /// <returns>A result indicating whether the account deletion request was successfully initiated. Returns a failure result if
+    /// the user is not active.</returns>
+    public Result<Unit> RequestAccountDeletion(DateTime currentTime)
     {
-        if (this.PasswordHash == newPasswordHash)
+        Result<Unit> result = this.EnsureActive();
+        if (result.IsFailure)
         {
-            throw new DomainException(PasswordPolicy.SameAsOldMessage);
+            return result;
         }
 
-        this.PasswordHash = newPasswordHash;
+        this.AddDomainEvent(new AccountDeletionRequestedDomainEvent(this));
+        this.MarkAsPendingDeletion(currentTime.AddDays(UserPolicy.DeletionDelayInDays));
+
+        return Result<Unit>.Success(Unit.Value);
     }
 
     /// <summary>
-    /// Sets the new security stamp.
+    /// Restores the user account from a pending deletion state to active status.
+    /// </summary>
+    /// <param name="currentTime">The current date and time used as the reference point for the deletion request.</param>
+    /// <remarks>Use this method to reactivate an account that is scheduled for deletion. The account must be
+    /// in a pending deletion state for recovery to succeed.</remarks>
+    /// <returns>A result indicating whether the account was successfully recovered. Returns a failure result if the account is
+    /// not pending deletion; otherwise, returns a success result.</returns>
+    public Result<Unit> RecoverAccount(DateTime currentTime)
+    {
+        Result<Unit> result = this.EnsurePendingDeletion();
+        if (result.IsFailure)
+        {
+            return result;
+        }
+
+        if (this.DeletionScheduledAt is null || currentTime > this.DeletionScheduledAt)
+        {
+            return Result<Unit>.Failure(ErrorCode.InvalidOperation, UserPolicy.DeletionPeriodExpiredMessage);
+        }
+
+        this.Activate();
+
+        return Result<Unit>.Success(Unit.Value);
+    }
+
+    /// <summary>
+    /// Internal helper to update the password hash after ensuring the user is active and the new password is different from the old one.
+    /// </summary>
+    /// <param name="newPasswordHash">The new password hash.</param>
+    /// <returns>A <see cref="Result{Unit}"/> indicating whether the hash was successfully updated.</returns>
+    private Result<Unit> SetPasswordHash(PasswordHash newPasswordHash)
+    {
+        if (this.PasswordHash == newPasswordHash)
+        {
+            return Result<Unit>.Failure(ErrorCode.ValidationError, PasswordPolicy.SameAsOldMessage);
+        }
+
+        this.PasswordHash = newPasswordHash;
+        return Result<Unit>.Success(Unit.Value);
+    }
+
+    /// <summary>
+    /// Updates the <see cref="SecurityStamp"/> with a new unique value.
     /// </summary>
     private void UpdateSecurityStamp() => this.SecurityStamp = SecurityStamp.New();
+
+    /// <summary>
+    /// Validates that the user's current status allows for active operations.
+    /// </summary>
+    /// <returns>A success result if active; otherwise, a failure describing why the account is restricted.</returns>
+    private Result<Unit> EnsureActive() =>
+        this.Status switch
+        {
+            UserStatus.Unconfirmed => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage),
+            UserStatus.PendingDeletion => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.AccountPendingDeletionMessage),
+            UserStatus.Active => Result<Unit>.Success(Unit.Value),
+            _ => throw new DomainException(UserPolicy.InvalidUserStatus),
+        };
+
+    /// <summary>
+    /// Validates that the user is currently in an unconfirmed state.
+    /// </summary>
+    /// <returns>A success result if unconfirmed; otherwise, a failure if already confirmed or pending deletion.</returns>
+    private Result<Unit> EnsureUnconfirmed() =>
+        this.Status switch
+        {
+            UserStatus.Unconfirmed => Result<Unit>.Success(Unit.Value),
+            UserStatus.Active => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.EmailAlreadyConfirmedMessage),
+            UserStatus.PendingDeletion => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.AccountPendingDeletionMessage),
+            _ => throw new DomainException(UserPolicy.InvalidUserStatus),
+        };
+
+    /// <summary>
+    /// Validates that the user is currently in an pending deletion state.
+    /// </summary>
+    /// <returns>A success result if pending deletion; otherwise, a failure if already confirmed or unconfirmed.</returns>
+    private Result<Unit> EnsurePendingDeletion() =>
+        this.Status switch
+        {
+            UserStatus.Active => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.IsActiveMessage),
+            UserStatus.Unconfirmed => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.EmailIsNotConfirmedMessage),
+            UserStatus.PendingDeletion => Result<Unit>.Success(Unit.Value),
+            _ => throw new DomainException(UserPolicy.InvalidUserStatus),
+        };
+
+    /// <summary>
+    /// Validates that the user isn't currently in an pending deletion state.
+    /// </summary>
+    /// <returns>A success result if confirmed or unconfirmed; otherwise, a failure if already pending deletion.</returns>
+    private Result<Unit> EnsureNotPendingDeletion() =>
+        this.Status switch
+        {
+            UserStatus.Active => Result<Unit>.Success(Unit.Value),
+            UserStatus.Unconfirmed => Result<Unit>.Success(Unit.Value),
+            UserStatus.PendingDeletion => Result<Unit>.Failure(ErrorCode.ValidationError, UserPolicy.AccountPendingDeletionMessage),
+            _ => throw new DomainException(UserPolicy.InvalidUserStatus),
+        };
+
+    /// <summary>
+    /// Marks the user as active and cancels any scheduled deletion.
+    /// </summary>
+    private void Activate()
+    {
+        this.Status = UserStatus.Active;
+        this.DeletionScheduledAt = null;
+    }
+
+    /// <summary>
+    /// Marks the user as pending deletion and schedules the deletion for the specified date.
+    /// </summary>
+    /// <param name="deletionDate">The date and time when the user is scheduled to be deleted.</param>
+    private void MarkAsPendingDeletion(DateTime deletionDate)
+    {
+        this.Status = UserStatus.PendingDeletion;
+        this.DeletionScheduledAt = deletionDate;
+        this.CurrentToken = null;
+        this.RevertToken = null;
+    }
+
+    /// <summary>
+    /// Sets the user's status to unconfirmed.
+    /// </summary>
+    /// <remarks>Use this method to reset the user's confirmation state. This may be necessary if the user's
+    /// confirmation needs to be revoked or re-initiated.</remarks>
+    private void MarkAsUnconfirmed() => this.Status = UserStatus.Unconfirmed;
 }

@@ -1,5 +1,5 @@
+using DotNetTask.Infrastructure.Notifications.Options;
 using DotNetTask.Infrastructure.Notifications.Services;
-using DotNetTask.Infrastructure.Notifications.Settings;
 
 using FluentAssertions;
 
@@ -35,9 +35,9 @@ public class EmailSenderTests
             .AddEnvironmentVariables()
             .Build();
 
-        EmailSettings? settings = configuration
+        EmailSettingsOptions? settings = configuration
             .GetSection("EmailSettings")
-            .Get<EmailSettings>();
+            .Get<EmailSettingsOptions>();
 
         // Assert
         settings.Should().NotBeNull();

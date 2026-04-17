@@ -1,6 +1,8 @@
 using DotNetTask.Application.Abstractions.Interfaces.Notifications;
+using DotNetTask.Infrastructure.Notifications.Options;
 using DotNetTask.Infrastructure.Notifications.Services;
 using FluentAssertions;
+using Microsoft.Extensions.Options;
 using Moq;
 
 namespace DotNetTask.Infrastructure.Test.Notifications;
@@ -17,6 +19,10 @@ public class EmailServiceTests
 
     private readonly Mock<IEmailSender> _senderMock;
     private readonly Mock<IEmailTemplateProvider> _templateProviderMock;
+
+    private readonly EmailTemplatesOptions _templates;
+    private readonly EmailSubjectsOptions _subjects;
+
     private readonly EmailService _emailService;
 
     /// <summary>
@@ -27,7 +33,32 @@ public class EmailServiceTests
         this._senderMock = new Mock<IEmailSender>();
         this._templateProviderMock = new Mock<IEmailTemplateProvider>();
 
-        this._emailService = new EmailService(this._senderMock.Object, this._templateProviderMock.Object);
+        this._templates = new EmailTemplatesOptions
+        {
+            EmailVerification = "verification_tpl",
+            EmailChange = "change_tpl",
+            PasswordReset = "reset_tpl",
+            EmailChangeSecurityAlert = "alert_tpl",
+            AccountDeleted = "deleted_tpl",
+        };
+
+        this._subjects = new EmailSubjectsOptions
+        {
+            RegistrationConfirmation = "Confirm Registration",
+            EmailChangeConfirmation = "Confirm Email Change",
+            PasswordReset = "Reset Password",
+            EmailChangeSecurityAlert = "Security Alert",
+            AccountDeleted = "Account Deleted",
+        };
+
+        IOptions<EmailTemplatesOptions> templatesOptions = Options.Create(this._templates);
+        IOptions<EmailSubjectsOptions> subjectsOptions = Options.Create(this._subjects);
+
+        this._emailService = new EmailService(
+            this._senderMock.Object,
+            this._templateProviderMock.Object,
+            subjectsOptions,
+            templatesOptions);
 
         this._templateProviderMock.Setup(
             x => x.GetEmailTemplateAsync(
@@ -49,7 +80,7 @@ public class EmailServiceTests
     /// </remarks>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SendConfirmationEmailAsync_ShouldCallProviderAndSender()
+    public async Task SendConfirmationEmailAsync_Should_CallProviderAndSender()
     {
         // Act
         await this._emailService.SendConfirmationEmailAsync(Email, UserName, Link, CancellationToken.None);
@@ -57,7 +88,7 @@ public class EmailServiceTests
         // Assert
         this._templateProviderMock.Verify(
             x => x.GetEmailTemplateAsync(
-                EmailTemplates.EmailVerification,
+                this._templates.EmailVerification,
                 It.Is<Dictionary<string, string>>(
                     dict =>
                     dict["USER_NAME"] == UserName &&
@@ -67,7 +98,7 @@ public class EmailServiceTests
         this._senderMock.Verify(
             x => x.SendAsync(
                 Email,
-                EmailSubjects.RegistrationConfirmation,
+                this._subjects.RegistrationConfirmation,
                 ExpectedBody,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -79,7 +110,7 @@ public class EmailServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SendEmailChangeConfirmationAsync_ShouldCallProviderWithCorrectTemplate()
+    public async Task SendEmailChangeConfirmationAsync_Should_CallProviderWithCorrectTemplate()
     {
         // Act
         await this._emailService.SendEmailChangeConfirmationAsync(Email, UserName, Link, CancellationToken.None);
@@ -87,7 +118,7 @@ public class EmailServiceTests
         // Assert
         this._templateProviderMock.Verify(
             x => x.GetEmailTemplateAsync(
-                EmailTemplates.EmailChange,
+                this._templates.EmailChange,
                 It.Is<Dictionary<string, string>>(
                     dict =>
                     dict["USER_NAME"] == UserName &&
@@ -97,7 +128,7 @@ public class EmailServiceTests
         this._senderMock.Verify(
             x => x.SendAsync(
                 Email,
-                EmailSubjects.EmailChangeConfirmation,
+                this._subjects.EmailChangeConfirmation,
                 ExpectedBody,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -109,7 +140,7 @@ public class EmailServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SendPasswordResetEmailAsync_ShouldCallProviderAndSender()
+    public async Task SendPasswordResetEmailAsync_Should_CallProviderAndSender()
     {
         // Act
         await this._emailService.SendPasswordResetEmailAsync(Email, UserName, Link, CancellationToken.None);
@@ -117,7 +148,7 @@ public class EmailServiceTests
         // Assert
         this._templateProviderMock.Verify(
             x => x.GetEmailTemplateAsync(
-                EmailTemplates.PasswordReset,
+                this._templates.PasswordReset,
                 It.Is<Dictionary<string, string>>(
                     dict =>
                     dict["USER_NAME"] == UserName &&
@@ -127,7 +158,7 @@ public class EmailServiceTests
         this._senderMock.Verify(
             x => x.SendAsync(
                 Email,
-                EmailSubjects.PasswordReset,
+                this._subjects.PasswordReset,
                 ExpectedBody,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -150,7 +181,7 @@ public class EmailServiceTests
         // Assert
         this._templateProviderMock.Verify(
             x => x.GetEmailTemplateAsync(
-                EmailTemplates.EmailChangeSecurityAlert,
+                this._templates.EmailChangeSecurityAlert,
                 It.Is<Dictionary<string, string>>(
                     dict =>
                     dict["USER_NAME"] == UserName &&
@@ -161,7 +192,35 @@ public class EmailServiceTests
         this._senderMock.Verify(
             x => x.SendAsync(
                 Email,
-                EmailSubjects.EmailChangeSecurityAlert,
+                this._subjects.EmailChangeSecurityAlert,
+                ExpectedBody,
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    /// <summary>
+    /// Verifies that <see cref="EmailService.SendAccountDeletedEmailAsync"/> correctly
+    /// coordinates template processing and delivery when an account deleted.
+    /// </summary>
+    /// <returns>A task representing the asynchronous test operation.</returns>
+    [Fact]
+    public async Task SendAccountDeletedEmailAsync_Should_CallProviderAndSender()
+    {
+        // Act
+        await this._emailService.SendAccountDeletedEmailAsync(Email, UserName, CancellationToken.None);
+
+        // Assert
+        this._templateProviderMock.Verify(
+            x => x.GetEmailTemplateAsync(
+                this._templates.AccountDeleted,
+                It.Is<Dictionary<string, string>>(
+                    dict =>
+                    dict["USER_NAME"] == UserName)),
+            Times.Once);
+        this._senderMock.Verify(
+            x => x.SendAsync(
+                Email,
+                this._subjects.AccountDeleted,
                 ExpectedBody,
                 It.IsAny<CancellationToken>()),
             Times.Once);
@@ -173,7 +232,7 @@ public class EmailServiceTests
     /// </summary>
     /// <returns>A task representing the asynchronous test operation.</returns>
     [Fact]
-    public async Task SendEmail_ShouldPropagateException_WhenTemplateNotFound()
+    public async Task SendEmail_Should_PropagateException_WhenTemplateNotFound()
     {
         // Arrange
         this._templateProviderMock

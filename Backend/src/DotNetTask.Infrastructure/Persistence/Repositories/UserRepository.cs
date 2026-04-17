@@ -5,7 +5,6 @@ using DotNetTask.Domain.ValueObjects;
 using DotNetTask.Infrastructure.Persistence.DatabaseContext;
 
 using Microsoft.EntityFrameworkCore;
-
 using TinyResult;
 
 namespace DotNetTask.Infrastructure.Persistence.Repositories;
@@ -23,6 +22,16 @@ namespace DotNetTask.Infrastructure.Persistence.Repositories;
 public class UserRepository(DotNetTaskDbContext context)
     : BaseRepository<UserEntity>(context), IUserRepository
 {
+    /// <summary>
+    /// Deletes the useers with the specified identifiers from the data store.
+    /// </summary>
+    /// <param name="ids">A collection of user identifiers representing the users to delete.
+    /// Each identifier must correspond to an existing user.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains the number of users deleted.</returns>
+    public async Task<int> DeleteRangeAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        => await this.DbSet.Where(u => ids.Contains(u.Id)).ExecuteDeleteAsync(cancellationToken);
+
     /// <summary>
     /// Checks if a user with the specified email exists.
     /// </summary>
@@ -111,21 +120,38 @@ public class UserRepository(DotNetTaskDbContext context)
     }
 
     /// <summary>
+    /// Retrieves a list of user IDs that are scheduled for deletion and have passed the cutoff time.
+    /// </summary>
+    /// <param name="cutoffTime">The threshold time; users scheduled for deletion before or at this time will be retrieved.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A read-only list of unique user identifiers.</returns>
+    public async Task<IReadOnlyList<Guid>> GetPendingDeletionAsync(DateTime cutoffTime, CancellationToken cancellationToken = default)
+        => await this.DbSet
+             .AsNoTracking()
+             .Where(u => u.Status == UserStatus.PendingDeletion
+                    && u.DeletionScheduledAt <= cutoffTime)
+             .Select(u => u.Id)
+             .ToListAsync(cancellationToken);
+
+    /// <summary>
     /// Retrieves minimal security-related information for a specific user.
     /// </summary>
     /// <param name="userId">The unique identifier of the user.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
-    /// <returns>A tuple with SecurityStamp and MustChangePassword, or null if user not found.</returns>
+    /// <returns>
+    /// A nullable tuple containing the user's <c>SecurityStamp</c>, <c>MustChangePassword</c> flag,
+    /// and current <see cref="UserStatus"/>. Returns <c>null</c> if no user is found with the specified ID.
+    /// </returns>
     /// <remarks>
     /// Optimized with projection to avoid fetching the entire entity.
     /// </remarks>
-    public async Task<(string SecurityStamp, bool MustChangePassword, bool IsEmailConfirmed)?> GetUsersSecurityInfoAsync(
+    public async Task<(string SecurityStamp, bool MustChangePassword, UserStatus Status)?> GetUsersSecurityInfoAsync(
         Guid userId,
         CancellationToken cancellationToken = default)
     {
         var user = await this.DbSet
             .Where(u => u.Id == userId)
-            .Select(u => new { u.SecurityStamp.Value, u.MustChangePassword, u.EmailConfirmed })
+            .Select(u => new { u.SecurityStamp.Value, u.MustChangePassword, u.Status })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (user is null)
@@ -133,6 +159,6 @@ public class UserRepository(DotNetTaskDbContext context)
             return null;
         }
 
-        return (user.Value, user.MustChangePassword, user.EmailConfirmed);
+        return (user.Value, user.MustChangePassword, user.Status);
     }
 }

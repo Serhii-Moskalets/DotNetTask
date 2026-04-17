@@ -62,4 +62,16 @@ public interface IEmailService
         string userName,
         string resetLink,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Sends a notification email informing the user that their account has been successfully deleted.
+    /// </summary>
+    /// <param name="toEmail">The recipient's email address.</param>
+    /// <param name="userName">The name of the user for personalization in the email.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    Task SendAccountDeletedEmailAsync(
+        string toEmail,
+        string userName,
+        CancellationToken cancellationToken = default);
 }
