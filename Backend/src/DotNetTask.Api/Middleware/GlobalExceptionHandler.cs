@@ -37,11 +37,12 @@ public class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IE
     {
         (int statusCode, string? title, string? detail) = exception switch
         {
-            PasswordChangeRequiredException => (StatusCodes.Status403Forbidden, UserPolicy.MustChangePasswordMessage, exception.Message),
-            DomainException => (StatusCodes.Status400BadRequest, DomainPolicy.BusinessRuleViolationMessage, exception.Message),
+            PasswordChangeRequiredException => (StatusCodes.Status403Forbidden, UserPolicy.MustChangePasswordTitle, exception.Message),
+            EmailResendVerificationException => (StatusCodes.Status403Forbidden, UserPolicy.EmailNotConfirmedTitle, exception.Message),
+            RecoveryAccountException => (StatusCodes.Status403Forbidden, UserPolicy.AccountPendingDeletionTitle, exception.Message),
+            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, UserPolicy.SessionExpiredTitle, exception.Message),
             KeyNotFoundException => (StatusCodes.Status404NotFound, DomainPolicy.ResourceNotFoundMessage, null),
-            UnauthorizedAccessException => (StatusCodes.Status401Unauthorized, UserPolicy.SessionExpiredMessage, exception.Message),
-            EmailResendVerificationException => (StatusCodes.Status403Forbidden, UserPolicy.EmailIsNotConfirmedMessage, exception.Message),
+            DomainException => (StatusCodes.Status400BadRequest, DomainPolicy.BusinessRuleViolationMessage, exception.Message),
             _ => (StatusCodes.Status500InternalServerError, DomainPolicy.ServerErrorMessage, DomainPolicy.UnexpectedErrorMessage)
         };
 

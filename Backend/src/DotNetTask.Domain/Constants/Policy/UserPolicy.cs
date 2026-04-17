@@ -31,6 +31,11 @@ public static class UserPolicy
     public const string EmailAlreadyConfirmedMessage = "Cannot update registration details after email is confirmed.";
 
     /// <summary>
+    /// The title for when email confirmation is required.
+    /// </summary>
+    public const string EmailNotConfirmedTitle = "Email Not Confirmed";
+
+    /// <summary>
     /// The error message when email confirmation is required but hasn't been completed.
     /// </summary>
     public const string EmailIsNotConfirmedMessage = "Email isn't confirmed.";
@@ -56,9 +61,19 @@ public static class UserPolicy
     public const string NoChangesDetectedMessage = "No changes detected. The provided names are the same as your current ones.";
 
     /// <summary>
+    /// The title for when a session has expired.
+    /// </summary>
+    public const string SessionExpiredTitle = "Unauthorized";
+
+    /// <summary>
     /// The error message when session has expired.
     /// </summary>
     public const string SessionExpiredMessage = "Session has expired. Please login again.";
+
+    /// <summary>
+    /// The title for when a user must change their password.
+    /// </summary>
+    public const string MustChangePasswordTitle = "Password Change Required";
 
     /// <summary>
     /// The error message when a user must change their password before accessing other resources.
@@ -79,6 +94,11 @@ public static class UserPolicy
     /// The error message when a user tries to restore an account after the deletion period has expired.
     /// </summary>
     public const string DeletionPeriodExpiredMessage = "Too late to restore account";
+
+    /// <summary>
+    /// The title for when an account is pending deletion.
+    /// </summary>
+    public const string AccountPendingDeletionTitle = "Account Pending Deletion";
 
     /// <summary>
     /// The error message when a user tries to access resources while their account is pending deletion.

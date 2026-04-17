@@ -75,7 +75,7 @@ public class GlobalExceptionHandlerTests
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
-        response.Title.Should().Be(UserPolicy.MustChangePasswordMessage);
+        response.Title.Should().Be(UserPolicy.MustChangePasswordTitle);
         response.Detail.Should().Be("Change password");
     }
 
@@ -99,7 +99,7 @@ public class GlobalExceptionHandlerTests
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
-        response.Title.Should().Be(UserPolicy.EmailIsNotConfirmedMessage);
+        response.Title.Should().Be(UserPolicy.EmailNotConfirmedTitle);
         response.Detail.Should().Be(UserPolicy.EmailIsNotConfirmedMessage);
     }
 
@@ -188,7 +188,7 @@ public class GlobalExceptionHandlerTests
         ProblemDetails response = await context.ReadProblemDetailsAsync();
 
         context.Response.StatusCode.Should().Be(StatusCodes.Status401Unauthorized);
-        response.Title.Should().Be(UserPolicy.SessionExpiredMessage);
+        response.Title.Should().Be(UserPolicy.SessionExpiredTitle);
         response.Detail.Should().Be("Unauthorized");
     }
 }
