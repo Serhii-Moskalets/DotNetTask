@@ -24,6 +24,16 @@ public class UserRepository(DotNetTaskDbContext context)
     : BaseRepository<UserEntity>(context), IUserRepository
 {
     /// <summary>
+    /// Deletes the useers with the specified identifiers from the data store.
+    /// </summary>
+    /// <param name="ids">A collection of user identifiers representing the users to delete.
+    /// Each identifier must correspond to an existing user.</param>
+    /// <param name="cancellationToken">A cancellation token that can be used to cancel the delete operation.</param>
+    /// <returns>A task that represents the asynchronous operation.</returns>
+    public async Task DeleteRangeAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+        => await this.DbSet.Where(u => ids.Contains(u.Id)).ExecuteDeleteAsync(cancellationToken);
+
+    /// <summary>
     /// Checks if a user with the specified email exists.
     /// </summary>
     /// <param name="email">The email value object to check.</param>
@@ -109,6 +119,20 @@ public class UserRepository(DotNetTaskDbContext context)
 
         return await query.FirstOrDefaultAsync(x => x.UserName == userName, cancellationToken);
     }
+
+    /// <summary>
+    /// Retrieves a list of user IDs that are scheduled for deletion and have passed the cutoff time.
+    /// </summary>
+    /// <param name="cutoffTime">The threshold time; users scheduled for deletion before or at this time will be retrieved.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A read-only list of unique user identifiers.</returns>
+    public async Task<IReadOnlyList<Guid>> GetPendingDeletionAsync(DateTime cutoffTime, CancellationToken cancellationToken = default)
+        => await this.DbSet
+            .AsNoTracking()
+            .Where(u => u.Status == UserStatus.PendingDeletion
+                && u.DeletionScheduledAt <= cutoffTime)
+            .Select(u => u.Id)
+            .ToListAsync(cancellationToken);
 
     /// <summary>
     /// Retrieves minimal security-related information for a specific user.
