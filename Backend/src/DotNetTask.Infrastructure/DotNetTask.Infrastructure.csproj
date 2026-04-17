@@ -12,11 +12,15 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Notifications\Templates\account_deleted.html" />
     <None Remove="Notifications\Templates\email_change.html" />
     <None Remove="Notifications\Templates\password_reset.html" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="Notifications\Templates\account_deleted.html">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Notifications\Templates\email_change.html">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
