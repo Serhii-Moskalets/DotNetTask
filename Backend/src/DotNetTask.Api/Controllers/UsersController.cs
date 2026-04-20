@@ -211,5 +211,4 @@ public sealed class UsersController(ISender mediator) : BaseController(mediator)
         Result<Unit> result = await this.Mediator.Send(command, this.HttpContext.RequestAborted);
         return this.HandleNoContent(result);
     }
-
 }

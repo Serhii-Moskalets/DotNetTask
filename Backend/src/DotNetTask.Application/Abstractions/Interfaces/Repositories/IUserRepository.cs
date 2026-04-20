@@ -92,5 +92,4 @@ public interface IUserRepository : IRepository<UserEntity>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A read-only list of unique user identifiers.</returns>
     Task<IReadOnlyList<Guid>> GetPendingDeletionAsync(DateTime cutoffTime, CancellationToken cancellationToken = default);
-
 }

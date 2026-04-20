@@ -10,7 +10,6 @@ namespace DotNetTask.Domain.ValueObjects;
 /// </summary>
 public record TagName
 {
-
     /// <summary>
     /// The maximum allowed length for a tag name.
     /// </summary>

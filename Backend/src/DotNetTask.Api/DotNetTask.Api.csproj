@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
-	<NoWarn>SA1633,SA1200,SA1309,S2139,CA1873,IDE0290,SA1313,SA1009</NoWarn>
+	<NoWarn>SA1633;SA1200;SA1309;S2139;CA1873;IDE0290;SA1313;SA1009;SA1000</NoWarn>
     <UserSecretsId>c63893b3-2dd1-48ef-8a1b-92c1f9066c7e</UserSecretsId>
   </PropertyGroup>
 	
