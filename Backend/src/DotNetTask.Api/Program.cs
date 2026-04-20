@@ -8,8 +8,10 @@ using DotNetTask.Infrastructure.Extensions;
 using DotNetTask.Infrastructure.Notifications.Options;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
+using Scalar.AspNetCore;
 using Serilog;
 using Serilog.Sinks.PostgreSQL;
 
@@ -115,31 +117,22 @@ try
         };
     });
 
-    builder.Services.AddSwaggerGen(options =>
+    builder.Services.AddOpenApi(options =>
     {
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        options.AddDocumentTransformer((document, _, _) =>
         {
-            Name = "Authorization",
-            Type = SecuritySchemeType.ApiKey,
-            Scheme = "Bearer",
-            BearerFormat = "JWT",
-            In = ParameterLocation.Header,
-            Description = "Enter JWT token in format: Bearer {your_token}",
-        });
-
-        options.AddSecurityRequirement(new OpenApiSecurityRequirement
-        {
+            document.Components ??= new();
+            document.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
             {
-                new OpenApiSecurityScheme
+                ["Bearer"] = new OpenApiSecurityScheme
                 {
-                    Reference = new OpenApiReference
-                    {
-                        Type = ReferenceType.SecurityScheme,
-                        Id = "Bearer",
-                    },
+                    Type = SecuritySchemeType.Http,
+                    Scheme = "bearer",
+                    BearerFormat = "JWT",
+                    Description = "Enter JWT Token",
                 },
-                Array.Empty<string>()
-            },
+            };
+            return Task.CompletedTask;
         });
     });
 
@@ -184,8 +177,13 @@ try
 
     if (app.Environment.IsDevelopment())
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
+        app.MapOpenApi();
+        app.MapScalarApiReference(options =>
+        {
+            options.WithTitle("DotNetTask API")
+                .WithTheme(ScalarTheme.Purple)
+                .WithDefaultHttpClient(ScalarTarget.CSharp, ScalarClient.HttpClient);
+        });
     }
 
     app.UseHttpsRedirection();
