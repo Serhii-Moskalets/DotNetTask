@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0
+WORKDIR /src
+
+COPY ["DotNetTask.Api/DotNetTask.Api.csproj", "DotNetTask.Api/"]
+COPY ["DotNetTask.Application/DotNetTask.Application.csproj", "DotNetTask.Application/"]
+COPY ["DotNetTask.Domain/DotNetTask.Domain.csproj", "DotNetTask.Domain/"]
+COPY ["DotNetTask.Infrastructure/DotNetTask.Infrastructure.csproj", "DotNetTask.Infrastructure/"]
+
+ENV NUGET_FALLBACK_PACKAGES=""
+
+RUN dotnet restore "DotNetTask.Api/DotNetTask.Api.csproj"
+
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+COPY . .
+
+WORKDIR /src/DotNetTask.Api
+
+ENTRYPOINT ["dotnet-ef", "database", "update", "--project", "../DotNetTask.Infrastructure", "--startup-project", "."]

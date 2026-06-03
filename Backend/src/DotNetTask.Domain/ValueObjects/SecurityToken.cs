@@ -10,7 +10,6 @@ namespace DotNetTask.Domain.ValueObjects;
 /// </summary>
 public sealed record SecurityToken
 {
-
     private SecurityToken() { }
 
     private SecurityToken(

@@ -9,7 +9,6 @@ namespace DotNetTask.Domain.ValueObjects;
 /// </summary>
 public record SecurityStamp
 {
-
     private SecurityStamp() { }
 
     private SecurityStamp(string value)

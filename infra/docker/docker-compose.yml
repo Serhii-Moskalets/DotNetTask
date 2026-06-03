@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  cache:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  migrate:
+    build:
+      context: ../../Backend/src
+      dockerfile: DotNetTask.Api/Dockerfile.migrate
+    environment:
+      - ConnectionStrings__DotNetTask=Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+    depends_on:
+      postgres:
+        condition: service_healthy
+        
+  api:
+    build:
+      context: ../../Backend/src
+      dockerfile: DotNetTask.Api/Dockerfile
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DotNetTask=Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      - ConnectionStrings__DotNetTaskLogging=Host=postgres;Port=5432;Database=${DB_NAME};Username=${DB_USER};Password=${DB_PASSWORD}
+      - ConnectionStrings__DotNetTaskRedis=cache:6379
+      - JwtSettings__Secret=${JWT_SECRET}
+      - JwtSettings__Issuer=DotNetTask
+      - JwtSettings__Audience=DotNetTask-Users
+      - EmailSettings__Password=${EMAIL_PASSWORD}
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      cache:
+        condition: service_started
+    
+volumes:
+  postgres_data:
+  redis_data:

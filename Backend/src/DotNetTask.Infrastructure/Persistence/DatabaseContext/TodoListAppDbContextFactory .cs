@@ -27,6 +27,7 @@ public class DotNetTaskDbContextFactory : IDesignTimeDbContextFactory<DotNetTask
             .SetBasePath(basePath)
             .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
             .AddJsonFile("appsettings.Development.json", optional: true)
+            .AddEnvironmentVariables()
             .Build();
 
         string connectionString = configuration.GetConnectionString(CommonPolicy.DataBaseConnectionString)

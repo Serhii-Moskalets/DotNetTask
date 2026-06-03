@@ -149,6 +149,7 @@ public abstract class BaseController : ControllerBase
             ErrorCode.ValidationError => StatusCodes.Status400BadRequest,
             ErrorCode.NotFound => StatusCodes.Status404NotFound,
             ErrorCode.InvalidOperation => StatusCodes.Status409Conflict,
+            ErrorCode.Timeout => StatusCodes.Status410Gone,
             _ => StatusCodes.Status500InternalServerError,
         };
 
